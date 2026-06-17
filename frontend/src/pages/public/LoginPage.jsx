@@ -30,12 +30,12 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] flex-1 flex-col justify-center px-6 py-12 lg:px-8 bg-slate-50">
+    <div className="flex min-h-[calc(100vh-4rem)] flex-1 flex-col justify-center px-6 py-12 lg:px-8 bg-slate-50 dark:bg-[#0d1117]">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-        <h2 className="mt-10 text-center text-3xl font-bold leading-9 tracking-tight text-slate-900">
+        <h2 className="mt-10 text-center text-3xl font-bold leading-9 tracking-tight text-slate-900 dark:text-[#e6edf3]">
           Sign in to your account
         </h2>
-        <p className="mt-2 text-center text-sm text-slate-600">
+        <p className="mt-2 text-center text-sm text-slate-600 dark:text-[#8b949e]">
           Sign in to access your dashboard.
         </p>
       </div>

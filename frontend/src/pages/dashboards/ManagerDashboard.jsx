@@ -25,8 +25,8 @@ export function ManagerDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Manager Dashboard</h1>
-        <p className="text-slate-500">Review feedback and manage operational tasks.</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-[#e6edf3]">Manager Dashboard</h1>
+        <p className="text-slate-500 dark:text-[#8b949e]">Review feedback and manage operational tasks.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -39,12 +39,12 @@ export function ManagerDashboard() {
             <CardContent>
               <div className="space-y-4">
                 {reviews.map(r => (
-                  <div key={r.id} className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                  <div key={r.id} className="flex items-center justify-between p-4 border border-slate-200 dark:border-[#30363d] rounded-lg">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant={r.sentiment === 'Positive' ? 'success' : 'danger'}>{r.sentiment}</Badge>
                       </div>
-                      <p className="text-sm text-slate-700">{r.text}</p>
+                      <p className="text-sm text-slate-700 dark:text-[#e6edf3]">{r.text}</p>
                     </div>
                     <div className="ml-4">
                       <Button 
@@ -68,8 +68,8 @@ export function ManagerDashboard() {
             <CardContent>
               <ul className="space-y-3">
                 {actions.map(a => (
-                  <li key={a.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-md">
-                    <span className={`text-sm ${a.status === 'Done' ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+                  <li key={a.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-[#0d1117] rounded-md">
+                    <span className={`text-sm ${a.status === 'Done' ? 'line-through text-slate-400 dark:text-[#8b949e]' : 'text-slate-800 dark:text-[#e6edf3]'}`}>
                       {a.task}
                     </span>
                     <Button size="sm" variant="ghost" onClick={() => toggleAction(a.id)}>
@@ -90,14 +90,14 @@ export function ManagerDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="bg-white p-3 rounded shadow-sm">
-                  <h4 className="font-medium text-sm text-slate-900 mb-1">HVAC Maintenance Needed</h4>
-                  <p className="text-xs text-slate-600">3 negative reviews mention AC issues in the 3rd floor in the last 48 hours.</p>
+                <div className="bg-white dark:bg-[#161b22] p-3 rounded shadow-sm">
+                  <h4 className="font-medium text-sm text-slate-900 dark:text-[#e6edf3] mb-1">HVAC Maintenance Needed</h4>
+                  <p className="text-xs text-slate-600 dark:text-[#8b949e]">3 negative reviews mention AC issues in the 3rd floor in the last 48 hours.</p>
                   <Button size="sm" className="mt-3 w-full text-xs">Create Ticket</Button>
                 </div>
-                <div className="bg-white p-3 rounded shadow-sm">
-                  <h4 className="font-medium text-sm text-slate-900 mb-1">Breakfast Peak Overcrowding</h4>
-                  <p className="text-xs text-slate-600">Consider extending breakfast hours or adding staff between 8-9 AM.</p>
+                <div className="bg-white dark:bg-[#161b22] p-3 rounded shadow-sm">
+                  <h4 className="font-medium text-sm text-slate-900 dark:text-[#e6edf3] mb-1">Breakfast Peak Overcrowding</h4>
+                  <p className="text-xs text-slate-600 dark:text-[#8b949e]">Consider extending breakfast hours or adding staff between 8-9 AM.</p>
                 </div>
               </div>
             </CardContent>

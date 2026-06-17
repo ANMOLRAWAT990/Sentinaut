@@ -35,8 +35,8 @@ export function StaffDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Staff Dashboard</h1>
-        <p className="text-slate-500">Log checkouts and analyze direct guest feedback.</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-[#e6edf3]">Staff Dashboard</h1>
+        <p className="text-slate-500 dark:text-[#8b949e]">Log checkouts and analyze direct guest feedback.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -47,7 +47,7 @@ export function StaffDashboard() {
           </CardHeader>
           <CardContent className="space-y-4">
             <textarea
-              className="w-full h-32 p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full h-32 p-3 border border-slate-300 dark:border-[#30363d] rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
               placeholder="Paste guest feedback here..."
               value={reviewText}
               onChange={(e) => setReviewText(e.target.value)}
@@ -94,7 +94,7 @@ export function StaffDashboard() {
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
-              <thead className="text-xs text-slate-500 uppercase bg-slate-50">
+              <thead className="text-xs text-slate-500 dark:text-[#8b949e] uppercase bg-slate-50 dark:bg-[#0d1117]">
                 <tr>
                   <th className="px-4 py-3">Guest</th>
                   <th className="px-4 py-3">Feedback Snippet</th>
@@ -104,9 +104,9 @@ export function StaffDashboard() {
               </thead>
               <tbody>
                 {results.map((r) => (
-                  <tr key={r.id} className="border-b border-slate-100 last:border-0">
-                    <td className="px-4 py-3 font-medium text-slate-900">{r.guest}</td>
-                    <td className="px-4 py-3 text-slate-600 truncate max-w-xs">{r.text}</td>
+                  <tr key={r.id} className="border-b border-slate-100 dark:border-[#30363d] last:border-0">
+                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-[#e6edf3]">{r.guest}</td>
+                    <td className="px-4 py-3 text-slate-600 dark:text-[#8b949e] truncate max-w-xs">{r.text}</td>
                     <td className="px-4 py-3">
                       <Badge variant={r.sentiment === 'Positive' ? 'success' : r.sentiment === 'Negative' ? 'danger' : 'warning'}>
                         {r.sentiment}
