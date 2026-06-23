@@ -1,23 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const mockData = [
-  { name: 'Mon', score: 8.2 },
-  { name: 'Tue', score: 8.4 },
-  { name: 'Wed', score: 8.1 },
-  { name: 'Thu', score: 8.5 },
-  { name: 'Fri', score: 8.9 },
-  { name: 'Sat', score: 9.2 },
-  { name: 'Sun', score: 9.0 },
-];
+const mockData = {
+  '7days': [
+    { name: 'Mon', score: 8.2 }, { name: 'Tue', score: 8.4 }, { name: 'Wed', score: 8.1 }, 
+    { name: 'Thu', score: 8.5 }, { name: 'Fri', score: 8.9 }, { name: 'Sat', score: 9.2 }, { name: 'Sun', score: 9.0 }
+  ],
+  '30days': [
+    { name: 'Week 1', score: 8.0 }, { name: 'Week 2', score: 8.3 }, 
+    { name: 'Week 3', score: 8.7 }, { name: 'Week 4', score: 8.9 }
+  ]
+};
 
 export function OwnerDashboard() {
+  const [dateRange, setDateRange] = useState('7days');
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-[#e6edf3]">Owner Dashboard</h1>
-        <p className="text-slate-500 dark:text-[#8b949e]">High-level metrics, trends, and benchmarking.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-[#e6edf3]">Owner Dashboard</h1>
+          <p className="text-slate-500 dark:text-[#8b949e]">High-level metrics, trends, and benchmarking.</p>
+        </div>
+        <select 
+          value={dateRange}
+          onChange={(e) => setDateRange(e.target.value)}
+          className="border border-slate-200 dark:border-[#30363d] rounded-md px-3 py-1.5 text-sm text-slate-700 dark:text-[#e6edf3] bg-white dark:bg-[#161b22] focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="7days">Last 7 Days</option>
+          <option value="30days">Last 30 Days</option>
+        </select>
       </div>
 
       {/* Stat Cards */}
@@ -55,12 +68,12 @@ export function OwnerDashboard() {
         {/* Trend Chart */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Sentiment Trend (Last 7 Days)</CardTitle>
+            <CardTitle>Sentiment Trend ({dateRange === '7days' ? 'Last 7 Days' : 'Last 30 Days'})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={mockData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                <LineChart data={mockData[dateRange]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                   <Line type="monotone" dataKey="score" stroke="#2563eb" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                   <CartesianGrid stroke="#e2e8f0" strokeDasharray="5 5" vertical={false} />
                   <XAxis dataKey="name" stroke="#64748b" axisLine={false} tickLine={false} />
