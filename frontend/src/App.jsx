@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './components/ui/Toast';
 import { PublicLayout } from './components/layout/PublicLayout';
 import { AppLayout } from './components/layout/AppLayout';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
@@ -14,29 +15,31 @@ import { SuggestionsIndex } from './pages/dashboards/SuggestionsIndex';
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Public Routes */}
-          <Route element={<PublicLayout />}>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/login" element={<LoginPage />} />
-          </Route>
-
-          {/* Protected Dashboard Routes */}
-          <Route path="/dashboard" element={<ProtectedRoute />}>
-            <Route element={<AppLayout />}>
-              <Route index element={<DashboardIndex />} />
-              <Route path="reviews" element={<ReviewsIndex />} />
-              <Route path="suggestions" element={<SuggestionsIndex />} />
+    <ToastProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes */}
+            <Route element={<PublicLayout />}>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/login" element={<LoginPage />} />
             </Route>
-          </Route>
 
-          {/* Fallback Route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+            {/* Protected Dashboard Routes */}
+            <Route path="/dashboard" element={<ProtectedRoute />}>
+              <Route element={<AppLayout />}>
+                <Route index element={<DashboardIndex />} />
+                <Route path="reviews" element={<ReviewsIndex />} />
+                <Route path="suggestions" element={<SuggestionsIndex />} />
+              </Route>
+            </Route>
+
+            {/* Fallback Route */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ToastProvider>
   );
 }

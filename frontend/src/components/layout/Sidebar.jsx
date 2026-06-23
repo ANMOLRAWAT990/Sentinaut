@@ -1,12 +1,36 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 export function Sidebar() {
-  const links = [
-    { name: 'Dashboard', path: '/dashboard' },
-    { name: 'Reviews', path: '/dashboard/reviews' },
-    { name: 'Suggestions', path: '/dashboard/suggestions' },
-  ];
+  const { user } = useAuth();
+  
+  const getLinksByRole = () => {
+    if (!user) return [];
+    switch (user.role) {
+      case 'owner':
+        return [
+          { name: 'Overview', path: '/dashboard' },
+          { name: 'Analytics', path: '/dashboard/reviews' },
+          { name: 'Strategic Insights', path: '/dashboard/suggestions' },
+        ];
+      case 'manager':
+        return [
+          { name: 'Action Board', path: '/dashboard' },
+          { name: 'Review Queue', path: '/dashboard/reviews' },
+          { name: 'AI Insights', path: '/dashboard/suggestions' },
+        ];
+      case 'staff':
+      default:
+        return [
+          { name: 'Review Input', path: '/dashboard' },
+          { name: 'My Tasks', path: '/dashboard/suggestions' },
+          { name: 'My Submissions', path: '/dashboard/reviews' },
+        ];
+    }
+  };
+
+  const links = getLinksByRole();
 
   return (
     <aside className="w-64 border-r border-slate-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] hidden md:flex flex-col h-full">
@@ -32,10 +56,12 @@ export function Sidebar() {
       </div>
       <div className="p-4 border-t border-slate-200 dark:border-[#30363d]">
         <div className="flex items-center">
-          <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-[#30363d]"></div>
+          <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold uppercase">
+            {user?.name?.[0] || 'U'}
+          </div>
           <div className="ml-3">
-            <p className="text-sm font-medium text-slate-700 dark:text-[#e6edf3]">User</p>
-            <p className="text-xs font-medium text-slate-500 dark:text-[#8b949e] group-hover:text-slate-700 dark:group-hover:text-[#e6edf3]">View profile</p>
+            <p className="text-sm font-medium text-slate-700 dark:text-[#e6edf3] capitalize">{user?.name || 'User'}</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-[#8b949e] uppercase">{user?.role || 'Guest'}</p>
           </div>
         </div>
       </div>
