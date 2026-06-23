@@ -4,15 +4,19 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Ca
 import { Badge } from '../../components/ui/Badge';
 import { Search, Filter, MessageSquare, Star, ArrowUpRight } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import { useToast } from '../../components/ui/Toast';
 
 export function ReviewsIndex() {
   const { user } = useAuth();
+  const { addToast } = useToast();
+
+  const handleComingSoon = () => addToast('This feature is coming soon!', 'info');
 
   const renderStaffView = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-slate-900 dark:text-[#e6edf3]">My Processed Reviews</h2>
-        <Button size="sm">Submit New Review</Button>
+        <Button size="sm" onClick={handleComingSoon}>Submit New Review</Button>
       </div>
       <Card>
         <CardContent className="p-0">
@@ -62,7 +66,7 @@ export function ReviewsIndex() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-[#8b949e]" />
             <input type="text" placeholder="Search reviews..." className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 dark:border-[#30363d] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
-          <Button variant="secondary" size="md" className="gap-2"><Filter className="h-4 w-4" /> Filter</Button>
+          <Button variant="secondary" size="md" onClick={handleComingSoon} className="gap-2"><Filter className="h-4 w-4" /> Filter</Button>
         </div>
       </div>
       <div className="grid gap-4">
@@ -82,8 +86,8 @@ export function ReviewsIndex() {
                 <div className="text-xs font-medium text-slate-500 dark:text-[#8b949e] uppercase tracking-wider">Theme: {r.theme}</div>
               </div>
               <div className="flex gap-2 w-full md:w-auto">
-                <Button variant="secondary" size="sm" className="flex-1 md:flex-none">Edit Tags</Button>
-                <Button size="sm" className="flex-1 md:flex-none">Approve</Button>
+                <Button variant="secondary" size="sm" onClick={handleComingSoon} className="flex-1 md:flex-none">Edit Tags</Button>
+                <Button size="sm" onClick={handleComingSoon} className="flex-1 md:flex-none">Approve</Button>
               </div>
             </CardContent>
           </Card>
@@ -96,7 +100,7 @@ export function ReviewsIndex() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-slate-900 dark:text-[#e6edf3]">Review Analytics Directory</h2>
-        <Button variant="secondary" size="sm" className="gap-2">Export CSV <ArrowUpRight className="h-4 w-4" /></Button>
+        <Button variant="secondary" size="sm" onClick={handleComingSoon} className="gap-2">Export CSV <ArrowUpRight className="h-4 w-4" /></Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         {['All (1,248)', 'Positive (840)', 'Neutral (210)', 'Negative (198)'].map((label, i) => (

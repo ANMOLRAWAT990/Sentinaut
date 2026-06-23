@@ -3,9 +3,13 @@ import { useAuth } from '../../context/AuthContext';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { CheckCircle2, Lightbulb, AlertCircle, TrendingUp } from 'lucide-react';
+import { useToast } from '../../components/ui/Toast';
 
 export function SuggestionsIndex() {
   const { user } = useAuth();
+  const { addToast } = useToast();
+
+  const handleComingSoon = () => addToast('This feature is coming soon!', 'info');
 
   const renderStaffView = () => (
     <div className="space-y-6">
@@ -30,7 +34,7 @@ export function SuggestionsIndex() {
                   <span className="text-slate-500 dark:text-[#8b949e]">Due: {t.due}</span>
                 </div>
               </div>
-              <Button variant="secondary" size="sm" className="gap-2"><CheckCircle2 className="h-4 w-4" /> Mark Done</Button>
+              <Button variant="secondary" size="sm" onClick={handleComingSoon} className="gap-2"><CheckCircle2 className="h-4 w-4" /> Mark Done</Button>
             </CardContent>
           </Card>
         ))}
@@ -42,7 +46,7 @@ export function SuggestionsIndex() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-slate-900 dark:text-[#e6edf3]">AI Operational Suggestions</h2>
-        <Button size="sm" variant="secondary">Run Batch Analysis</Button>
+        <Button size="sm" variant="secondary" onClick={handleComingSoon}>Run Batch Analysis</Button>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {[
@@ -59,7 +63,7 @@ export function SuggestionsIndex() {
               <p className="text-sm text-slate-600 dark:text-[#8b949e] mb-6 leading-relaxed">{s.desc}</p>
               <div className="flex items-center justify-between mt-auto">
                 <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-[#8b949e]">{s.type}</span>
-                <Button size="sm">Convert to Task</Button>
+                <Button size="sm" onClick={handleComingSoon}>Convert to Task</Button>
               </div>
             </CardContent>
           </Card>
@@ -71,17 +75,17 @@ export function SuggestionsIndex() {
   const renderOwnerView = () => (
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-slate-900 dark:text-[#e6edf3]">Strategic Insights</h2>
-      <Card className="bg-slate-900 dark:bg-[#161b22] text-white border-0">
+      <Card className="bg-blue-50 dark:bg-[#161b22] border-blue-100 dark:border-[#30363d]">
         <CardContent className="p-8">
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-white dark:bg-[#161b22]/10 rounded-lg"><TrendingUp className="h-6 w-6 text-white" /></div>
+            <div className="p-3 bg-blue-100 dark:bg-[#21262d] rounded-lg"><TrendingUp className="h-6 w-6 text-blue-700 dark:text-[#58a6ff]" /></div>
             <div>
-              <h3 className="text-lg font-bold">Q3 Opportunity Report</h3>
-              <p className="text-slate-300 text-sm mt-2 max-w-2xl leading-relaxed">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-[#e6edf3]">Q3 Opportunity Report</h3>
+              <p className="text-slate-700 dark:text-[#8b949e] text-sm mt-2 max-w-2xl leading-relaxed">
                 Based on aggregate analysis of 1,248 reviews across your property and 3 competitors, your biggest opportunity lies in <strong>Family Activities</strong>. 
                 Competitors are consistently losing points for poor entertainment options. Investing in a small play area or guided family tours could increase your booking rate by an estimated 12%.
               </p>
-              <Button className="mt-6 bg-white dark:bg-[#161b22] text-slate-900 dark:text-[#e6edf3] hover:bg-slate-100 dark:bg-[#21262d] border-0">Download Full Report</Button>
+              <Button onClick={handleComingSoon} className="mt-6 bg-blue-600 hover:bg-blue-700 text-white dark:bg-[#238636] dark:hover:bg-[#2ea043] border-0">Download Full Report</Button>
             </div>
           </div>
         </CardContent>
