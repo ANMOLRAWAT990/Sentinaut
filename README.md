@@ -93,6 +93,35 @@ Set `USE_GEMINI=false` to use local Ollama during development.
 
 ---
 
+## How to run backend locally
+
+1. **Navigate to the backend directory:**
+   ```bash
+   cd backend
+   ```
+2. **Create a virtual environment and activate it:**
+   ```bash
+   python -m venv venv
+   # On Windows:
+   venv\Scripts\activate
+   # On Mac/Linux:
+   source venv/bin/activate
+   ```
+3. **Install dependencies:**
+   ```bash
+   pip install fastapi uvicorn pydantic python-dotenv
+   ```
+4. **Set up environment variables:**
+   - Copy `.env.example` to `.env`
+   - Fill in any required keys (like `GEMINI_API_KEY`)
+5. **Run the server:**
+   ```bash
+   uvicorn main:app --reload --port 8000
+   ```
+   The backend will now be running at `http://localhost:8000`. You can access the interactive API documentation at `http://localhost:8000/docs`.
+
+---
+
 ## Intern Details
 
 | Field | Details |

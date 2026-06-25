@@ -1,0 +1,95 @@
+{
+  "client": "Thunder Client",
+  "collectionName": "SentiNaut API",
+  "dateExported": "2026-06-23T02:30:00.000Z",
+  "version": "1.1",
+  "folders": [],
+  "requests": [
+    {
+      "_id": "1",
+      "colId": "SentiNaut API",
+      "name": "Get All Reviews",
+      "url": "http://localhost:8000/api/reviews",
+      "method": "GET",
+      "sortNum": 10000,
+      "created": "2026-06-23T02:30:00.000Z",
+      "modified": "2026-06-23T02:30:00.000Z",
+      "headers": []
+    },
+    {
+      "_id": "2",
+      "colId": "SentiNaut API",
+      "name": "Search Reviews",
+      "url": "http://localhost:8000/api/reviews/search?q=food",
+      "method": "GET",
+      "sortNum": 20000,
+      "created": "2026-06-23T02:30:00.000Z",
+      "modified": "2026-06-23T02:30:00.000Z",
+      "headers": []
+    },
+    {
+      "_id": "3",
+      "colId": "SentiNaut API",
+      "name": "Get Single Review",
+      "url": "http://localhost:8000/api/reviews/1",
+      "method": "GET",
+      "sortNum": 30000,
+      "created": "2026-06-23T02:30:00.000Z",
+      "modified": "2026-06-23T02:30:00.000Z",
+      "headers": []
+    },
+    {
+      "_id": "4",
+      "colId": "SentiNaut API",
+      "name": "Create Review",
+      "url": "http://localhost:8000/api/reviews",
+      "method": "POST",
+      "sortNum": 40000,
+      "created": "2026-06-23T02:30:00.000Z",
+      "modified": "2026-06-23T02:30:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"guestName\": \"Alice Green\",\n  \"platform\": \"TripAdvisor\",\n  \"text\": \"Beautiful location but the WiFi was spotty.\",\n  \"sentiment\": \"Mixed\",\n  \"tags\": [\"Location\", \"WiFi\"],\n  \"status\": \"Pending\"\n}",
+        "form": []
+      }
+    },
+    {
+      "_id": "5",
+      "colId": "SentiNaut API",
+      "name": "Update Review",
+      "url": "http://localhost:8000/api/reviews/1",
+      "method": "PUT",
+      "sortNum": 50000,
+      "created": "2026-06-23T02:30:00.000Z",
+      "modified": "2026-06-23T02:30:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"guestName\": \"John Doe\",\n  \"platform\": \"Google\",\n  \"text\": \"The room was clean but the food was cold.\",\n  \"sentiment\": \"Neutral\",\n  \"tags\": [\"Food\", \"Cleanliness\"],\n  \"status\": \"Done\"\n}",
+        "form": []
+      }
+    },
+    {
+      "_id": "6",
+      "colId": "SentiNaut API",
+      "name": "Delete Review",
+      "url": "http://localhost:8000/api/reviews/2",
+      "method": "DELETE",
+      "sortNum": 60000,
+      "created": "2026-06-23T02:30:00.000Z",
+      "modified": "2026-06-23T02:30:00.000Z",
+      "headers": []
+    }
+  ]
+}
