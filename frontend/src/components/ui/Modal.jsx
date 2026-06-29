@@ -14,10 +14,7 @@ export const Modal = ({ isOpen, onClose, title, children }) => {
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
-      // Prevent body scrolling
       document.body.style.overflow = 'hidden';
-      // Basic focus trap - focus first element or modal container
-      modalRef.current?.focus();
     }
 
     return () => {
@@ -25,6 +22,12 @@ export const Modal = ({ isOpen, onClose, title, children }) => {
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (isOpen) {
+      modalRef.current?.focus();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
