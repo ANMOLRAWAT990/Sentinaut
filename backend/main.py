@@ -6,6 +6,7 @@ from bson.objectid import ObjectId
 from bson.errors import InvalidId
 import bcrypt
 from models.database import reviews_collection, actions_collection, users_collection, properties_collection
+from models.schemas import Review, Action, Property, SignupRequest, LoginRequest, UserResponse
 
 app = FastAPI(title="SentiNaut Backend API")
 
@@ -17,16 +18,6 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
-
-# Core Data Model
-class Review(BaseModel):
-    id: Optional[str] = None
-    guestName: str
-    platform: str
-    text: str
-    sentiment: str = "Neutral"
-    tags: List[str] = []
-    status: str = "Pending"
 
 def review_helper(review) -> dict:
     return {
@@ -116,10 +107,6 @@ def delete_review(id: str):
     raise HTTPException(status_code=404, detail="Review not found")
 
 # --- Actions API ---
-class Action(BaseModel):
-    id: Optional[str] = None
-    task: str
-    status: str
 
 def action_helper(action) -> dict:
     _id = action.get("_id")
@@ -167,11 +154,6 @@ def read_root():
     return {"message": "Welcome to SentiNaut API"}
 
 # --- Properties API ---
-class Property(BaseModel):
-    id: Optional[str] = None
-    name: str
-    location: str
-    status: str = "Active"
 
 def property_helper(prop) -> dict:
     return {
@@ -200,20 +182,6 @@ def create_property(prop: Property):
 # AUTH API  (signup / login — DB backed, no JWT this week)
 # ============================================================
 VALID_ROLES = ["staff", "manager", "owner"]
-
-
-class SignupRequest(BaseModel):
-    name: str
-    email: str
-    password: str
-    role: str  # staff | manager | owner
-    property: Optional[str] = None
-
-
-class LoginRequest(BaseModel):
-    email: str
-    password: str
-    role: str
 
 
 def user_helper(user) -> dict:
@@ -246,14 +214,6 @@ def signup(data: SignupRequest):
     result = users_collection.insert_one(new_user)
     created = users_collection.find_one({"_id": result.inserted_id})
     return {"message": "Account created successfully", "user": user_helper(created)}
-
-class UserResponse(BaseModel):
-    id: str
-    name: str
-    email: str
-    role: str
-    property: Optional[str] = None
-    initials: Optional[str] = None
 
 @app.get("/api/users", response_model=List[UserResponse])
 def get_users(role: Optional[str] = None):

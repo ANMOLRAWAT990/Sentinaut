@@ -4,7 +4,6 @@
 
 SentiNaut turns guest reviews into direct business actions. Staff paste reviews from any platform and the system classifies sentiment, tags recurring themes, benchmarks performance against nearby competitors, and converts feedback patterns into trackable staff action items — all working together to maximize positive review volume, reduce repeat complaints, and improve search visibility over time.
 
-
 ---
 
 ## The Problem
@@ -53,12 +52,38 @@ Two-layer classification pipeline:
 
 | Layer | Technology |
 |---|---|
-| Frontend | React JS |
+| Frontend | React JS (Vite + Tailwind CSS) |
 | Backend | Python / FastAPI |
-| Database | MongoDB via Atlas |
+| Database | MongoDB (local via Compass / Atlas in production) |
 | AI | Gemini Flash (Google AI free tier) |
 | Local Dev AI | Ollama (llama3) |
 | Deployment | Vercel (frontend) / Render (backend) |
+
+---
+
+## Database
+
+### Why MongoDB?
+
+MongoDB was chosen for SentiNaut for three reasons:
+
+1. **Flexible schema** — Guest reviews vary wildly in structure (tags, platforms, sentiment fields). MongoDB's document model handles this without rigid migrations.
+2. **Free tier availability** — MongoDB Atlas provides a generous free tier perfectly suited for a self-funded SIP project, with zero infrastructure cost.
+3. **Python-native integration** — PyMongo integrates directly with FastAPI and Pydantic models with minimal boilerplate, keeping the codebase clean.
+
+### Collections
+
+| Collection | Purpose |
+|---|---|
+| `users` | Stores registered users with hashed passwords and role assignments (staff, manager, owner) |
+| `reviews` | Stores all guest reviews ingested via the platform, with sentiment, tags, and status |
+| `actions` | Stores operational action items generated from review patterns |
+
+### Schema Diagram
+
+![SentiNaut MongoDB Schema](./W5_SchemaDiagram_TBI-26100062.png)
+
+> The `users` collection feeds into `reviews` (a user creates a review). Reviews generate `actions` (operational tasks derived from feedback patterns).
 
 ---
 
@@ -66,34 +91,73 @@ Two-layer classification pipeline:
 
 ```
 Sentinaut/
-├── frontend/          # React app — role-based dashboards
+├── frontend/                  # React app — role-based dashboards
+│   └── src/
+│       ├── pages/
+│       │   ├── public/        # Landing, Login, Signup pages
+│       │   └── dashboards/    # Staff, Manager, Owner dashboards
+│       ├── components/        # UI component library + layouts
+│       └── context/           # AuthContext, ThemeContext
 ├── backend/
-│   ├── main.py        # FastAPI entry point
-│   ├── classifier.py  # Rule-based pre-classifier
-│   ├── suggestions.py # Gemini aggregate suggestions call
-│   ├── models/        # Data models
-│   ├── routes/        # API endpoints
-│   └── .env           # Environment variables
-├── README.md
-└── W1_ProjectBrief_TBI-26100062.txt
+│   ├── main.py                # FastAPI entry point — all API routes
+│   ├── models/
+│   │   ├── database.py        # MongoDB connection + collection references
+│   │   └── schemas.py         # Pydantic schema models for data validation
+│   ├── .env                   # Local environment variables (not committed)
+│   └── .env.example           # Template for required env variables
+├── W5_SchemaDiagram_TBI-26100062.png
+└── README.md
 ```
 
 ---
 
 ## Environment Variables
 
-```
-Temporary:
-GEMINI_API_KEY=your_key_here
-USE_GEMINI=true
-MONGODB_URI=your_atlas_uri
+Copy `backend/.env.example` to `backend/.env` and fill in your values:
+
+```env
+# API Keys
+GEMINI_API_KEY=your_gemini_api_key_here
+USE_GEMINI=false
+
+# Database
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/sentinaut?retryWrites=true&w=majority
 ```
 
-Set `USE_GEMINI=false` to use local Ollama during development.
+> For local development with MongoDB Compass, use `MONGODB_URI=mongodb://localhost:27017`
 
 ---
 
-## How to run backend locally
+## Set Up the Database
+
+SentiNaut uses MongoDB as its database. Follow these steps to get it running locally:
+
+### Option A — Local MongoDB (recommended for development)
+
+1. **Install MongoDB Community Edition** from [mongodb.com/try/download/community](https://www.mongodb.com/try/download/community)
+2. **Install MongoDB Compass** (GUI) from [mongodb.com/products/compass](https://www.mongodb.com/products/compass) to visually inspect your data
+3. Start the MongoDB service — it runs on `mongodb://localhost:27017` by default
+4. Set your `.env` file:
+   ```env
+   MONGODB_URI=mongodb://localhost:27017
+   ```
+5. Run the backend — MongoDB will automatically create the `sentinaut` database and its collections (`users`, `reviews`, `actions`) on first write
+
+### Option B — MongoDB Atlas (cloud, for production)
+
+1. Create a free account at [cloud.mongodb.com](https://cloud.mongodb.com)
+2. Create a free M0 cluster
+3. Under **Database Access**, create a user with read/write permissions
+4. Under **Network Access**, add your IP address (or `0.0.0.0/0` for open access during dev)
+5. Click **Connect → Drivers** and copy your connection string
+6. Paste it into `.env`:
+   ```env
+   MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/sentinaut?retryWrites=true&w=majority
+   ```
+
+---
+
+## How to Run the Backend Locally
 
 1. **Navigate to the backend directory:**
    ```bash
@@ -109,16 +173,53 @@ Set `USE_GEMINI=false` to use local Ollama during development.
    ```
 3. **Install dependencies:**
    ```bash
-   pip install fastapi uvicorn pydantic python-dotenv
+   pip install fastapi uvicorn pydantic python-dotenv pymongo passlib[bcrypt]
    ```
 4. **Set up environment variables:**
    - Copy `.env.example` to `.env`
-   - Fill in any required keys (like `GEMINI_API_KEY`)
+   - Set your `MONGODB_URI` (see above)
 5. **Run the server:**
    ```bash
    uvicorn main:app --reload --port 8000
    ```
-   The backend will now be running at `http://localhost:8000`. You can access the interactive API documentation at `http://localhost:8000/docs`.
+   The backend will now be running at `http://localhost:8000`.
+   Interactive API docs available at `http://localhost:8000/docs`.
+
+## How to Run the Frontend Locally
+
+1. **Navigate to the frontend directory:**
+   ```bash
+   cd frontend
+   ```
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+3. **Start the dev server:**
+   ```bash
+   npm run dev
+   ```
+   The frontend will be available at `http://localhost:5173`.
+
+> Make sure the backend is running first so the frontend can connect to the API.
+
+---
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/reviews` | List all reviews |
+| GET | `/api/reviews/search?q=` | Search reviews by text/guest/tag |
+| GET | `/api/reviews/{id}` | Get a single review |
+| POST | `/api/reviews` | Create a new review |
+| PUT | `/api/reviews/{id}` | Update a review |
+| DELETE | `/api/reviews/{id}` | Delete a review |
+| GET | `/api/actions` | List all action items |
+| POST | `/api/actions` | Create a new action item |
+| PUT | `/api/actions/{id}` | Update an action item |
+| POST | `/api/auth/signup` | Register a new user (staff/manager/owner) |
+| POST | `/api/auth/login` | Authenticate and return user + role |
 
 ---
 
@@ -129,3 +230,4 @@ Set `USE_GEMINI=false` to use local Ollama during development.
 | Intern ID | TBI-26100062 |
 | Name | Anmol Rawat |
 | Domain | Homestay and Eco-tourism |
+
