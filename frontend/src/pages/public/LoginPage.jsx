@@ -11,6 +11,7 @@ export function LoginPage() {
   const { addToast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('owner');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -72,6 +73,18 @@ export function LoginPage() {
             <p className="text-sm font-light text-slate-500 dark:text-slate-400">Enter your credentials to access your workspace.</p>
           </div>
           <form className="space-y-8 mt-2" onSubmit={handleSubmit}>
+            <div className="flex w-full border-b border-black/10 dark:border-white/10 mt-2">
+              {['staff', 'manager', 'owner'].map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => { setRole(r); setEmail(`${r}@test.com`); }}
+                  className={`flex-1 pb-3 text-[11px] uppercase tracking-widest transition-all font-medium border-b-2 -mb-[1px] ${role === r ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
 
             <Input label="Email address" type="email" placeholder="Enter your email address" required value={email} onChange={(e) => setEmail(e.target.value)} />
             <div>
