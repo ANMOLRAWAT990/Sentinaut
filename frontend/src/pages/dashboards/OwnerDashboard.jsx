@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Modal } from '../../components/ui/Modal';
+import { Input } from '../../components/ui/Input';
+import { useToast } from '../../components/ui/Toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const mockData = {
@@ -15,14 +19,116 @@ const mockData = {
 
 export function OwnerDashboard() {
   const [dateRange, setDateRange] = useState('7days');
+  const { addToast } = useToast();
+  
+  const [properties, setProperties] = useState([
+    { id: 1, name: 'Taj Palace', location: 'New Delhi, India', status: 'Active' }
+  ]);
+  const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false);
+  const [propertyName, setPropertyName] = useState('');
+  const [propertyLocation, setPropertyLocation] = useState('');
+  
+  const [managers, setManagers] = useState([
+    { id: 1, name: 'Rahul Sharma', email: 'rahul.manager@taj.com', property: 'Taj Palace', initials: 'RS' }
+  ]);
+  const [isManagerModalOpen, setIsManagerModalOpen] = useState(false);
+  const [managerEmail, setManagerEmail] = useState('');
+  const [selectedProperty, setSelectedProperty] = useState('');
+
+  useEffect(() => {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+    Promise.all([
+      fetch(`${API_URL}/api/properties`).then(res => res.json()),
+      fetch(`${API_URL}/api/users?role=manager`).then(res => res.json())
+    ]).then(([propsData, managersData]) => {
+      if (Array.isArray(propsData) && propsData.length > 0) {
+        setProperties(propsData);
+      }
+      if (Array.isArray(managersData) && managersData.length > 0) {
+        setManagers(managersData);
+      }
+    }).catch(err => console.error("Failed to load owner data:", err));
+  }, []);
+
+  const handleAddProperty = async (e) => {
+    e.preventDefault();
+    setIsPropertyModalOpen(false);
+    
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/properties`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: propertyName, location: propertyLocation, status: 'Active' })
+      });
+      
+      if (res.ok) {
+        const newProp = await res.json();
+        setProperties([...properties, newProp]);
+        addToast(`${propertyName} has been registered successfully.`, 'success');
+      } else {
+        addToast('Failed to register property.', 'error');
+      }
+    } catch (err) {
+      addToast('Network error while registering property.', 'error');
+    }
+    
+    setPropertyName('');
+    setPropertyLocation('');
+  };
+
+  const handleInviteManager = async (e) => {
+    e.preventDefault();
+    setIsManagerModalOpen(false);
+    
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          name: 'Invited Manager', 
+          email: managerEmail, 
+          password: 'password123', 
+          role: 'manager',
+          property: selectedProperty || properties[0]?.name || 'Unassigned'
+        })
+      });
+      
+      if (res.ok) {
+        const newManager = {
+          id: Date.now(),
+          name: 'Invited Manager',
+          email: managerEmail,
+          property: selectedProperty || properties[0]?.name || 'Unassigned',
+          initials: 'IM'
+        };
+        setManagers([...managers, newManager]);
+        addToast(`Manager account created! They can login with password: password123`, 'success');
+      } else {
+        const data = await res.json();
+        addToast(data.detail || 'Failed to create manager account.', 'error');
+      }
+    } catch (err) {
+      addToast('Network error while inviting manager.', 'error');
+    }
+    
+    setManagerEmail('');
+    setSelectedProperty('');
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-[#e6edf3]">Owner Dashboard</h1>
-          <p className="text-slate-500 dark:text-[#8b949e]">High-level metrics, trends, and benchmarking.</p>
+      <div className="relative w-full h-48 rounded-xl overflow-hidden mb-6 border border-black/10 dark:border-white/10 shadow-sm animate-in fade-in duration-500">
+        <img src="/images/owner_header.png" alt="Resort Header" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent"></div>
+        <div className="absolute inset-0 flex flex-col justify-center px-8 text-white">
+          <h1 className="text-[28px] font-semibold tracking-tight">Executive Dashboard</h1>
+          <p className="text-white/80 mt-1 max-w-lg text-[14px]">High-level metrics, trends, and market positioning across all active properties.</p>
         </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4">
         <select 
           value={dateRange}
           onChange={(e) => setDateRange(e.target.value)}
@@ -96,7 +202,7 @@ export function OwnerDashboard() {
             <div className="space-y-5">
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-slate-900 dark:text-[#e6edf3]">Your Property</span>
+                  <span className="font-medium text-slate-900 dark:text-[#e6edf3]">Taj Palace, New Delhi</span>
                   <span className="text-blue-600 font-bold">8.6/10</span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-[#21262d] rounded-full h-2">
@@ -105,7 +211,7 @@ export function OwnerDashboard() {
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-slate-600 dark:text-[#8b949e]">The Grand Resort (Competitor A)</span>
+                  <span className="text-slate-600 dark:text-[#8b949e]">The Oberoi, New Delhi (Competitor A)</span>
                   <span className="font-medium text-slate-900 dark:text-[#e6edf3]">8.2/10</span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-[#21262d] rounded-full h-2">
@@ -114,7 +220,7 @@ export function OwnerDashboard() {
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-slate-600 dark:text-[#8b949e]">Oceanview Suites (Competitor B)</span>
+                  <span className="text-slate-600 dark:text-[#8b949e]">ITC Maurya (Competitor B)</span>
                   <span className="font-medium text-slate-900 dark:text-[#e6edf3]">7.9/10</span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-[#21262d] rounded-full h-2">
@@ -128,6 +234,121 @@ export function OwnerDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-6 border-t border-black/10 dark:border-white/10">
+        <Card>
+          <CardHeader>
+            <CardTitle>Property Management</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {properties.map(p => (
+                <div key={p.id} className="flex items-center gap-4 bg-slate-50 dark:bg-[#161b22] p-3 rounded-lg border border-slate-200 dark:border-[#30363d]">
+                  <img src="/images/resort_thumb.png" alt="Resort" className="w-16 h-16 rounded object-cover" />
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-slate-900 dark:text-[#e6edf3]">{p.name}</h4>
+                    <p className="text-xs text-slate-500 dark:text-[#8b949e]">{p.location}</p>
+                  </div>
+                  <span className="text-xs font-medium px-2 py-1 bg-green-100 text-green-700 rounded-full">{p.status}</span>
+                </div>
+              ))}
+              <button 
+                onClick={() => setIsPropertyModalOpen(true)}
+                className="w-full py-3 border-2 border-dashed border-slate-200 dark:border-[#30363d] rounded-lg text-sm font-medium text-slate-500 dark:text-[#8b949e] hover:bg-slate-50 dark:hover:bg-[#161b22] transition-colors"
+              >
+                + Add New Property
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Team Management (Managers)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {managers.map(m => (
+                <div key={m.id} className="flex items-center justify-between bg-slate-50 dark:bg-[#161b22] p-3 rounded-lg border border-slate-200 dark:border-[#30363d]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">{m.initials}</div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-slate-900 dark:text-[#e6edf3]">{m.name}</h4>
+                      <p className="text-xs text-slate-500 dark:text-[#8b949e]">{m.email}</p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-500">{m.property}</span>
+                </div>
+              ))}
+              <button 
+                onClick={() => setIsManagerModalOpen(true)}
+                className="w-full py-3 border-2 border-dashed border-slate-200 dark:border-[#30363d] rounded-lg text-sm font-medium text-slate-500 dark:text-[#8b949e] hover:bg-slate-50 dark:hover:bg-[#161b22] transition-colors"
+              >
+                + Invite Manager
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Modal isOpen={isPropertyModalOpen} onClose={() => setIsPropertyModalOpen(false)} title="Register New Property">
+        <form onSubmit={handleAddProperty} className="space-y-4">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Register a new resort or hotel property to your SentiNaut portfolio.
+          </p>
+          <Input 
+            label="Property Name" 
+            placeholder="e.g. Taj Lands End" 
+            required 
+            value={propertyName} 
+            onChange={(e) => setPropertyName(e.target.value)} 
+          />
+          <Input 
+            label="Location" 
+            placeholder="Mumbai, India" 
+            required 
+            value={propertyLocation}
+            onChange={(e) => setPropertyLocation(e.target.value)}
+          />
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="secondary" onClick={() => setIsPropertyModalOpen(false)}>Cancel</Button>
+            <Button type="submit">Register Property</Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal isOpen={isManagerModalOpen} onClose={() => setIsManagerModalOpen(false)} title="Invite Manager">
+        <form onSubmit={handleInviteManager} className="space-y-4">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Invite a new General Manager. They will receive an email to create their account and access operational data.
+          </p>
+          <Input 
+            label="Email Address" 
+            type="email" 
+            placeholder="manager@taj.com" 
+            required 
+            value={managerEmail} 
+            onChange={(e) => setManagerEmail(e.target.value)} 
+          />
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium text-[#111111] dark:text-[#ededed]">Assign to Property</label>
+            <select 
+              value={selectedProperty}
+              onChange={(e) => setSelectedProperty(e.target.value)}
+              className="h-10 w-full rounded-md bg-transparent border border-black/10 dark:border-white/10 px-3 text-[14px] text-[#111111] dark:text-[#ededed] focus:outline-none focus:border-black/30 dark:focus:border-white/30"
+            >
+              <option value="">Select a property...</option>
+              {properties.map(p => (
+                <option key={p.id} value={p.name}>{p.name}, {p.location}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="secondary" onClick={() => setIsManagerModalOpen(false)}>Cancel</Button>
+            <Button type="submit">Send Invite</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

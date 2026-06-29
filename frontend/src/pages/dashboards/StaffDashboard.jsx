@@ -43,30 +43,19 @@ export function StaffDashboard() {
     setError(false);
     
     try {
-      const sentimentGuess = reviewText.toLowerCase().includes('good') ? 'Positive' : 'Negative';
-      
-      // Hit actual backend API
-      const newReview = {
-        guestName: 'Unknown',
-        platform: 'Direct',
-        text: reviewText,
-        sentiment: sentimentGuess,
-        tags: ["General"],
-        status: 'Pending'
-      };
-
-      const res = await fetch('http://localhost:8000/api/reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newReview)
-      });
-      
-      if (!res.ok) throw new Error("API call failed");
-      const data = await res.json();
-      
-      setLoading(false);
-      
       if (mode === 'single') {
+        const sentimentGuess = reviewText.toLowerCase().includes('good') ? 'Positive' : 'Negative';
+        const newReview = { guestName: 'Unknown', platform: 'Direct', text: reviewText, sentiment: sentimentGuess, tags: ["General"], status: 'Pending' };
+
+        const res = await fetch('http://localhost:8000/api/reviews', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newReview)
+        });
+        
+        if (!res.ok) throw new Error("API call failed");
+        const data = await res.json();
+        
         setSingleResult({
           sentiment: data.sentiment,
           confidence: '94%',
@@ -74,22 +63,36 @@ export function StaffDashboard() {
           reply: `Thank you for your feedback! We noticed you mentioned: ${reviewText.substring(0,20)}... We will look into it.`
         });
       } else {
+        // BATCH MODE: Split by double newline and POST to database
+        const rawReviews = reviewText.split(/\n\s*\n/).filter(r => r.trim().length > 0);
+        
+        const savedReviews = await Promise.all(rawReviews.map(async (text) => {
+           const sentimentGuess = text.toLowerCase().includes('good') ? 'Positive' : 'Negative';
+           const res = await fetch('http://localhost:8000/api/reviews', {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ guestName: 'Batch Upload', platform: 'Direct', text, sentiment: sentimentGuess, tags: ["Batch"], status: 'Pending' })
+           });
+           return await res.json();
+        }));
+
         setBatchResults({
-          reviews: [
-            { id: data.id, text: data.text, sentiment: data.sentiment, theme: data.tags[0] || 'Experience', confidence: "98%", reply: "Thank you for the detailed feedback." }
-          ],
-          rootCauses: ["General sentiment tracking active"],
-          working: ["Review ingestion working"],
-          actions: ["Review new feedback"]
+          reviews: savedReviews.map(data => ({
+             id: data.id, text: data.text, sentiment: data.sentiment, theme: data.tags[0] || 'Experience', confidence: "98%", reply: "Thank you for the detailed feedback." 
+          })),
+          rootCauses: ["Recurring theme identified in batch upload"],
+          working: ["Review ingestion pipeline operational"],
+          actions: [`Review ${savedReviews.length} new feedback entries`]
         });
       }
       
-      addToast('Analysis complete!', 'success');
+      addToast('Analysis complete and saved to database!', 'success');
     } catch (err) {
       console.error(err);
-      setLoading(false);
       setError(true);
       addToast('Failed to analyze reviews.', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -112,16 +115,16 @@ export function StaffDashboard() {
   };
 
   const PillToggle = () => (
-    <div className="flex bg-[#f1f5f9] dark:bg-[#161b22] p-1 rounded-full w-fit mb-4 border border-slate-200 dark:border-[#30363d]">
+    <div className="flex w-full border-b border-black/10 dark:border-white/10 mb-6">
       <button 
         onClick={() => { setMode('single'); setSingleResult(null); setBatchResults(null); }}
-        className={`px-4 py-1.5 text-sm rounded-full font-medium transition-all ${mode === 'single' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-[#8b949e] bg-transparent'}`}
+        className={`flex-1 pb-3 text-[11px] uppercase tracking-widest transition-all font-medium border-b-2 -mb-[1px] ${mode === 'single' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-400 hover:text-slate-900 dark:hover:text-white bg-transparent'}`}
       >
         Single Review
       </button>
       <button 
         onClick={() => { setMode('batch'); setSingleResult(null); setBatchResults(null); }}
-        className={`px-4 py-1.5 text-sm rounded-full font-medium transition-all ${mode === 'batch' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-[#8b949e] bg-transparent'}`}
+        className={`flex-1 pb-3 text-[11px] uppercase tracking-widest transition-all font-medium border-b-2 -mb-[1px] ${mode === 'batch' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-400 hover:text-slate-900 dark:hover:text-white bg-transparent'}`}
       >
         Batch Analysis
       </button>
@@ -211,7 +214,7 @@ export function StaffDashboard() {
           onChange={(e) => setReviewText(e.target.value)}
         ></textarea>
         <div className="flex justify-end mt-2">
-          <Button onClick={handleAnalyze} disabled={loading || !reviewText} className="gap-2 bg-blue-600 hover:bg-blue-700">
+          <Button onClick={handleAnalyze} disabled={loading || !reviewText} className="gap-2">
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
             Analyze Reviews
           </Button>
@@ -223,7 +226,7 @@ export function StaffDashboard() {
           <AlertCircle className="h-8 w-8 text-red-400 mb-2" />
           <h3 className="font-semibold text-slate-900 dark:text-[#e6edf3]">Analysis failed</h3>
           <p className="text-slate-500 dark:text-[#8b949e] text-sm mt-1 mb-4">Something went wrong. Please try again.</p>
-          <Button onClick={handleAnalyze} className="bg-blue-600">Retry</Button>
+          <Button onClick={handleAnalyze}>Retry</Button>
         </div>
       )}
 
@@ -318,9 +321,13 @@ export function StaffDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-[#e6edf3]">Review Input</h1>
-        <p className="text-slate-500 dark:text-[#8b949e]">Log checkouts and analyze direct guest feedback.</p>
+      <div className="relative w-full h-32 rounded-xl overflow-hidden shrink-0 shadow-sm flex items-end p-6 border border-black/10 dark:border-white/10 mb-8">
+        <img src="/images/staff_header.png" alt="Front Desk Operations" className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-luminosity dark:opacity-40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+        <div className="relative z-10">
+          <h1 className="text-2xl font-bold text-white tracking-tight">Front Desk Operations</h1>
+          <p className="text-[13px] text-white/80 mt-1">Log checkouts and analyze direct guest feedback.</p>
+        </div>
       </div>
 
       <Card>
@@ -335,8 +342,8 @@ export function StaffDashboard() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleCheckout} className="space-y-4 max-w-md">
-            <Input label="Guest Name" placeholder="Jane Smith" value={checkoutName} onChange={(e) => setCheckoutName(e.target.value)} required />
-            <Input label="WhatsApp Number (with country code)" type="tel" placeholder="919876543210" value={checkoutPhone} onChange={(e) => setCheckoutPhone(e.target.value)} required />
+            <Input label="Guest Name" placeholder="Anjali Desai" value={checkoutName} onChange={(e) => setCheckoutName(e.target.value)} required />
+            <Input label="WhatsApp Number (with country code)" type="tel" placeholder="+91 98765 43210" value={checkoutPhone} onChange={(e) => setCheckoutPhone(e.target.value)} required />
             <Button type="submit" className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white">Send via WhatsApp</Button>
           </form>
         </CardContent>

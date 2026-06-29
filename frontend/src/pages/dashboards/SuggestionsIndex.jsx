@@ -1,42 +1,36 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { CheckCircle2, Lightbulb, AlertCircle, TrendingUp } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
 
 export function SuggestionsIndex() {
   const { user } = useAuth();
   const { addToast } = useToast();
 
-  const handleComingSoon = () => addToast('This feature is coming soon!', 'info');
+  const handleComingSoon = () => addToast('This functionality is currently locked in your environment.', 'info');
 
   const renderStaffView = () => (
     <div className="space-y-6">
-      <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-start gap-4">
-        <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-        <div>
-          <h3 className="text-sm font-bold text-blue-900">Your Action Items</h3>
-          <p className="text-sm text-blue-800 mt-1">These tasks were generated from recent guest feedback and assigned to you by the manager.</p>
-        </div>
+      <div className="border border-black/10 dark:border-white/10 rounded-xl p-6 bg-black/[0.02] dark:bg-white/[0.02]">
+        <h3 className="text-[14px] font-semibold text-[#111111] dark:text-[#ededed]">Operational Directive</h3>
+        <p className="text-[13px] text-[#666666] dark:text-[#a1a1aa] mt-1">Execute the following tasks dispatched by the anomaly engine.</p>
       </div>
-      <div className="grid gap-4">
+      <div className="space-y-2">
         {[
-          { task: 'Check AC unit filter in Room 302', priority: 'High', due: 'Today' },
-          { task: 'Restock extra towels in pool area', priority: 'Medium', due: 'Tomorrow' }
+          { task: 'Inspect HVAC filter block in Room 302', priority: 'High', due: 'Immediate' },
+          { task: 'Restock auxiliary towels in primary pool sector', priority: 'Medium', due: 'Next Shift' }
         ].map((t, i) => (
-          <Card key={i}>
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="font-medium text-slate-900 dark:text-[#e6edf3]">{t.task}</p>
-                <div className="flex gap-3 mt-2 text-xs font-medium">
-                  <span className={t.priority === 'High' ? 'text-red-600' : 'text-yellow-600'}>{t.priority} Priority</span>
-                  <span className="text-slate-500 dark:text-[#8b949e]">Due: {t.due}</span>
-                </div>
+          <div key={i} className="bg-white dark:bg-[#111111] border border-black/10 dark:border-white/10 rounded-lg p-4 flex items-center justify-between group hover:border-black/20 dark:hover:border-white/20 transition-colors">
+            <div>
+              <p className="text-[14px] font-medium text-[#111111] dark:text-[#ededed]">{t.task}</p>
+              <div className="flex gap-3 mt-1 text-[11px] font-mono text-[#888888]">
+                <span>{t.priority} Priority</span>
+                <span>•</span>
+                <span>Due: {t.due}</span>
               </div>
-              <Button variant="secondary" size="sm" onClick={handleComingSoon} className="gap-2"><CheckCircle2 className="h-4 w-4" /> Mark Done</Button>
-            </CardContent>
-          </Card>
+            </div>
+            <Button variant="secondary" size="sm" onClick={handleComingSoon} className="h-8 text-[12px]">Mark Executed</Button>
+          </div>
         ))}
       </div>
     </div>
@@ -44,71 +38,92 @@ export function SuggestionsIndex() {
 
   const renderManagerView = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-[#e6edf3]">AI Operational Suggestions</h2>
-        <Button size="sm" variant="secondary" onClick={handleComingSoon}>Run Batch Analysis</Button>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-[#111111] dark:text-[#ededed] tracking-tight">Operational Intelligence</h2>
+          <p className="text-[13px] text-[#666666] dark:text-[#a1a1aa] mt-1">Algorithmic deductions based on review volume anomalies.</p>
+        </div>
+        <Button size="sm" variant="secondary" onClick={handleComingSoon}>Force Re-index</Button>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {[
-          { title: 'HVAC Maintenance Pattern', desc: '3 negative reviews mention AC issues on the 3rd floor. Suggestion: Schedule preventative maintenance for rooms 301-310.', type: 'Maintenance' },
-          { title: 'Breakfast Peak Overcrowding', desc: 'Guests report long waits between 8:30-9:00 AM. Suggestion: Stagger breakfast slots or add one temporary staff member during this window.', type: 'Operations' },
-          { title: 'Pillow Comfort', desc: 'Multiple guests praised the new memory foam pillows. Suggestion: Highlight this feature in the listing description.', type: 'Marketing' }
-        ].map((s, i) => (
-          <Card key={i} className="flex flex-col">
-            <CardHeader className="pb-2 flex flex-row items-center gap-2">
-              <Lightbulb className="h-5 w-5 text-amber-500" />
-              <CardTitle className="text-base">{s.title}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col justify-between">
-              <p className="text-sm text-slate-600 dark:text-[#8b949e] mb-6 leading-relaxed">{s.desc}</p>
-              <div className="flex items-center justify-between mt-auto">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-[#8b949e]">{s.type}</span>
-                <Button size="sm" onClick={handleComingSoon}>Convert to Task</Button>
+
+      <div className="bg-white dark:bg-[#111111] border border-black/10 dark:border-white/10 rounded-xl shadow-sm overflow-hidden">
+        <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.02] text-[11px] font-semibold text-[#666666] dark:text-[#a1a1aa] uppercase tracking-wider">
+          <div className="col-span-3">Anomaly ID</div>
+          <div className="col-span-7">Deduction & Recommended Action</div>
+          <div className="col-span-2 text-right">Confidence</div>
+        </div>
+        
+        <div className="divide-y divide-black/5 dark:divide-white/5">
+          {[
+            { id: 'ANM-492', title: 'HVAC Maintenance Deterioration', desc: '3 negative reviews mention AC issues on the 3rd floor in 48h. Suggest scheduling preventative maintenance for rooms 301-310 immediately.', conf: '94%' },
+            { id: 'ANM-481', title: 'Breakfast Peak Overcrowding', desc: 'Sustained complaints regarding wait times between 08:30-09:00. Recommend staggering slots or dynamic staffing.', conf: '88%' },
+            { id: 'ANM-477', title: 'Memory Foam Preference', desc: 'Statistically significant praise for new pillows. Recommend highlighting in primary marketing copy.', conf: '96%' }
+          ].map((s, i) => (
+            <div key={i} className="grid grid-cols-12 gap-4 px-6 py-4 items-start group hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors">
+              <div className="col-span-3">
+                <div className="text-[13px] font-medium text-[#111111] dark:text-[#ededed] font-mono">{s.id}</div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+              <div className="col-span-7 pr-8">
+                <div className="text-[14px] font-medium text-[#111111] dark:text-[#ededed] mb-1">{s.title}</div>
+                <div className="text-[13px] text-[#666666] dark:text-[#a1a1aa] leading-relaxed mb-3">{s.desc}</div>
+                <Button size="sm" variant="secondary" className="text-[12px] h-7 px-3" onClick={handleComingSoon}>Initialize Task</Button>
+              </div>
+              <div className="col-span-2 text-right text-[13px] font-mono text-[#666666] dark:text-[#a1a1aa]">{s.conf}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 
   const renderOwnerView = () => (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold text-slate-900 dark:text-[#e6edf3]">Strategic Insights</h2>
-      <Card className="bg-blue-50 dark:bg-[#161b22] border-blue-100 dark:border-[#30363d]">
-        <CardContent className="p-8">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-blue-100 dark:bg-[#21262d] rounded-lg"><TrendingUp className="h-6 w-6 text-blue-700 dark:text-[#58a6ff]" /></div>
-            <div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-[#e6edf3]">Q3 Opportunity Report</h3>
-              <p className="text-slate-700 dark:text-[#8b949e] text-sm mt-2 max-w-2xl leading-relaxed">
-                Based on aggregate analysis of 1,248 reviews across your property and 3 competitors, your biggest opportunity lies in <strong>Family Activities</strong>. 
-                Competitors are consistently losing points for poor entertainment options. Investing in a small play area or guided family tours could increase your booking rate by an estimated 12%.
-              </p>
-              <Button onClick={handleComingSoon} className="mt-6 bg-blue-600 hover:bg-blue-700 text-white dark:bg-[#238636] dark:hover:bg-[#2ea043] border-0">Download Full Report</Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-xl font-bold text-[#111111] dark:text-[#ededed] tracking-tight">Strategic Thesis</h2>
+        <p className="text-[13px] text-[#666666] dark:text-[#a1a1aa] mt-1">Aggregated market positioning against competitor baselines.</p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-         <Card><CardContent className="p-5"><h4 className="font-bold mb-2">Top Praised Theme</h4><p className="text-3xl font-bold text-green-600">Cleanliness</p><p className="text-xs text-slate-500 dark:text-[#8b949e] mt-1">Mentioned in 42% of positive reviews</p></CardContent></Card>
-         <Card><CardContent className="p-5"><h4 className="font-bold mb-2">Top Complaint Theme</h4><p className="text-3xl font-bold text-red-600">Noise</p><p className="text-xs text-slate-500 dark:text-[#8b949e] mt-1">Mentioned in 18% of negative reviews</p></CardContent></Card>
-         <Card><CardContent className="p-5"><h4 className="font-bold mb-2">ROI on Tasks</h4><p className="text-3xl font-bold text-blue-600">84%</p><p className="text-xs text-slate-500 dark:text-[#8b949e] mt-1">Resolved issues leading to higher scores</p></CardContent></Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <div className="lg:col-span-2 space-y-4">
+          <h3 className="text-[14px] font-semibold text-[#111111] dark:text-[#ededed]">Q3 Market Opportunity</h3>
+          <p className="text-[14px] text-[#444444] dark:text-[#cccccc] leading-relaxed max-w-2xl">
+            Based on a continuous ingestion of 1,248 data points across the immediate competitive set, a strict divergence exists in <strong>Family Entertainment</strong>.
+          </p>
+          <p className="text-[14px] text-[#444444] dark:text-[#cccccc] leading-relaxed max-w-2xl">
+            Competitor properties are sustaining a -14% sentiment penalty regarding on-site activities. Allocating CAPEX toward guided family infrastructure represents an asymmetric upside with an estimated +12% conversion impact.
+          </p>
+          <Button onClick={handleComingSoon} variant="secondary" className="mt-2 text-[13px]">Export Complete Thesis</Button>
+        </div>
+
+        <div className="bg-black/[0.03] dark:bg-white/[0.03] rounded-xl p-6 border border-black/5 dark:border-white/5 space-y-6">
+          <div>
+            <div className="text-[11px] font-semibold text-[#888888] uppercase tracking-wider mb-1">Primary Accolade</div>
+            <div className="text-[16px] font-medium text-[#111111] dark:text-[#ededed]">Cleanliness Standard</div>
+            <div className="text-[12px] text-[#666666] dark:text-[#a1a1aa] mt-0.5">Present in 42% of positive vectors</div>
+          </div>
+          <div className="w-full h-px bg-black/10 dark:bg-white/10" />
+          <div>
+            <div className="text-[11px] font-semibold text-[#888888] uppercase tracking-wider mb-1">Primary Friction</div>
+            <div className="text-[16px] font-medium text-[#111111] dark:text-[#ededed]">Acoustic Bleed</div>
+            <div className="text-[12px] text-[#666666] dark:text-[#a1a1aa] mt-0.5">Present in 18% of negative vectors</div>
+          </div>
+          <div className="w-full h-px bg-black/10 dark:bg-white/10" />
+          <div>
+            <div className="text-[11px] font-semibold text-[#888888] uppercase tracking-wider mb-1">Task ROI Engine</div>
+            <div className="text-[16px] font-medium text-[#111111] dark:text-[#ededed]">84% Efficiency</div>
+            <div className="text-[12px] text-[#666666] dark:text-[#a1a1aa] mt-0.5">Resolution to rating yield ratio</div>
+          </div>
+        </div>
       </div>
     </div>
   );
 
   return (
-    <div className="pb-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-[#e6edf3]">AI Suggestions</h1>
-        <p className="text-slate-500 dark:text-[#8b949e] text-sm mt-1">Actionable insights generated from guest feedback patterns.</p>
-      </div>
+    <div className="pb-8 animate-in fade-in duration-500">
       {user?.role === 'staff' && renderStaffView()}
       {user?.role === 'manager' && renderManagerView()}
       {user?.role === 'owner' && renderOwnerView()}
-      {!['staff', 'manager', 'owner'].includes(user?.role) && <p>Invalid role.</p>}
+      {!['staff', 'manager', 'owner'].includes(user?.role) && <p>Invalid role architecture.</p>}
     </div>
   );
 }

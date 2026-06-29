@@ -1,213 +1,225 @@
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
-import { Filter, Star, CheckCircle2, Circle, MoreHorizontal, MessageSquare } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
+import { Modal } from '../../components/ui/Modal';
+import { Input } from '../../components/ui/Input';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 export function ManagerDashboard() {
-  const [reviews, setReviews] = useState([
-    { id: "mock-1", text: "AC was broken in room 302.", sentiment: "Negative", approved: false },
-    { id: "mock-2", text: "Loved the breakfast buffet!", sentiment: "Positive", approved: true },
-  ]);
-
-  const [actions, setActions] = useState([
-    { id: 1, task: "Inspect AC in 302", status: "Pending" },
-    { id: 2, task: "Praise kitchen staff", status: "Done" },
-  ]);
-
+  const [reviews, setReviews] = useState([]);
+  const [actions, setActions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { addToast } = useToast();
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
 
-  const handleComingSoon = () => addToast('This feature is coming soon!', 'info');
+  const handleInviteStaff = async (e) => {
+    e.preventDefault();
+    setIsInviteModalOpen(false);
+    
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'Invited Staff', email: inviteEmail, password: 'password123', role: 'staff' })
+      });
+      
+      if (res.ok) {
+        addToast(`Staff account created! They can login with password: password123`, 'success');
+      } else {
+        const data = await res.json();
+        addToast(data.detail || 'Failed to create staff account.', 'error');
+      }
+    } catch (err) {
+      addToast('Network error while inviting staff.', 'error');
+    }
+    
+    setInviteEmail('');
+  };
 
   React.useEffect(() => {
-    fetch('http://localhost:8000/api/reviews')
-      .then(res => res.json())
-      .then(data => {
-        const fetchedReviews = data.map(r => ({
-          id: r.id,
-          text: r.text,
-          sentiment: r.sentiment,
-          approved: r.status === "Done",
-          fullData: r // keep full original data to send back
-        }));
-        setReviews([...fetchedReviews, { id: "mock-1", text: "AC was broken in room 302.", sentiment: "Negative", approved: false }, { id: "mock-2", text: "Loved the breakfast buffet!", sentiment: "Positive", approved: true }]);
-      })
-      .catch(err => console.error("Failed to fetch reviews:", err));
+    const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
-    fetch('http://localhost:8000/api/actions')
-      .then(res => res.json())
-      .then(data => setActions(data))
-      .catch(err => console.error("Failed to fetch actions:", err));
+    Promise.all([
+      fetch(`${API_URL}/api/reviews`).then(res => res.json()),
+      fetch(`${API_URL}/api/actions`).then(res => res.json())
+    ]).then(([reviewsData, actionsData]) => {
+      const fetchedReviews = reviewsData.map(r => ({
+        id: r.id, text: r.text, sentiment: r.sentiment, approved: r.status === "Done", fullData: r
+      }));
+      setReviews([...fetchedReviews, { id: "mock-1", text: "AC was not cooling in Taj Palace room 302 due to Delhi heat.", sentiment: "Negative", approved: false }, { id: "mock-2", text: "Loved the breakfast spread at The Oberoi, fantastic Dal Makhani!", sentiment: "Positive", approved: true }]);
+      
+      setActions(actionsData.length > 0 ? actionsData : [
+        { id: "mock-a", task: "Inspect AC compressor in 302 (Taj Palace)", status: "Pending" },
+        { id: "mock-b", task: "Commend Head Chef for Breakfast Service", status: "Done" },
+      ]);
+    }).catch(err => console.error(err))
+      .finally(() => {
+        // Add a tiny synthetic delay so the skeleton animation is actually visible (feels premium)
+        setTimeout(() => setLoading(false), 800);
+      });
   }, []);
 
   const toggleApproval = async (id) => {
     const reviewToUpdate = reviews.find(r => r.id === id);
     if (!reviewToUpdate) return;
-    
-    // Optimistic update
     setReviews(reviews.map(r => r.id === id ? { ...r, approved: !r.approved } : r));
-
     if (String(id).startsWith('mock-')) return; 
-
     try {
-      // Send back full data to avoid missing required fields like `tags`
-      const apiUpdatePayload = {
-        ...reviewToUpdate.fullData,
-        status: !reviewToUpdate.approved ? "Done" : "Pending"
-      };
       await fetch(`http://localhost:8000/api/reviews/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(apiUpdatePayload)
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...reviewToUpdate.fullData, status: !reviewToUpdate.approved ? "Done" : "Pending" })
       });
-    } catch(err) {
-      console.error("Failed to update review:", err);
-    }
+    } catch(err) {}
   };
 
   const toggleAction = async (id) => {
     const actionToUpdate = actions.find(a => a.id === id);
     if (!actionToUpdate) return;
-
     const newStatus = actionToUpdate.status === 'Pending' ? 'Done' : 'Pending';
-    
-    // Optimistic update
     setActions(actions.map(a => a.id === id ? { ...a, status: newStatus } : a));
-
+    if (String(id).startsWith('mock-')) return; 
     try {
       await fetch(`http://localhost:8000/api/actions/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...actionToUpdate, status: newStatus })
       });
-    } catch(err) {
-      console.error("Failed to update action:", err);
-    }
+    } catch(err) {}
   };
 
   return (
-    <div className="space-y-6 w-full max-w-none">
+    <div className="space-y-10 w-full animate-in fade-in duration-500">
+      <div className="relative w-full h-32 rounded-xl overflow-hidden shrink-0 shadow-sm flex items-end p-6 border border-black/10 dark:border-white/10">
+        <img src="/images/manager_header.png" alt="Command Center" className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-luminosity dark:opacity-40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+        <div className="relative z-10">
+          <h1 className="text-2xl font-bold text-white tracking-tight">Command Center</h1>
+          <p className="text-[13px] text-white/80 mt-1">Orchestrate approvals and track active operational flows.</p>
+        </div>
+      </div>
+
+      <div className="border border-black/10 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-[#111111] shadow-sm">
+        <div className="px-6 py-4 border-b border-black/10 dark:border-white/10 flex items-center justify-between bg-black/[0.02] dark:bg-white/[0.02]">
+          <h2 className="text-[14px] font-semibold text-[#111111] dark:text-[#ededed]">Ingestion Queue</h2>
+          <span className="text-[12px] font-medium text-[#888888]">{reviews.length} pending items</span>
+        </div>
+        <div className="divide-y divide-black/5 dark:divide-white/5">
+          {loading ? (
+            Array(4).fill(0).map((_, i) => (
+              <div key={i} className="p-5 flex items-start justify-between gap-6">
+                <div className="flex-1 space-y-3">
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                  <Skeleton className="h-4 w-full max-w-lg" />
+                </div>
+                <Skeleton className="h-8 w-20 rounded-md shrink-0" />
+              </div>
+            ))
+          ) : (
+            reviews.slice(0, 4).map(r => (
+              <div key={r.id} className="p-5 flex items-start justify-between gap-6 hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors">
+                <div className="flex-1 space-y-2">
+                  <Badge variant={r.sentiment === 'Positive' ? 'success' : 'danger'}>{r.sentiment}</Badge>
+                  <p className="text-[14px] text-[#444444] dark:text-[#cccccc]">{r.text}</p>
+                </div>
+                <Button variant={r.approved ? "ghost" : "primary"} size="sm" onClick={() => toggleApproval(r.id)} className="h-8 text-[12px] shrink-0">
+                  {r.approved ? "Revert" : "Authorize"}
+                </Button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-[#e6edf3]">Manager Dashboard</h1>
-        <p className="text-slate-500 dark:text-[#8b949e]">Review feedback and manage operational tasks.</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content: Reviews */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Review Approvals</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {reviews.map(r => (
-                  <div key={r.id} className="flex items-center justify-between p-4 border border-slate-200 dark:border-[#30363d] rounded-lg">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant={r.sentiment === 'Positive' ? 'success' : 'danger'}>{r.sentiment}</Badge>
-                      </div>
-                      <p className="text-sm text-slate-700 dark:text-[#e6edf3]">{r.text}</p>
-                    </div>
-                    <div className="ml-4">
-                      <Button 
-                        variant={r.approved ? "secondary" : "primary"}
-                        size="sm"
-                        onClick={() => toggleApproval(r.id)}
-                      >
-                        {r.approved ? "Approved" : "Approve"}
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sidebar: Operational Suggestions */}
-        <div className="space-y-6">
-          <Card className="bg-blue-50 border-blue-100">
-            <CardHeader>
-              <CardTitle className="text-blue-900 text-base">AI Insights</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="bg-white dark:bg-[#161b22] p-3 rounded shadow-sm">
-                  <h4 className="font-medium text-sm text-slate-900 dark:text-[#e6edf3] mb-1">HVAC Maintenance Needed</h4>
-                  <p className="text-xs text-slate-600 dark:text-[#8b949e]">3 negative reviews mention AC issues in the 3rd floor in the last 48 hours.</p>
-                  <Button size="sm" onClick={handleComingSoon} className="mt-3 w-full text-xs">Create Ticket</Button>
-                </div>
-                <div className="bg-white dark:bg-[#161b22] p-3 rounded shadow-sm">
-                  <h4 className="font-medium text-sm text-slate-900 dark:text-[#e6edf3] mb-1">Breakfast Peak Overcrowding</h4>
-                  <p className="text-xs text-slate-600 dark:text-[#8b949e]">Consider extending breakfast hours or adding staff between 8-9 AM.</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Kanban Action Tracker - Full Width */}
-      <div className="mt-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-[#e6edf3]">Action Tracker</h2>
-          <div className="text-sm text-slate-500 dark:text-[#8b949e]">
-            {actions.length} open tasks
-          </div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-[#111111] dark:text-[#ededed] tracking-tight">Active Operations</h2>
         </div>
         
-        {/* Filters */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          <select className="border border-slate-200 dark:border-[#30363d] rounded-md px-3 py-1.5 text-sm text-slate-600 dark:text-[#8b949e] bg-white dark:bg-[#0d1117] focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option>Status: All</option>
-          </select>
-          <select className="border border-slate-200 dark:border-[#30363d] rounded-md px-3 py-1.5 text-sm text-slate-600 dark:text-[#8b949e] bg-white dark:bg-[#0d1117] focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option>Theme: All</option>
-          </select>
-          <select className="border border-slate-200 dark:border-[#30363d] rounded-md px-3 py-1.5 text-sm text-slate-600 dark:text-[#8b949e] bg-white dark:bg-[#0d1117] focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option>Assigned: All</option>
-          </select>
-        </div>
-
-        {/* Kanban Columns */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {['Pending', 'In Progress', 'Done', 'Verified'].map(column => (
-            <div key={column} className="bg-slate-100/50 dark:bg-[#0d1117]/50 border border-slate-200 dark:border-[#30363d] rounded-xl p-4 min-h-[400px]">
-              <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-200 dark:border-[#30363d]">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-[#8b949e]">{column}</h3>
-                <span className="bg-white dark:bg-[#30363d] text-slate-700 dark:text-[#e6edf3] text-xs px-2.5 py-0.5 rounded-full font-semibold shadow-sm border border-slate-200 dark:border-transparent">
+            <div key={column} className="flex flex-col gap-3 min-h-[400px]">
+              <div className="flex items-center justify-between pb-2 border-b border-black/10 dark:border-white/10">
+                <h3 className="text-[12px] font-semibold text-[#111111] dark:text-[#ededed] tracking-tight">{column}</h3>
+                <span className="text-[11px] font-medium text-[#666666] dark:text-[#a1a1aa]">
                   {actions.filter(a => (column === 'Done' ? a.status === 'Done' : column === 'Pending' ? a.status === 'Pending' : false)).length}
                 </span>
               </div>
-              <div className="space-y-4">
-                {actions.filter(a => (column === 'Done' ? a.status === 'Done' : column === 'Pending' ? a.status === 'Pending' : false)).map(a => (
-                  <div key={a.id} className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-[#30363d] rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow" style={{ borderLeftWidth: '4px', borderLeftColor: a.status === 'Done' ? '#10b981' : '#3b82f6' }}>
-                    <h4 className="text-sm font-semibold text-slate-900 dark:text-[#e6edf3] mb-1">{a.task}</h4>
-                    <div className="text-xs text-slate-500 dark:text-[#8b949e] mb-4 flex items-center gap-2">
-                      <span className="bg-slate-100 dark:bg-[#30363d] px-2 py-0.5 rounded">Maintenance</span>
-                      <span>• 3 reviews</span>
+              <div className="space-y-3">
+                {loading ? (
+                  Array(2).fill(0).map((_, i) => (
+                    <div key={i} className="bg-white dark:bg-[#111111] border border-black/10 dark:border-white/10 rounded-lg p-3 shadow-sm h-[94px] flex flex-col">
+                      <Skeleton className="h-3 w-full mb-1" />
+                      <Skeleton className="h-3 w-2/3 mb-auto" />
+                      <div className="flex items-center justify-between mt-auto">
+                        <Skeleton className="h-3 w-16" />
+                        <Skeleton className="h-6 w-14 rounded-md" />
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 dark:border-[#30363d]">
-                      <span className="text-xs font-medium text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded">Unassigned</span>
-                      {column !== 'Done' && (
-                        <Button size="sm" variant="secondary" className="text-xs h-7 px-3" onClick={() => toggleAction(a.id)}>Mark Done</Button>
-                      )}
-                      {column === 'Done' && (
-                        <Button size="sm" variant="outline" className="text-xs h-7 px-3" onClick={() => toggleAction(a.id)}>Undo</Button>
-                      )}
+                  ))
+                ) : (
+                  actions.filter(a => (column === 'Done' ? a.status === 'Done' : column === 'Pending' ? a.status === 'Pending' : false)).map(a => (
+                    <div key={a.id} className="bg-white dark:bg-[#111111] border border-black/10 dark:border-white/10 rounded-lg p-3 shadow-sm hover:border-black/20 dark:hover:border-white/20 transition-all flex flex-col h-[94px]">
+                      <h4 className="text-[13px] font-medium text-[#111111] dark:text-[#ededed] mb-3 leading-snug line-clamp-2">{a.task}</h4>
+                      <div className="flex items-center justify-between mt-auto">
+                        <span className="text-[11px] font-mono text-[#888888]">TSK-{String(a.id).slice(-4).toUpperCase()}</span>
+                        {column !== 'Done' && (
+                          <Button size="sm" variant="secondary" className="h-6 px-2 text-[11px]" onClick={() => toggleAction(a.id)}>Execute</Button>
+                        )}
+                        {column === 'Done' && (
+                          <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={() => toggleAction(a.id)}>Revert</Button>
+                        )}
+                      </div>
                     </div>
-                    {column === 'Verified' && (
-                      <div className="mt-2 text-[11px] bg-green-100 text-green-700 px-2 py-1 rounded-full inline-block font-medium">Verified by reviews</div>
-                    )}
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      <div className="pt-6 border-t border-black/10 dark:border-white/10">
+        <h2 className="text-xl font-bold text-[#111111] dark:text-[#ededed] tracking-tight mb-6">Staff Management</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="flex items-center justify-between bg-white dark:bg-[#111111] p-4 rounded-lg border border-black/10 dark:border-white/10 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-sm font-bold">DS</div>
+              <div>
+                <h4 className="text-sm font-semibold text-slate-900 dark:text-[#ededed]">Demo Staff</h4>
+                <p className="text-xs text-slate-500 dark:text-[#a1a1aa]">Front Desk</p>
+              </div>
+            </div>
+          </div>
+          <button 
+            onClick={() => setIsInviteModalOpen(true)}
+            className="flex items-center justify-center h-[74px] border-2 border-dashed border-black/10 dark:border-white/10 rounded-lg text-sm font-medium text-slate-500 dark:text-[#8b949e] hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+          >
+            + Invite Staff Member
+          </button>
+        </div>
+      </div>
+
+      <Modal isOpen={isInviteModalOpen} onClose={() => setIsInviteModalOpen(false)} title="Invite Staff Member">
+        <form onSubmit={handleInviteStaff} className="space-y-4">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Send an invitation to a new staff member to join your property team.
+          </p>
+          <Input 
+            label="Email Address" 
+            type="email" 
+            placeholder="staff@taj.com" 
+            required 
+            value={inviteEmail} 
+            onChange={(e) => setInviteEmail(e.target.value)} 
+          />
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="secondary" onClick={() => setIsInviteModalOpen(false)}>Cancel</Button>
+            <Button type="submit">Send Invite</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
