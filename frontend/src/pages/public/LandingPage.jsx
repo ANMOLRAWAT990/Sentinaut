@@ -161,40 +161,51 @@ export function LandingPage() {
       </section>
 
       {/* Integrations Section */}
-      <section className="py-24 sm:py-32 w-full text-center bg-[#050505]">
+      <section className="py-24 sm:py-32 w-full text-center bg-[#050505] relative overflow-hidden group">
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" 
+             style={{ background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.03) 0%, transparent 60%)' }}></div>
+        
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false, amount: 0.1 }}
           transition={{ duration: 1.2, ease: "easeOut" }}
-          className="max-w-4xl mx-auto px-6"
+          className="max-w-4xl mx-auto px-6 relative z-10"
         >
           <h2 className="text-3xl sm:text-5xl font-serif tracking-tight text-white mb-8">Connect Your Ecosystem</h2>
           <p className="text-lg text-white/60 mb-12 font-light leading-relaxed">
             SentiNaut natively ingests data from TripAdvisor, Booking.com, WhatsApp Business API, and your internal property management systems seamlessly.
           </p>
           <div className="flex flex-wrap justify-center gap-6">
-            <a href="/about#integrations" className="px-8 py-4 bg-white text-black text-sm uppercase tracking-widest font-semibold hover:bg-slate-200 transition-colors inline-block">View Integrations</a>
+            <a href="/about#integrations" className="px-8 py-4 bg-white text-black text-sm uppercase tracking-widest font-semibold hover:bg-slate-200 hover:scale-105 transition-all inline-block duration-300 shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)]">View Integrations</a>
           </div>
         </motion.div>
       </section>
 
-      {/* Trusted By Section - Editorial Vibe */}
-      <section className="px-6 sm:px-8 lg:px-16 py-32 max-w-7xl mx-auto w-full text-center">
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: false, amount: 0.1 }}
-          transition={{ duration: 1.5 }}
-        >
-          <p className="text-xs font-mono tracking-[0.3em] text-slate-400 uppercase mb-16">Selected Deployments</p>
-          <div className="flex flex-wrap justify-center items-center gap-12 sm:gap-24 opacity-60">
-            <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest hover:opacity-100 transition-opacity cursor-pointer">TAJ PALACE</span>
-            <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest hover:opacity-100 transition-opacity cursor-pointer">THE OBEROI</span>
-            <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest hover:opacity-100 transition-opacity cursor-pointer">ITC MAURYA</span>
-            <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest hover:opacity-100 transition-opacity cursor-pointer">LEELA PALACE</span>
-          </div>
-        </motion.div>
+      {/* Trusted By Section - Infinite Marquee (Upscayl Inspired) */}
+      <section className="py-32 w-full text-center overflow-hidden relative bg-white dark:bg-[#09090b]">
+        <p className="text-xs font-mono tracking-[0.3em] text-slate-400 uppercase mb-16">Selected Deployments</p>
+        
+        {/* Gradient fades for the edges of the marquee */}
+        <div className="absolute inset-y-0 left-0 w-24 sm:w-48 bg-gradient-to-r from-white dark:from-[#09090b] to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute inset-y-0 right-0 w-24 sm:w-48 bg-gradient-to-l from-white dark:from-[#09090b] to-transparent z-10 pointer-events-none"></div>
+        
+        <div className="relative flex w-full">
+          <motion.div
+            className="flex whitespace-nowrap gap-16 sm:gap-32 w-max opacity-50 hover:opacity-100 transition-opacity duration-700"
+            animate={{ x: ["0%", "-50%"] }}
+            transition={{ ease: "linear", duration: 25, repeat: Infinity }}
+          >
+            {[...Array(4)].map((_, i) => (
+              <React.Fragment key={i}>
+                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">TAJ PALACE</span>
+                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">THE OBEROI</span>
+                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">ITC MAURYA</span>
+                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">LEELA PALACE</span>
+              </React.Fragment>
+            ))}
+          </motion.div>
+        </div>
       </section>
     </div>
   );
