@@ -23,9 +23,14 @@ export function LoginPage() {
     
     // Demo Authentication Bypass
     const validPasswords = ['password', 'passwords', 'passowrds'];
-    if (validPasswords.includes(password.toLowerCase()) && (email.includes('staff') || email.includes('manager') || email.includes('owner'))) {
-      const demoRole = email.includes('staff') ? 'staff' : email.includes('manager') ? 'manager' : 'owner';
-      login({ email, role: demoRole, name: `Demo ${demoRole.charAt(0).toUpperCase() + demoRole.slice(1)}`, id: `demo-${demoRole}` });
+    if (validPasswords.includes(password.toLowerCase())) {
+      // Enforce role based on email to prevent cross-role spoofing bugs
+      const demoRole = email.toLowerCase().includes('staff') ? 'staff' 
+                     : email.toLowerCase().includes('manager') ? 'manager' 
+                     : email.toLowerCase().includes('owner') ? 'owner' 
+                     : role;
+                     
+      login({ email: email || `${demoRole}@test.com`, role: demoRole, name: `Demo ${demoRole.charAt(0).toUpperCase() + demoRole.slice(1)}`, id: `demo-${demoRole}` });
       addToast(`Logged in as ${demoRole} (Demo Mode)`, 'success');
       navigate('/dashboard');
       return;
