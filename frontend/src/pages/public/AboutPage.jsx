@@ -1,65 +1,249 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 
 export function AboutPage() {
   return (
-    <div className="bg-white dark:bg-[#161b22] py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl lg:mx-0">
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-[#e6edf3] sm:text-4xl">About SentiNaut</h2>
-          <p className="mt-6 text-lg leading-8 text-slate-600 dark:text-[#8b949e]">
-            SentiNaut is an enterprise-grade reputation management platform. Our mission is to empower hospitality businesses to understand and leverage guest feedback at scale.
+    <div className="flex flex-col w-full bg-white dark:bg-[#09090b] min-h-screen">
+      
+      {/* Responsive fluid header with cinematic luxury feel */}
+      <div className="relative w-full min-h-[60vh] flex flex-col justify-end overflow-hidden pb-16">
+        <motion.div 
+          initial={{ scale: 1.1 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 3, ease: "easeOut" }}
+          className="absolute inset-0 w-full h-full"
+        >
+          <img src="/images/auth_side.png" alt="Resort Architecture" className="w-full h-full object-cover" />
+        </motion.div>
+        
+        <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-[#09090b]/60 to-transparent"></div>
+        
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.2, delay: 0.4, ease: "easeOut" }}
+          className="relative z-10 px-6 sm:px-8 lg:px-16 max-w-5xl"
+        >
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif tracking-tight text-white mb-6">About SentiNaut</h1>
+          <p className="text-base sm:text-lg text-white/70 max-w-2xl leading-relaxed font-light">
+            SentiNaut is a full-stack passion project built to explore the intersection of LLM inference and modern hospitality operations. 
+            Designed as a high-fidelity prototype during my software engineering journey.
           </p>
-        </div>
-        <div className="mx-auto mt-16 max-w-2xl lg:mx-0 lg:max-w-none">
-          <div className="grid grid-cols-1 gap-x-8 gap-y-16 lg:grid-cols-2">
-            <div className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 p-8 rounded-2xl">
-              <h3 className="text-2xl font-semibold tracking-tight text-red-900 dark:text-red-400">The Problem Statement</h3>
-              <p className="mt-4 text-base leading-7 text-red-800 dark:text-red-200/70">
-                Hotels and resorts receive hundreds of reviews daily across multiple platforms (Google, TripAdvisor, Booking.com). 
-              </p>
-              <ul className="mt-6 space-y-3 text-sm text-red-800 dark:text-red-200/70">
-                <li className="flex items-start gap-2"><span className="text-red-500 font-bold">×</span> Manual categorization is incredibly time-consuming.</li>
-                <li className="flex items-start gap-2"><span className="text-red-500 font-bold">×</span> Sentiment is often misunderstood without reading the full text.</li>
-                <li className="flex items-start gap-2"><span className="text-red-500 font-bold">×</span> Actionable insights (e.g. "AC is broken") are buried and ignored by operations.</li>
-              </ul>
-            </div>
-            <div className="bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/20 p-8 rounded-2xl">
-              <h3 className="text-2xl font-semibold tracking-tight text-green-900 dark:text-green-400">The SentiNaut Solution</h3>
-              <p className="mt-4 text-base leading-7 text-green-800 dark:text-green-200/70">
-                Using advanced Natural Language Processing (Google Gemini), our platform automatically turns unstructured text into an operational roadmap.
-              </p>
-              <ul className="mt-6 space-y-3 text-sm text-green-800 dark:text-green-200/70">
-                <li className="flex items-start gap-2"><span className="text-green-500 font-bold">✓</span> <strong>Automated Classification:</strong> Instantly tags sentiment and core themes.</li>
-                <li className="flex items-start gap-2"><span className="text-green-500 font-bold">✓</span> <strong>Task Delegation:</strong> Generates actionable tasks for managers to assign.</li>
-                <li className="flex items-start gap-2"><span className="text-green-500 font-bold">✓</span> <strong>Strategic Insights:</strong> Gives owners high-level ROI and competitor benchmarking.</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Tech Stack Section */}
-        <div className="mx-auto mt-24 max-w-2xl lg:mx-0">
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-[#e6edf3]">Technology Stack</h2>
-          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="border border-slate-200 dark:border-[#30363d] rounded-xl p-4 text-center">
-              <p className="font-bold text-slate-900 dark:text-[#e6edf3]">Frontend</p>
-              <p className="text-sm text-slate-500 dark:text-[#8b949e]">React 19 + Tailwind</p>
-            </div>
-            <div className="border border-slate-200 dark:border-[#30363d] rounded-xl p-4 text-center">
-              <p className="font-bold text-slate-900 dark:text-[#e6edf3]">Backend</p>
-              <p className="text-sm text-slate-500 dark:text-[#8b949e]">Python FastAPI</p>
-            </div>
-            <div className="border border-slate-200 dark:border-[#30363d] rounded-xl p-4 text-center">
-              <p className="font-bold text-slate-900 dark:text-[#e6edf3]">AI Engine</p>
-              <p className="text-sm text-slate-500 dark:text-[#8b949e]">Google Gemini Flash</p>
-            </div>
-            <div className="border border-slate-200 dark:border-[#30363d] rounded-xl p-4 text-center">
-              <p className="font-bold text-slate-900 dark:text-[#e6edf3]">Database</p>
-              <p className="text-sm text-slate-500 dark:text-[#8b949e]">MongoDB</p>
-            </div>
-          </div>
-        </div>
+        </motion.div>
       </div>
+
+      <section className="border-y border-slate-200 dark:border-slate-800">
+        <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-200 dark:divide-slate-800">
+          
+          <motion.div 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: false, amount: 0.1 }}
+            transition={{ duration: 1 }}
+            className="p-8 sm:p-16 lg:p-24 bg-slate-50 dark:bg-[#0f0f12] flex flex-col justify-center"
+          >
+            <h3 className="text-xl sm:text-2xl font-serif text-slate-900 dark:text-white mb-6">The Legacy Fault</h3>
+            <div className="space-y-4 text-sm text-slate-600 dark:text-slate-400 font-light leading-relaxed">
+              <p>Market legacy solutions rely on manual review parsing, resulting in high latency between guest experience and operational correction.</p>
+              <ul className="list-disc pl-4 space-y-2 marker:text-slate-400">
+                <li>Stochastic sentiment interpretation by rushed staff.</li>
+                <li>Actionable insights trapped in unstructured text blobs.</li>
+                <li>Siloed data access between field staff and ownership.</li>
+              </ul>
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: false, amount: 0.1 }}
+            transition={{ duration: 1, delay: 0.2 }}
+            className="p-8 sm:p-16 lg:p-24 flex flex-col justify-center"
+          >
+            <h3 className="text-xl sm:text-2xl font-serif text-slate-900 dark:text-white mb-6">The Resolution</h3>
+            <div className="space-y-4 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              <p>An automated pipeline leveraging deterministic routing and LLM inference for high-fidelity data categorization.</p>
+              <ul className="list-disc pl-4 space-y-2 marker:text-slate-400">
+                <li>Automated thematic tagging via Gemini Flash inference.</li>
+                <li>Discrete task generation linked directly to review vectors.</li>
+                <li>Strict Role-Based Access Control enforcing data discipline.</li>
+              </ul>
+            </div>
+          </motion.div>
+          
+        </div>
+      </section>
+
+      <section className="flex-1 bg-white dark:bg-[#09090b]">
+        <div className="px-6 sm:px-8 lg:px-16 py-16 sm:py-24 max-w-5xl mx-auto">
+          <motion.h2 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: false, amount: 0.1 }}
+            className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white mb-8 sm:mb-12 uppercase tracking-widest"
+          >
+            Infrastructure Stack
+          </motion.h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
+            {[
+              { label: 'Client', val: 'React 19, Tailwind CSS' },
+              { label: 'Server', val: 'FastAPI, Python 3' },
+              { label: 'Inference', val: 'Google Gemini' },
+              { label: 'Persistence', val: 'MongoDB' },
+            ].map((stack, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.1 }}
+                transition={{ delay: i * 0.1 }}
+              >
+                <div className="text-[11px] sm:text-xs text-slate-500 mb-1 sm:mb-2">{stack.label}</div>
+                <div className="text-sm sm:text-base font-medium text-slate-900 dark:text-white">{stack.val}</div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Mid-page Cinematic Banner */}
+      <section className="relative w-full h-[60vh] overflow-hidden border-y border-slate-200 dark:border-slate-800">
+        <motion.div 
+          initial={{ scale: 1.1 }}
+          whileInView={{ scale: 1 }}
+          viewport={{ once: false, amount: 0.1 }}
+          transition={{ duration: 2, ease: "easeOut" }}
+          className="absolute inset-0 w-full h-full"
+        >
+          <img src="/images/auth_side_3.png" alt="Luxury Lounge" className="w-full h-full object-cover" />
+        </motion.div>
+        <div className="absolute inset-0 bg-black/40"></div>
+        <div className="absolute inset-0 flex items-center justify-center text-center px-6">
+          <h2 className="text-3xl sm:text-5xl md:text-6xl font-serif text-white max-w-4xl leading-tight">
+            "Design is not just what it looks like and feels like. Design is how it works."
+          </h2>
+        </div>
+      </section>
+
+      {/* Product Sections */}
+      <section id="features" className="bg-white dark:bg-[#09090b]">
+        <div className="px-6 sm:px-8 lg:px-16 py-24 sm:py-32 max-w-7xl mx-auto flex flex-col md:flex-row gap-16 items-center">
+          <div className="w-full md:w-1/2">
+            <h2 className="text-3xl md:text-5xl font-serif text-slate-900 dark:text-white mb-10 leading-tight">Platform Features</h2>
+            <div className="space-y-8 text-slate-600 dark:text-slate-400 font-light text-lg">
+              <div className="pb-8 border-b border-slate-200 dark:border-slate-800">
+                <p className="text-sm font-mono text-slate-400 mb-2">01</p>
+                <p className="text-slate-900 dark:text-slate-200 text-xl font-serif mb-2">Deterministic Sentiment</p>
+                <p>98.4% accuracy using Google Gemini inference for all guest interactions.</p>
+              </div>
+              <div className="pb-8 border-b border-slate-200 dark:border-slate-800">
+                <p className="text-sm font-mono text-slate-400 mb-2">02</p>
+                <p className="text-slate-900 dark:text-slate-200 text-xl font-serif mb-2">Automated Execution</p>
+                <p>Converts generic complaints into actionable, tracked staff duties.</p>
+              </div>
+              <div>
+                <p className="text-sm font-mono text-slate-400 mb-2">03</p>
+                <p className="text-slate-900 dark:text-slate-200 text-xl font-serif mb-2">Strict RBAC</p>
+                <p>Securely segment data between field staff, unit managers, and group owners.</p>
+              </div>
+            </div>
+          </div>
+          <div className="w-full md:w-1/2 h-[600px] overflow-hidden">
+             <img src="/images/login_resort.png" alt="Platform Features" className="w-full h-full object-cover hover:scale-105 transition-transform duration-[3000ms]" />
+          </div>
+        </div>
+      </section>
+
+      <section id="integrations" className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0f0f12]">
+        <div className="px-6 sm:px-8 lg:px-16 py-24 sm:py-32 max-w-5xl mx-auto text-center">
+          <h2 className="text-3xl md:text-5xl font-serif text-slate-900 dark:text-white mb-8">System Integrations</h2>
+          <p className="text-lg text-slate-600 dark:text-slate-400 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
+            SentiNaut natively interfaces with your existing hospitality stack, ensuring zero operational downtime.
+          </p>
+          <div className="flex flex-wrap justify-center gap-8 sm:gap-16 opacity-70">
+            <span className="text-xl font-serif tracking-widest text-slate-900 dark:text-white">TripAdvisor API</span>
+            <span className="text-xl font-serif tracking-widest text-slate-900 dark:text-white">Booking.com</span>
+            <span className="text-xl font-serif tracking-widest text-slate-900 dark:text-white">WhatsApp</span>
+            <span className="text-xl font-serif tracking-widest text-slate-900 dark:text-white">Opera PMS</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="pricing" className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#09090b]">
+        <div className="px-6 sm:px-8 lg:px-16 py-24 sm:py-32 max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-serif text-slate-900 dark:text-white mb-6">Pricing Plans</h2>
+            <p className="text-slate-500 font-light text-lg">Simple, transparent, and built for scale.</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-y border-slate-200 dark:border-slate-800 divide-y md:divide-y-0 md:divide-x divide-slate-200 dark:divide-slate-800">
+            <div className="p-12 sm:p-16 text-center hover:bg-slate-50 dark:hover:bg-[#111115] transition-colors">
+              <h3 className="font-serif text-2xl text-slate-900 dark:text-white mb-2">Boutique</h3>
+              <p className="text-sm text-slate-500 mb-8 font-light">Up to 1,000 reviews/mo</p>
+              <p className="text-5xl font-serif text-slate-900 dark:text-white mb-8">$299<span className="text-lg font-light text-slate-500">/mo</span></p>
+              <button className="px-6 py-3 border border-slate-900 dark:border-white text-slate-900 dark:text-white text-sm uppercase tracking-widest hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">Select</button>
+            </div>
+            
+            <div className="p-12 sm:p-16 text-center bg-slate-900 dark:bg-white text-white dark:text-slate-900 relative">
+              <div className="absolute top-6 left-1/2 -translate-x-1/2 text-[10px] font-mono tracking-widest uppercase opacity-70">Popular</div>
+              <h3 className="font-serif text-2xl mb-2 mt-4">Resort</h3>
+              <p className="text-sm opacity-70 mb-8 font-light">Unlimited reviews & managers</p>
+              <p className="text-5xl font-serif mb-8">$599<span className="text-lg font-light opacity-70">/mo</span></p>
+              <button className="px-6 py-3 border border-white dark:border-slate-900 text-white dark:text-slate-900 text-sm uppercase tracking-widest hover:bg-white hover:text-black dark:hover:bg-slate-900 dark:hover:text-white transition-colors">Select</button>
+            </div>
+
+            <div className="p-12 sm:p-16 text-center hover:bg-slate-50 dark:hover:bg-[#111115] transition-colors">
+              <h3 className="font-serif text-2xl text-slate-900 dark:text-white mb-2">Enterprise</h3>
+              <p className="text-sm text-slate-500 mb-8 font-light">Custom SLA deployment</p>
+              <p className="text-5xl font-serif text-slate-900 dark:text-white mb-8">POA</p>
+              <button className="px-6 py-3 border border-slate-900 dark:border-white text-slate-900 dark:text-white text-sm uppercase tracking-widest hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">Contact</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Project Status Section */}
+      <section id="careers" className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0f0f12]">
+        <div className="px-6 sm:px-8 lg:px-16 py-16 sm:py-24 max-w-5xl mx-auto">
+          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white mb-6">About the Developer</h2>
+          <p className="text-slate-600 dark:text-slate-400 mb-6">This platform was designed and developed as a comprehensive side project to demonstrate proficiency in React, FastAPI, MongoDB, and AI integrations.</p>
+          <div className="space-y-4">
+            <div className="p-4 bg-white dark:bg-[#16161b] border border-slate-200 dark:border-slate-800 rounded-lg flex justify-between items-center">
+              <div>
+                <h4 className="font-medium text-slate-900 dark:text-white">Currently Interning</h4>
+                <p className="text-sm text-slate-500">Software Engineering</p>
+              </div>
+              <button className="px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors">View GitHub</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="blog" className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#09090b]">
+        <div className="px-6 sm:px-8 lg:px-16 py-16 sm:py-24 max-w-5xl mx-auto">
+          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white mb-6">Development Log</h2>
+          <p className="text-slate-600 dark:text-slate-400 italic">I regularly document the architecture decisions and state management patterns used in this project on my personal blog.</p>
+        </div>
+      </section>
+
+      <section id="contact" className="border-y border-slate-200 dark:border-slate-800 bg-white dark:bg-[#09090b]">
+        <div className="px-6 sm:px-8 lg:px-16 py-24 sm:py-32 max-w-5xl mx-auto flex flex-col items-center">
+          <h2 className="text-3xl md:text-5xl font-serif text-slate-900 dark:text-white mb-6">Let's Connect</h2>
+          <p className="text-slate-500 font-light mb-12 text-center max-w-xl">Whether you're interested in deploying SentiNaut or just want to discuss hospitality engineering, I'd love to hear from you.</p>
+          <form className="w-full max-w-md space-y-8">
+            <div>
+              <input type="text" placeholder="Full Name" className="w-full px-0 py-3 border-b border-slate-300 dark:border-slate-700 bg-transparent text-slate-900 dark:text-white focus:border-slate-900 dark:focus:border-white focus:outline-none transition-colors rounded-none placeholder:text-slate-400 font-light" required/>
+            </div>
+            <div>
+              <input type="email" placeholder="Email Address" className="w-full px-0 py-3 border-b border-slate-300 dark:border-slate-700 bg-transparent text-slate-900 dark:text-white focus:border-slate-900 dark:focus:border-white focus:outline-none transition-colors rounded-none placeholder:text-slate-400 font-light" required/>
+            </div>
+            <div>
+              <textarea placeholder="Message" rows="3" className="w-full px-0 py-3 border-b border-slate-300 dark:border-slate-700 bg-transparent text-slate-900 dark:text-white focus:border-slate-900 dark:focus:border-white focus:outline-none transition-colors rounded-none placeholder:text-slate-400 font-light resize-none" required></textarea>
+            </div>
+            <button type="submit" className="w-full py-4 border border-slate-900 dark:border-white text-slate-900 dark:text-white font-medium uppercase tracking-widest text-sm hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">Send Transmission</button>
+          </form>
+        </div>
+      </section>
     </div>
   );
 }

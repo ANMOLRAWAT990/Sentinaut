@@ -1,41 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
-export const Input = React.forwardRef(({
-  label,
-  placeholder,
-  type = 'text',
-  value,
-  onChange,
-  error,
-  className = '',
-  id,
-  ...props
-}, ref) => {
+export const Input = React.forwardRef(({ label, error, className = '', id, type = 'text', ...props }, ref) => {
   const inputId = id || React.useId();
+  const [showPassword, setShowPassword] = useState(false);
+  const isPasswordInput = type === 'password';
+  const inputType = isPasswordInput ? (showPassword ? 'text' : 'password') : type;
 
   return (
-    <div className={`flex flex-col gap-1.5 ${className}`}>
-      {label && (
-        <label htmlFor={inputId} className="text-sm font-medium text-gray-700 dark:text-[#e6edf3]">
-          {label}
-        </label>
-      )}
-      <input
-        ref={ref}
-        id={inputId}
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className={`px-3 py-2 border rounded-md shadow-sm dark:shadow-none bg-white dark:bg-[#0d1117] text-gray-900 dark:text-[#e6edf3] dark:placeholder-[#8b949e] focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary dark:border-[#30363d] dark:focus:border-[#58a6ff] dark:focus:ring-[#58a6ff]
-          ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-[#f85149] dark:focus:border-[#f85149] dark:focus:ring-[#f85149]' : 'border-gray-300'}
-          ${props.disabled ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-[#161b22]' : ''}
-        `}
-        {...props}
-      />
-      {error && (
-        <span className="text-sm text-red-500 dark:text-[#f85149]">{error}</span>
-      )}
+    <div className={`flex flex-col gap-2 ${className}`}>
+      {label && <label htmlFor={inputId} className="text-[11px] font-mono tracking-widest uppercase text-slate-500 dark:text-slate-400">{label}</label>}
+      <div className="relative">
+        <input
+          ref={ref}
+          id={inputId}
+          type={inputType}
+          className={`h-12 w-full rounded-none bg-transparent border-b border-black/20 dark:border-white/20 px-0 text-[15px] text-slate-900 dark:text-white placeholder:text-slate-400 transition-all duration-300 focus:outline-none focus:border-black dark:focus:border-white ${error ? '!border-red-500' : ''} ${props.disabled ? 'opacity-50 cursor-not-allowed' : ''} ${isPasswordInput ? 'pr-10' : ''}`}
+          {...props}
+        />
+        {isPasswordInput && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#888888] hover:text-[#111111] dark:hover:text-[#ededed] transition-colors focus:outline-none"
+          >
+            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        )}
+      </div>
+      {error && <span className="text-[12px] text-red-500">{error}</span>}
     </div>
   );
 });

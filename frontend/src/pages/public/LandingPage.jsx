@@ -1,192 +1,200 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { MessageSquare, TrendingUp, ShieldCheck } from 'lucide-react';
-import { Hero } from '../../components/ui/Hero';
-import { Card, CardContent } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-
-// Animation variants
-const fadeInUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
-};
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.2
-    }
-  }
-};
+import React, { useRef } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 export function LandingPage() {
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"]
+  });
+
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  const opacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
+
   return (
-    <div className="flex flex-col">
-      <Hero />
-
-      {/* Stats Section */}
-      <section className="py-16 bg-white dark:bg-[#161b22] border-y border-slate-100 dark:border-[#30363d] relative z-10">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <motion.dl 
-            className="grid grid-cols-1 gap-x-8 gap-y-12 text-center md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-100"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
-          >
-            <motion.div variants={fadeInUp} className="flex flex-col gap-y-2 pt-8 md:pt-0">
-              <dt className="text-base font-medium text-slate-500 dark:text-[#8b949e]">Reviews Analyzed Daily</dt>
-              <dd className="order-first text-4xl font-bold tracking-tight text-slate-900 dark:text-[#e6edf3] sm:text-5xl">100k+</dd>
-            </motion.div>
-            <motion.div variants={fadeInUp} className="flex flex-col gap-y-2 pt-8 md:pt-0">
-              <dt className="text-base font-medium text-slate-500 dark:text-[#8b949e]">Classification Accuracy</dt>
-              <dd className="order-first text-4xl font-bold tracking-tight text-blue-600 sm:text-5xl">98%</dd>
-            </motion.div>
-            <motion.div variants={fadeInUp} className="flex flex-col gap-y-2 pt-8 md:pt-0">
-              <dt className="text-base font-medium text-slate-500 dark:text-[#8b949e]">Partner Properties</dt>
-              <dd className="order-first text-4xl font-bold tracking-tight text-slate-900 dark:text-[#e6edf3] sm:text-5xl">500+</dd>
-            </motion.div>
-          </motion.dl>
-        </div>
-      </section>
-
-      {/* Feature Cards Section */}
-      <section className="py-24 bg-slate-50 dark:bg-[#0d1117]">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <motion.div 
-            className="mx-auto max-w-2xl text-center"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeInUp}
-          >
-            <h2 className="text-base font-semibold leading-7 text-blue-600 uppercase tracking-wider">Intelligent Engine</h2>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-[#e6edf3] sm:text-4xl">Everything you need to manage your reputation</p>
-          </motion.div>
-          
-          <motion.div 
-            className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
-          >
-            <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-3">
-              {[
-                {
-                  title: 'Real-time Sentiment',
-                  desc: 'Instantly classify reviews into positive, negative, and neutral sentiments with deep context understanding via Google Gemini.',
-                  icon: <MessageSquare className="h-6 w-6 text-blue-600" />
-                },
-                {
-                  title: 'Actionable Insights',
-                  desc: 'Don\'t just read complaints—generate actionable operational tasks based on recurring themes like Food, Cleanliness, or Location.',
-                  icon: <TrendingUp className="h-6 w-6 text-blue-600" />
-                },
-                {
-                  title: 'Role-based Dashboards',
-                  desc: 'Tailored views for Staff, Managers, and Owners. Everyone sees exactly the data and tasks they need to drive results.',
-                  icon: <ShieldCheck className="h-6 w-6 text-blue-600" />
-                }
-              ].map((feature, idx) => (
-                <motion.div key={idx} variants={fadeInUp} whileHover={{ y: -8, transition: { duration: 0.2 } }}>
-                  <Card className="h-full hover:shadow-xl transition-shadow">
-                    <CardContent className="p-8 flex flex-col h-full">
-                      <dt className="flex items-center gap-x-4 text-lg font-bold leading-7 text-slate-900 dark:text-[#e6edf3]">
-                        <div className="h-12 w-12 flex shrink-0 items-center justify-center rounded-xl bg-blue-50 ring-1 ring-blue-100">
-                          {feature.icon}
-                        </div>
-                        {feature.title}
-                      </dt>
-                      <dd className="mt-6 flex flex-auto flex-col text-base leading-7 text-slate-600 dark:text-[#8b949e]">
-                        <p className="flex-auto">{feature.desc}</p>
-                      </dd>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </dl>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* How it Works Section */}
-      <section className="py-24 bg-white dark:bg-[#161b22] border-y border-slate-100 dark:border-[#30363d]">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center mb-16">
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-[#e6edf3] sm:text-4xl">How SentiNaut Works</h2>
-            <p className="mt-4 text-lg text-slate-600 dark:text-[#8b949e]">A seamless workflow from guest review to operational improvement.</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div className="relative">
-              <div className="w-16 h-16 mx-auto bg-blue-100 dark:bg-[#1f6feb]/20 text-blue-600 dark:text-[#58a6ff] rounded-full flex items-center justify-center text-2xl font-bold mb-6">1</div>
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-[#e6edf3] mb-3">Ingest Feedback</h3>
-              <p className="text-slate-600 dark:text-[#8b949e]">Staff paste guest reviews or sync them directly from Google and TripAdvisor.</p>
-              {/* Connector line for desktop */}
-              <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-[2px] bg-gradient-to-r from-blue-100 to-transparent dark:from-[#30363d]"></div>
-            </div>
-            <div className="relative">
-              <div className="w-16 h-16 mx-auto bg-blue-100 dark:bg-[#1f6feb]/20 text-blue-600 dark:text-[#58a6ff] rounded-full flex items-center justify-center text-2xl font-bold mb-6">2</div>
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-[#e6edf3] mb-3">AI Analysis</h3>
-              <p className="text-slate-600 dark:text-[#8b949e]">Our Gemini AI instantly scores sentiment, tags themes, and suggests professional replies.</p>
-              {/* Connector line for desktop */}
-              <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-[2px] bg-gradient-to-r from-blue-100 to-transparent dark:from-[#30363d]"></div>
-            </div>
-            <div className="relative">
-              <div className="w-16 h-16 mx-auto bg-blue-100 dark:bg-[#1f6feb]/20 text-blue-600 dark:text-[#58a6ff] rounded-full flex items-center justify-center text-2xl font-bold mb-6">3</div>
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-[#e6edf3] mb-3">Drive Operations</h3>
-              <p className="text-slate-600 dark:text-[#8b949e]">Managers assign specific tasks on the Kanban board, and Owners track long-term ROI.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Resort Strip Section */}
-      <section className="py-20 bg-slate-900 dark:bg-[#161b22] text-center relative overflow-hidden">
-        {/* Subtle background pattern */}
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
+    <div className="flex flex-col w-full bg-white dark:bg-[#09090b] overflow-hidden">
+      
+      {/* Dynamic Cinematic Hero Section */}
+      <div ref={heroRef} className="relative w-full min-h-screen flex flex-col justify-end overflow-hidden pb-32">
+        <motion.div 
+          style={{ y }} 
+          initial={{ scale: 1.1 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 3, ease: "easeOut" }}
+          className="absolute inset-0 w-full h-full"
+        >
+          <img src="/images/hero_resort.png" alt="Luxury Resort" className="w-full h-full object-cover" />
+        </motion.div>
         
-        <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
-          <p className="text-sm font-semibold leading-8 text-slate-400 dark:text-[#8b949e] mb-10 tracking-widest uppercase">Trusted by top eco-resorts & homestays</p>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent z-0"></div>
+        
+        <motion.div 
+          style={{ opacity }}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.2, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="relative z-10 w-full px-6 sm:px-8 lg:px-16 max-w-5xl"
+        >
+          <h2 className="text-sm font-semibold tracking-[0.2em] text-white/70 uppercase mb-4">SentiNaut Intelligence</h2>
+          <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-serif tracking-tight text-white mb-6 leading-tight">
+            Elevating <br className="hidden sm:block"/>
+            <span className="italic text-white/90">Exceptional</span> Properties.
+          </h1>
+          <p className="text-base sm:text-lg text-white/70 max-w-xl leading-relaxed font-light">
+            An elegant intersection of artificial intelligence and hospitality. We transform unstructured guest feedback into immediate operational clarity.
+          </p>
+        </motion.div>
+      </div>
+      
+      {/* Stats Section with Elegant Borders */}
+      <section className="relative z-20 border-y border-slate-200 dark:border-slate-800 bg-white dark:bg-[#09090b]">
+        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-slate-200 dark:divide-slate-800">
+          {[
+            { label: 'Data Processing Limit', value: '100k+ / day' },
+            { label: 'Inference Accuracy', value: '98.4%' },
+            { label: 'P99 Latency', value: '240ms' },
+            { label: 'Active Deployments', value: '500+' }
+          ].map((stat, i) => (
+            <motion.div 
+              key={i} 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.1 }}
+              transition={{ delay: i * 0.1, duration: 0.8, ease: "easeOut" }}
+              className="px-6 py-12 sm:px-8 lg:px-12 bg-transparent hover:bg-slate-50 dark:hover:bg-[#111115] transition-colors flex flex-col justify-center items-center text-center group"
+            >
+              <div className="text-3xl sm:text-4xl font-serif text-slate-900 dark:text-white mb-2 group-hover:scale-105 transition-transform duration-500 ease-out">{stat.value}</div>
+              <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-mono uppercase tracking-widest">{stat.label}</div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Elegant Features Section */}
+      <section className="px-6 sm:px-8 lg:px-16 py-32 max-w-7xl mx-auto w-full">
+        <div className="flex flex-col md:flex-row gap-16 md:gap-24 items-center">
           <motion.div 
-            className="flex flex-wrap justify-center gap-x-16 gap-y-10 opacity-70"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: false, amount: 0.1 }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="w-full md:w-1/2"
           >
-             {['OCEANVIEW', 'THE RETREAT', 'ALPINE LODGE', 'CITY STAY'].map((brand, i) => (
-                <motion.div 
-                  key={i}
-                  variants={fadeInUp}
-                  className="text-white/80 hover:text-white transition-colors text-2xl font-bold tracking-widest"
-                >
-                  {brand}
-                </motion.div>
-             ))}
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif tracking-tight text-slate-900 dark:text-white mb-8 leading-tight">
+              A symphony of <br/> <span className="italic text-slate-500">discrete</span> operations.
+            </h2>
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Deterministic Sentiment</h3>
+                <p className="text-slate-600 dark:text-slate-400 font-light leading-relaxed">High-confidence inputs are resolved via precise rules, while ambiguous payloads are escalated to our inference engine for contextual extraction.</p>
+              </div>
+              <div className="h-px w-12 bg-slate-200 dark:bg-slate-800"></div>
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Automated Execution</h3>
+                <p className="text-slate-600 dark:text-slate-400 font-light leading-relaxed">Recurring thematic failures automatically instantiate actionable tickets in the management queue, ensuring nothing is lost in translation.</p>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: false, amount: 0.1 }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            className="w-full md:w-1/2 h-[600px] overflow-hidden"
+          >
+            <img src="/images/login_resort.png" alt="Luxury Architecture" className="w-full h-full object-cover hover:scale-105 transition-transform duration-[3000ms]" />
           </motion.div>
         </div>
       </section>
 
-      {/* Final CTA Section */}
-      <section className="py-24 bg-blue-600 dark:bg-[#1f6feb]">
-        <div className="mx-auto max-w-4xl px-6 text-center lg:px-8">
-          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl mb-6">
-            Ready to turn your guest reviews into a 5-star reputation?
-          </h2>
-          <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
-            Join hundreds of property owners who are using AI to fix operational issues before they become bad reviews.
-          </p>
-          <Link to="/login" className="inline-block mt-4">
-            <button className="bg-white text-blue-600 hover:bg-slate-50 border-0 px-8 py-4 rounded-md text-lg font-bold shadow-xl cursor-pointer transition-all">
-              Start Your Free Trial
-            </button>
-          </Link>
+
+
+      {/* Elegant Staggered Workflow Section */}
+      <section className="bg-white dark:bg-[#09090b] border-y border-slate-200 dark:border-slate-800">
+        <div className="px-6 sm:px-8 lg:px-16 py-24 sm:py-32 max-w-7xl mx-auto w-full">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.1 }}
+            transition={{ duration: 1 }}
+            className="text-center mb-24"
+          >
+            <h2 className="text-3xl sm:text-5xl font-serif tracking-tight text-slate-900 dark:text-white mb-6">The Protocol</h2>
+            <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto text-lg font-light leading-relaxed">
+              A frictionless flow from raw guest sentiment to resolved structural failure, eliminating the noise of traditional management.
+            </p>
+          </motion.div>
+          
+          <div className="space-y-24 md:space-y-32">
+            {[
+              { step: '01', title: 'Ingestion', desc: 'Front-desk staff log raw guest feedback via rapid-entry forms or WhatsApp integrations, bypassing manual spreadsheets completely.', img: '/images/protocol_ingestion.png' },
+              { step: '02', title: 'Inference', desc: 'The Gemini engine parses sentiment, flags critical anomalies, and instantly generates trackable tickets based on the exact failure vector.', img: '/images/protocol_inference.png' },
+              { step: '03', title: 'Execution', desc: 'Managers receive localized action items while ownership monitors macro health metrics from a pristine command center.', img: '/images/protocol_execution.png' }
+            ].map((flow, i) => (
+              <div key={i} className={`flex flex-col ${i % 2 === 1 ? 'md:flex-row-reverse' : 'md:flex-row'} items-center gap-12 md:gap-24`}>
+                <motion.div 
+                  initial={{ opacity: 0, x: i % 2 === 1 ? 30 : -30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: false, amount: 0.1 }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                  className="w-full md:w-1/2"
+                >
+                  <div className="text-sm font-mono text-slate-400 mb-4">{flow.step}</div>
+                  <h3 className="text-3xl font-serif text-slate-900 dark:text-white mb-6">{flow.title}</h3>
+                  <p className="text-lg text-slate-600 dark:text-slate-400 font-light leading-relaxed max-w-md">{flow.desc}</p>
+                </motion.div>
+                
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: false, amount: 0.1 }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  className="w-full md:w-1/2 aspect-[4/3] md:aspect-[3/4] lg:aspect-square overflow-hidden rounded-sm"
+                >
+                  <img src={flow.img} alt={flow.title} className="w-full h-full object-cover hover:scale-105 transition-transform duration-[3000ms]" />
+                </motion.div>
+              </div>
+            ))}
+          </div>
         </div>
+      </section>
+
+      {/* Integrations Section */}
+      <section className="py-24 sm:py-32 w-full text-center bg-[#050505]">
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.1 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          className="max-w-4xl mx-auto px-6"
+        >
+          <h2 className="text-3xl sm:text-5xl font-serif tracking-tight text-white mb-8">Connect Your Ecosystem</h2>
+          <p className="text-lg text-white/60 mb-12 font-light leading-relaxed">
+            SentiNaut natively ingests data from TripAdvisor, Booking.com, WhatsApp Business API, and your internal property management systems seamlessly.
+          </p>
+          <div className="flex flex-wrap justify-center gap-6">
+            <a href="/about#integrations" className="px-8 py-4 bg-white text-black text-sm uppercase tracking-widest font-semibold hover:bg-slate-200 transition-colors inline-block">View Integrations</a>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Trusted By Section - Editorial Vibe */}
+      <section className="px-6 sm:px-8 lg:px-16 py-32 max-w-7xl mx-auto w-full text-center">
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: false, amount: 0.1 }}
+          transition={{ duration: 1.5 }}
+        >
+          <p className="text-xs font-mono tracking-[0.3em] text-slate-400 uppercase mb-16">Selected Deployments</p>
+          <div className="flex flex-wrap justify-center items-center gap-12 sm:gap-24 opacity-60">
+            <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest hover:opacity-100 transition-opacity cursor-pointer">TAJ PALACE</span>
+            <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest hover:opacity-100 transition-opacity cursor-pointer">THE OBEROI</span>
+            <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest hover:opacity-100 transition-opacity cursor-pointer">ITC MAURYA</span>
+            <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest hover:opacity-100 transition-opacity cursor-pointer">LEELA PALACE</span>
+          </div>
+        </motion.div>
       </section>
     </div>
   );

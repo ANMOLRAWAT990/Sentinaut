@@ -1,31 +1,33 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { LayoutDashboard, MessageSquare, Lightbulb, ClipboardList, BarChart3, Users, Settings } from 'lucide-react';
 
 export function Sidebar() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   const getLinksByRole = () => {
     if (!user) return [];
     switch (user.role) {
       case 'owner':
         return [
-          { name: 'Overview', path: '/dashboard' },
-          { name: 'Analytics', path: '/dashboard/reviews' },
-          { name: 'Strategic Insights', path: '/dashboard/suggestions' },
+          { name: 'Overview', path: '/dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
+          { name: 'Analytics', path: '/dashboard/reviews', icon: <BarChart3 className="h-4 w-4" /> },
+          { name: 'Strategic Insights', path: '/dashboard/suggestions', icon: <Lightbulb className="h-4 w-4" /> },
         ];
       case 'manager':
         return [
-          { name: 'Action Board', path: '/dashboard' },
-          { name: 'Review Queue', path: '/dashboard/reviews' },
-          { name: 'AI Insights', path: '/dashboard/suggestions' },
+          { name: 'Action Board', path: '/dashboard', icon: <ClipboardList className="h-4 w-4" /> },
+          { name: 'Review Queue', path: '/dashboard/reviews', icon: <MessageSquare className="h-4 w-4" /> },
+          { name: 'Operational Intel', path: '/dashboard/suggestions', icon: <Lightbulb className="h-4 w-4" /> },
         ];
       case 'staff':
       default:
         return [
-          { name: 'Review Input', path: '/dashboard' },
-          { name: 'My Tasks', path: '/dashboard/suggestions' },
-          { name: 'My Submissions', path: '/dashboard/reviews' },
+          { name: 'Review Input', path: '/dashboard', icon: <MessageSquare className="h-4 w-4" /> },
+          { name: 'My Tasks', path: '/dashboard/suggestions', icon: <ClipboardList className="h-4 w-4" /> },
+          { name: 'My Submissions', path: '/dashboard/reviews', icon: <Users className="h-4 w-4" /> },
         ];
     }
   };
@@ -33,8 +35,16 @@ export function Sidebar() {
   const links = getLinksByRole();
 
   return (
-    <aside className="w-64 border-r border-slate-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] hidden md:flex flex-col h-full">
+    <aside className="w-64 border-r border-black/10 dark:border-white/10 bg-white dark:bg-[#000000] hidden md:flex flex-col h-full shrink-0">
       <div className="flex-1 py-6 px-4">
+        {/* Role badge */}
+        <div className="mb-8 px-2 flex items-center justify-between">
+          <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-[#666666] dark:text-[#a1a1aa]">
+            <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+            {user?.role} Access
+          </span>
+        </div>
+
         <nav className="space-y-1">
           {links.map((link) => (
             <NavLink
@@ -42,27 +52,34 @@ export function Sidebar() {
               to={link.path}
               end={link.path === '/dashboard'}
               className={({ isActive }) =>
-                `flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                `flex items-center gap-3 px-3 py-2 text-[13px] font-medium rounded-md transition-all duration-150 ${
                   isActive
-                    ? 'bg-blue-50 text-blue-700 dark:bg-[#1f6feb]/20 dark:text-[#58a6ff]'
-                    : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:text-[#8b949e] dark:hover:bg-[#21262d] dark:hover:text-[#e6edf3]'
+                    ? 'bg-black/5 text-[#111111] dark:bg-white/10 dark:text-[#ededed]'
+                    : 'text-[#666666] hover:text-[#111111] hover:bg-black/5 dark:text-[#a1a1aa] dark:hover:bg-white/5 dark:hover:text-[#ededed]'
                 }`
               }
             >
+              {link.icon}
               {link.name}
             </NavLink>
           ))}
         </nav>
       </div>
-      <div className="p-4 border-t border-slate-200 dark:border-[#30363d]">
-        <div className="flex items-center">
-          <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold uppercase">
+
+      {/* User info */}
+      <div 
+        onClick={() => navigate('/dashboard/settings')}
+        className="p-4 border-t border-black/10 dark:border-white/10 mx-2 mb-2 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors group relative"
+      >
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-full bg-[#111] dark:bg-white flex items-center justify-center text-white dark:text-[#111] font-semibold text-[11px] uppercase border border-black/5 dark:border-white/5">
             {user?.name?.[0] || 'U'}
           </div>
-          <div className="ml-3">
-            <p className="text-sm font-medium text-slate-700 dark:text-[#e6edf3] capitalize">{user?.name || 'User'}</p>
-            <p className="text-xs font-medium text-slate-500 dark:text-[#8b949e] uppercase">{user?.role || 'Guest'}</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px] font-medium text-[#111] dark:text-[#eee] capitalize truncate">{user?.name || 'User'}</p>
+            <p className="text-[11px] font-medium text-[#888] dark:text-[#888] uppercase tracking-wide truncate">{user?.email || 'user@example.com'}</p>
           </div>
+          <Settings className="h-4 w-4 text-[#888] opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
       </div>
     </aside>

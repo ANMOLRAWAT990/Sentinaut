@@ -2,7 +2,6 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
-import { Footer } from './Footer';
 
 export function AppLayout() {
   return (
@@ -14,7 +13,6 @@ export function AppLayout() {
           <div className="mx-auto max-w-7xl p-6 lg:p-8 flex-1 w-full">
             <Outlet />
           </div>
-          <Footer />
         </main>
       </div>
     </div>

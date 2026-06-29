@@ -4,14 +4,57 @@ import { Modal } from '../ui/Modal';
 export function Footer() {
   const [activeModal, setActiveModal] = useState(null);
   return (
-    <footer className="w-full border-t border-slate-200 dark:border-[#30363d] bg-slate-50 dark:bg-[#0d1117] py-8 px-6 mt-auto">
-      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 sm:flex-row">
-        <p className="text-sm text-slate-500 dark:text-[#8b949e]">
-          © {new Date().getFullYear()} SentiNaut. All rights reserved.
-        </p>
-        <div className="flex gap-4 text-sm text-slate-500 dark:text-[#8b949e]">
-          <button onClick={() => setActiveModal('privacy')} className="hover:text-slate-900 dark:hover:text-[#e6edf3] bg-transparent border-0 cursor-pointer">Privacy Policy</button>
-          <button onClick={() => setActiveModal('terms')} className="hover:text-slate-900 dark:hover:text-[#e6edf3] bg-transparent border-0 cursor-pointer">Terms of Service</button>
+    <footer className="w-full border-t border-slate-200 dark:border-[#30363d] bg-white dark:bg-[#09090b] pt-16 pb-8 mt-auto">
+      <div className="mx-auto max-w-7xl px-6 lg:px-16">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 lg:gap-8 mb-16">
+          <div className="col-span-1 md:col-span-2 lg:col-span-1 space-y-4">
+            <div className="flex items-center gap-3 mb-6">
+              <img src="/images/logo_emblem.png" alt="SentiNaut Logo" className="w-6 h-6 object-contain" />
+              <span className="font-bold text-lg text-slate-900 dark:text-white tracking-tight">SentiNaut</span>
+            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs">
+              Weaponized hospitality intelligence for premium hotel operators and general managers.
+            </p>
+          </div>
+          
+          <div>
+            <h4 className="font-semibold text-slate-900 dark:text-white mb-4">Product</h4>
+            <ul className="space-y-3 text-sm text-slate-500 dark:text-slate-400">
+              <li><a href="/about#features" className="hover:text-slate-900 dark:hover:text-white transition-colors">Features</a></li>
+              <li><a href="/about#integrations" className="hover:text-slate-900 dark:hover:text-white transition-colors">Integrations</a></li>
+              <li><a href="/about#enterprise" className="hover:text-slate-900 dark:hover:text-white transition-colors">Enterprise</a></li>
+              <li><a href="/about#pricing" className="hover:text-slate-900 dark:hover:text-white transition-colors">Pricing</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-slate-900 dark:text-white mb-4">Company</h4>
+            <ul className="space-y-3 text-sm text-slate-500 dark:text-slate-400">
+              <li><a href="/about" className="hover:text-slate-900 dark:hover:text-white transition-colors">About Us</a></li>
+              <li><a href="/about#careers" className="hover:text-slate-900 dark:hover:text-white transition-colors">Careers</a></li>
+              <li><a href="/about#blog" className="hover:text-slate-900 dark:hover:text-white transition-colors">Blog</a></li>
+              <li><a href="/about#contact" className="hover:text-slate-900 dark:hover:text-white transition-colors">Contact</a></li>
+            </ul>
+          </div>
+
+          <div className="col-span-1 md:col-span-2 lg:col-span-1">
+            <h4 className="font-semibold text-slate-900 dark:text-white mb-4">Subscribe to our newsletter</h4>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Get the latest news on AI in hospitality.</p>
+            <form className="flex gap-2">
+              <input type="email" placeholder="Enter your email" className="bg-slate-50 dark:bg-[#161b22] border border-slate-200 dark:border-[#30363d] text-slate-900 dark:text-white text-sm rounded-md px-3 py-2 w-full focus:outline-none focus:border-blue-500" required />
+              <button type="submit" className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-medium px-4 py-2 rounded-md hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors">Subscribe</button>
+            </form>
+          </div>
+        </div>
+
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-slate-200 dark:border-[#30363d]">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            © {new Date().getFullYear()} SentiNaut. All rights reserved.
+          </p>
+          <div className="flex gap-6 text-sm text-slate-500 dark:text-slate-400">
+            <button onClick={() => setActiveModal('privacy')} className="hover:text-slate-900 dark:hover:text-white transition-colors">Privacy Policy</button>
+            <button onClick={() => setActiveModal('terms')} className="hover:text-slate-900 dark:hover:text-white transition-colors">Terms of Service</button>
+          </div>
         </div>
       </div>
 

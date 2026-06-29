@@ -11,9 +11,9 @@ export function PublicLayout() {
     return <Navigate to="/dashboard" replace />;
   }
   return (
-    <div className="flex h-screen flex-col bg-white dark:bg-[#0d1117] overflow-hidden">
+    <div className="flex min-h-screen flex-col bg-white dark:bg-[#0d1117]">
       <Navbar />
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1">
         <Outlet />
       </main>
       <Footer />

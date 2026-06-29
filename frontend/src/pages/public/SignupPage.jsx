@@ -7,40 +7,54 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/ui/Toast';
 import { ArrowRight } from 'lucide-react';
 
-export function LoginPage() {
+const ROLES = [
+  { value: 'staff', label: 'Staff' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'owner', label: 'Owner' },
+];
+
+export function SignupPage() {
   const { addToast } = useToast();
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
-  const { login } = useAuth();
+  const role = 'owner';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     // Demo Authentication Bypass
+    const demoEmails = ['staff@test.com', 'manager@test.com', 'owner@test.com'];
     const validPasswords = ['password', 'passwords', 'passowrds'];
-    if (validPasswords.includes(password.toLowerCase()) && (email.includes('staff') || email.includes('manager') || email.includes('owner'))) {
-      const demoRole = email.includes('staff') ? 'staff' : email.includes('manager') ? 'manager' : 'owner';
-      login({ email, role: demoRole, name: `Demo ${demoRole.charAt(0).toUpperCase() + demoRole.slice(1)}`, id: `demo-${demoRole}` });
-      addToast(`Logged in as ${demoRole} (Demo Mode)`, 'success');
+    if (demoEmails.includes(email) && validPasswords.includes(password)) {
+      const demoRole = email.split('@')[0];
+      login({ email, role: demoRole, name: name || `Demo ${demoRole.charAt(0).toUpperCase() + demoRole.slice(1)}`, id: `demo-${demoRole}` });
+      addToast(`Account created and logged in as ${demoRole} (Demo Mode)`, 'success');
       navigate('/dashboard');
       return;
     }
 
+    if (password.length < 6) {
+      setError('Minimum 6 characters required.');
+      return;
+    }
     setLoading(true);
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      const res = await fetch(`${API_URL}/api/auth/login`, {
+      const res = await fetch(`${API_URL}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ name, email, password, role }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.detail || 'Authentication rejected.');
+        setError(data.detail || 'Provisioning failed.');
         setLoading(false);
         return;
       }
@@ -52,13 +66,13 @@ export function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = (e) => {
+  const handleGoogleSignup = (e) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate OAuth redirect and successful login
+    // Simulate OAuth redirect
     setTimeout(() => {
       login({ email: 'executive@google.com', role: 'owner', name: 'Google Executive', id: 'demo-google' });
-      addToast('Authenticated via Google Workspace', 'success');
+      addToast('Account provisioned via Google Workspace', 'success');
       navigate('/dashboard');
     }, 1200);
   };
@@ -66,33 +80,28 @@ export function LoginPage() {
   return (
     <div className="flex min-h-screen bg-white dark:bg-[#000000]">
       <div className="flex-1 flex flex-col justify-center px-8 sm:px-16 lg:px-24 xl:px-32 relative z-10">
-        <div className="w-full max-w-[400px] animate-in slide-in-from-bottom-4 fade-in duration-700 ease-out">
-          <div className="mb-12">
-            <h1 className="text-4xl font-serif text-slate-900 dark:text-white mb-3">Welcome back.</h1>
-            <p className="text-sm font-light text-slate-500 dark:text-slate-400">Enter your credentials to access your workspace.</p>
+        <div className="w-full max-w-[360px] animate-in slide-in-from-bottom-4 fade-in duration-500 ease-out">
+          <div className="mb-10">
+            <h1 className="text-[28px] font-semibold tracking-tight text-[#111111] dark:text-[#ededed] mb-2">Initialize Workspace</h1>
+            <p className="text-[14px] text-[#666666] dark:text-[#a1a1aa]">Create an account to deploy SentiNaut.</p>
           </div>
-          <form className="space-y-8 mt-2" onSubmit={handleSubmit}>
-
+          <form className="space-y-5" onSubmit={handleSubmit}>
+            <Input label="Full Name" type="text" placeholder="Enter your full name" required value={name} onChange={(e) => setName(e.target.value)} />
             <Input label="Email address" type="email" placeholder="Enter your email address" required value={email} onChange={(e) => setEmail(e.target.value)} />
-            <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="text-[13px] font-medium text-[#111111] dark:text-[#ededed]">Password</label>
-                <button type="button" onClick={() => addToast('Password reset link sent to your email.', 'info')} className="text-[13px] text-[#666666] dark:text-[#a1a1aa] hover:text-[#111111] dark:hover:text-[#ededed] transition-colors">Forgot?</button>
-              </div>
-              <Input type="password" placeholder="Enter your password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-            </div>
+            <Input label="Password" type="password" placeholder="Create a password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+
             {error && <div className="text-[13px] text-red-500 font-medium">{error}</div>}
             
             <div className="space-y-4 pt-2">
               <Button type="submit" disabled={loading} className="w-full group">
-                {loading ? 'Verifying...' : (
-                  <span className="flex items-center gap-3">
-                    Sign In
-                    <ArrowRight className="w-4 h-4 opacity-70 group-hover:translate-x-1 transition-transform duration-300" />
+                {loading ? 'Provisioning...' : (
+                  <span className="flex items-center gap-2">
+                    Create Account
+                    <ArrowRight className="w-4 h-4 opacity-70 group-hover:translate-x-0.5 transition-transform" />
                   </span>
                 )}
               </Button>
-              
+
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-black/10 dark:border-white/10"></div>
@@ -102,7 +111,7 @@ export function LoginPage() {
                 </div>
               </div>
               
-              <Button type="button" variant="secondary" onClick={handleGoogleLogin} disabled={loading} className="w-full bg-white dark:bg-transparent text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-[#30363d] hover:bg-slate-50 dark:hover:bg-[#161b22]">
+              <Button type="button" variant="secondary" onClick={handleGoogleSignup} disabled={loading} className="w-full bg-white dark:bg-transparent text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-[#30363d] hover:bg-slate-50 dark:hover:bg-[#161b22]">
                 <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -113,9 +122,8 @@ export function LoginPage() {
               </Button>
             </div>
           </form>
-
-          <div className="mt-12 text-[11px] font-mono tracking-widest uppercase text-slate-500 dark:text-slate-400 text-center">
-            New here? <Link to="/signup" className="text-slate-900 dark:text-white font-medium hover:opacity-70 transition-opacity">Request Access</Link>
+          <div className="mt-8 text-[13px] text-[#666666] dark:text-[#a1a1aa]">
+            Existing user? <Link to="/login" className="text-[#111111] dark:text-[#ededed] font-medium hover:underline underline-offset-4">Authenticate</Link>
           </div>
         </div>
       </div>

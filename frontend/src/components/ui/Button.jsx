@@ -1,36 +1,23 @@
 import React from 'react';
 
 const variants = {
-  primary: 'bg-primary text-white hover:bg-primary-hover dark:bg-[#1f6feb] dark:text-[#ffffff] dark:hover:bg-[#1f6feb]/90',
-  secondary: 'bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-transparent dark:border dark:border-[#30363d] dark:text-[#8b949e] dark:hover:bg-[#21262d] dark:hover:text-[#e6edf3]',
-  outline: 'bg-transparent border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-[#30363d] dark:text-[#e6edf3] dark:hover:bg-[#21262d]'
+  primary: 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-black dark:hover:bg-slate-200 border border-slate-900 dark:border-white shadow-none',
+  secondary: 'bg-transparent border border-black/20 dark:border-white/20 text-slate-900 dark:text-white hover:bg-black/5 dark:hover:bg-white/5 shadow-none',
+  ghost: 'bg-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
 };
 
 const sizes = {
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2 text-base',
-  lg: 'px-6 py-3 text-lg'
+  sm: 'h-10 px-4 text-[10px]',
+  md: 'h-12 px-6 text-[12px]',
+  lg: 'h-14 px-8 text-[13px]'
 };
 
-export const Button = ({
-  variant = 'primary',
-  size = 'md',
-  disabled = false,
-  onClick,
-  children,
-  className = '',
-  type = 'button',
-  ...props
-}) => {
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-slate-900';
-  const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer';
-
+export const Button = ({ variant = 'primary', size = 'md', disabled, className = '', children, type = 'button', ...props }) => {
   return (
     <button
       type={type}
-      className={`${baseClasses} ${variants[variant]} ${sizes[size]} ${disabledClasses} ${className}`}
       disabled={disabled}
-      onClick={onClick}
+      className={`inline-flex items-center justify-center font-semibold uppercase tracking-[0.2em] rounded-none transition-all duration-300 ease-out active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-1 focus-visible:ring-black dark:focus-visible:ring-white ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     >
       {children}
