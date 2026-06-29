@@ -2,15 +2,18 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
-import uuid
+from bson.objectid import ObjectId
+from bson.errors import InvalidId
+import bcrypt
+from models.database import reviews_collection, actions_collection, users_collection, properties_collection
 
 app = FastAPI(title="SentiNaut Backend API")
 
 # Configure CORS so the React frontend can communicate with it
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins for development, can restrict to http://localhost:5173 later
-    allow_credentials=True,
+    allow_origins=["*"],  # Allows all origins for development
+    allow_credentials=False,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
@@ -25,103 +28,258 @@ class Review(BaseModel):
     tags: List[str] = []
     status: str = "Pending"
 
-# In-memory data store for this week
-# We populate it with some dummy data to preserve "old data" equivalents
-reviews_db = [
-    Review(
-        id="1", 
-        guestName="John Doe", 
-        platform="Google", 
-        text="The room was clean but the food was cold.", 
-        sentiment="Neutral", 
-        tags=["Food", "Cleanliness"], 
-        status="Pending"
-    ),
-    Review(
-        id="2", 
-        guestName="Jane Smith", 
-        platform="Booking.com", 
-        text="Amazing view and great host!", 
-        sentiment="Positive", 
-        tags=["Host", "Experience"], 
-        status="Done"
-    )
-]
+def review_helper(review) -> dict:
+    return {
+        "id": str(review["_id"]),
+        "guestName": review.get("guestName"),
+        "platform": review.get("platform"),
+        "text": review.get("text"),
+        "sentiment": review.get("sentiment", "Neutral"),
+        "tags": review.get("tags", []),
+        "status": review.get("status", "Pending")
+    }
 
 # 1. GET /api/reviews - list all reviews
 @app.get("/api/reviews", response_model=List[Review])
 def get_reviews():
-    return reviews_db
+    reviews = []
+    for review in reviews_collection.find():
+        reviews.append(review_helper(review))
+    return reviews
 
-# 2. GET /api/reviews/search?q=... - search reviews (Must be defined BEFORE /api/reviews/{id})
+# 2. GET /api/reviews/search?q=... - search reviews
 @app.get("/api/reviews/search", response_model=List[Review])
 def search_reviews(q: str = Query(..., description="Search query")):
-    query = q.lower()
-    results = [
-        r for r in reviews_db 
-        if query in r.guestName.lower() or query in r.text.lower() or any(query in tag.lower() for tag in r.tags)
-    ]
-    return results
+    query = {"$regex": q, "$options": "i"}
+    db_query = {
+        "$or": [
+            {"guestName": query},
+            {"text": query},
+            {"tags": query}
+        ]
+    }
+    reviews = []
+    for review in reviews_collection.find(db_query):
+        reviews.append(review_helper(review))
+    return reviews
 
 # 3. GET /api/reviews/{id} - get a single review
 @app.get("/api/reviews/{id}", response_model=Review)
 def get_review(id: str):
-    for r in reviews_db:
-        if r.id == id:
-            return r
+    try:
+        review = reviews_collection.find_one({"_id": ObjectId(id)})
+    except InvalidId:
+        review = reviews_collection.find_one({"id": id})
+        
+    if review:
+        return review_helper(review)
     raise HTTPException(status_code=404, detail="Review not found")
 
 # 4. POST /api/reviews - create a review
 @app.post("/api/reviews", response_model=Review, status_code=201)
 def create_review(review: Review):
-    # Generate a unique ID if not provided
-    review.id = review.id or str(uuid.uuid4())
-    reviews_db.append(review)
-    return review
+    review_dict = review.model_dump(exclude={"id"})
+    new_review = reviews_collection.insert_one(review_dict)
+    created_review = reviews_collection.find_one({"_id": new_review.inserted_id})
+    return review_helper(created_review)
 
 # 5. PUT /api/reviews/{id} - update a review
 @app.put("/api/reviews/{id}", response_model=Review)
 def update_review(id: str, updated_review: Review):
-    for i, r in enumerate(reviews_db):
-        if r.id == id:
-            updated_review.id = id # Ensure ID remains the same
-            reviews_db[i] = updated_review
-            return updated_review
+    review_dict = updated_review.model_dump(exclude={"id"})
+    
+    try:
+        filter_query = {"_id": ObjectId(id)}
+    except InvalidId:
+        filter_query = {"id": id}
+
+    update_result = reviews_collection.update_one(filter_query, {"$set": review_dict})
+    
+    if update_result.modified_count == 1 or update_result.matched_count == 1:
+        updated = reviews_collection.find_one(filter_query)
+        if updated:
+            return review_helper(updated)
+            
     raise HTTPException(status_code=404, detail="Review not found")
 
 # 6. DELETE /api/reviews/{id} - delete a review
 @app.delete("/api/reviews/{id}", status_code=204)
 def delete_review(id: str):
-    for i, r in enumerate(reviews_db):
-        if r.id == id:
-            del reviews_db[i]
-            return
+    try:
+        filter_query = {"_id": ObjectId(id)}
+    except InvalidId:
+        filter_query = {"id": id}
+        
+    delete_result = reviews_collection.delete_one(filter_query)
+    if delete_result.deleted_count == 1:
+        return
     raise HTTPException(status_code=404, detail="Review not found")
 
 # --- Actions API ---
 class Action(BaseModel):
-    id: int
+    id: Optional[str] = None
     task: str
     status: str
 
-actions_db = [
-    Action(id=1, task="Inspect AC in 302", status="Pending"),
-    Action(id=2, task="Praise kitchen staff", status="Done"),
-]
+def action_helper(action) -> dict:
+    _id = action.get("_id")
+    action_id = str(_id) if _id else str(action.get("id"))
+    return {
+        "id": action_id,
+        "task": action.get("task"),
+        "status": action.get("status")
+    }
 
 @app.get("/api/actions", response_model=List[Action])
 def get_actions():
-    return actions_db
+    actions = []
+    for action in actions_collection.find():
+        actions.append(action_helper(action))
+    return actions
+
+@app.post("/api/actions", response_model=Action, status_code=201)
+def create_action(action: Action):
+    action_dict = action.model_dump(exclude={"id"})
+    new_action = actions_collection.insert_one(action_dict)
+    created_action = actions_collection.find_one({"_id": new_action.inserted_id})
+    return action_helper(created_action)
 
 @app.put("/api/actions/{id}", response_model=Action)
-def update_action(id: int, updated_action: Action):
-    for i, a in enumerate(actions_db):
-        if a.id == id:
-            updated_action.id = id
-            actions_db[i] = updated_action
-            return updated_action
+def update_action(id: str, updated_action: Action):
+    action_dict = updated_action.model_dump(exclude={"id"})
+    
+    try:
+        filter_query = {"_id": ObjectId(id)}
+    except InvalidId:
+        filter_query = {"id": id}
+            
+    update_result = actions_collection.update_one(filter_query, {"$set": action_dict})
+    
+    if update_result.modified_count == 1 or update_result.matched_count == 1:
+        updated = actions_collection.find_one(filter_query)
+        if updated:
+            return action_helper(updated)
+            
     raise HTTPException(status_code=404, detail="Action not found")
 
 @app.get("/")
 def read_root():
     return {"message": "Welcome to SentiNaut API"}
+
+# --- Properties API ---
+class Property(BaseModel):
+    id: Optional[str] = None
+    name: str
+    location: str
+    status: str = "Active"
+
+def property_helper(prop) -> dict:
+    return {
+        "id": str(prop["_id"]),
+        "name": prop.get("name"),
+        "location": prop.get("location"),
+        "status": prop.get("status", "Active")
+    }
+
+@app.get("/api/properties", response_model=List[Property])
+def get_properties():
+    props = []
+    for prop in properties_collection.find():
+        props.append(property_helper(prop))
+    return props
+
+@app.post("/api/properties", response_model=Property, status_code=201)
+def create_property(prop: Property):
+    prop_dict = prop.model_dump(exclude={"id"})
+    new_prop = properties_collection.insert_one(prop_dict)
+    created_prop = properties_collection.find_one({"_id": new_prop.inserted_id})
+    return property_helper(created_prop)
+
+
+# ============================================================
+# AUTH API  (signup / login — DB backed, no JWT this week)
+# ============================================================
+VALID_ROLES = ["staff", "manager", "owner"]
+
+
+class SignupRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+    role: str  # staff | manager | owner
+    property: Optional[str] = None
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+    role: str
+
+
+def user_helper(user) -> dict:
+    return {
+        "id": str(user["_id"]),
+        "name": user.get("name"),
+        "email": user.get("email"),
+        "role": user.get("role"),
+        "property": user.get("property", "Unassigned")
+    }
+
+
+@app.post("/api/auth/signup", status_code=201)
+def signup(data: SignupRequest):
+    if data.role not in VALID_ROLES:
+        raise HTTPException(status_code=400, detail=f"Invalid role. Must be one of: {VALID_ROLES}")
+
+    # Check duplicate email
+    if users_collection.find_one({"email": data.email}):
+        raise HTTPException(status_code=409, detail="An account with this email already exists.")
+
+    hashed = bcrypt.hashpw(data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    new_user = {
+        "name": data.name,
+        "email": data.email,
+        "password": hashed,
+        "role": data.role,
+        "property": data.property,
+    }
+    result = users_collection.insert_one(new_user)
+    created = users_collection.find_one({"_id": result.inserted_id})
+    return {"message": "Account created successfully", "user": user_helper(created)}
+
+class UserResponse(BaseModel):
+    id: str
+    name: str
+    email: str
+    role: str
+    property: Optional[str] = None
+    initials: Optional[str] = None
+
+@app.get("/api/users", response_model=List[UserResponse])
+def get_users(role: Optional[str] = None):
+    query = {}
+    if role:
+        query["role"] = role
+    users = []
+    for user in users_collection.find(query):
+        u = user_helper(user)
+        name_parts = str(u["name"]).split() if u.get("name") else []
+        u["initials"] = "".join([p[0].upper() for p in name_parts[:2]]) if name_parts else "U"
+        users.append(u)
+    return users
+
+
+@app.post("/api/auth/login")
+def login(data: LoginRequest):
+    user = users_collection.find_one({"email": data.email})
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid email or password.")
+
+    if not bcrypt.checkpw(data.password.encode('utf-8'), user["password"].encode('utf-8')):
+        raise HTTPException(status_code=401, detail="Invalid email or password.")
+
+    if user.get("role") != data.role:
+        raise HTTPException(status_code=403, detail=f"Access denied: This account does not have {data.role} privileges.")
+
+    return {"message": "Login successful", "user": user_helper(user)}
+

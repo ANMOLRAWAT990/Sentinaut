@@ -30,6 +30,11 @@ export function LoginPage() {
                      : email.toLowerCase().includes('owner') ? 'owner' 
                      : role;
                      
+      if (demoRole !== role) {
+        setError(`Access denied: This account does not have ${role} privileges.`);
+        return;
+      }
+      
       login({ email: email || `${demoRole}@test.com`, role: demoRole, name: `Demo ${demoRole.charAt(0).toUpperCase() + demoRole.slice(1)}`, id: `demo-${demoRole}` });
       addToast(`Logged in as ${demoRole} (Demo Mode)`, 'success');
       navigate('/dashboard');
@@ -42,7 +47,7 @@ export function LoginPage() {
       const res = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, role }),
       });
       const data = await res.json();
       if (!res.ok) {
