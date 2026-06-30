@@ -1,10 +1,29 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function AboutPage() {
+  const [toast, setToast] = useState(null);
+  
+  const showToast = (message) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 3000);
+  };
+
   return (
-    <div className="flex flex-col w-full bg-white dark:bg-[#09090b] min-h-screen">
-      
+    <div className="flex flex-col w-full bg-white dark:bg-[#09090b] min-h-screen relative">
+      <AnimatePresence>
+        {toast && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-8 right-8 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-4 rounded-md shadow-2xl z-50 font-medium tracking-wide border border-slate-700 dark:border-slate-200"
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Responsive fluid header with cinematic luxury feel */}
       <div className="relative w-full min-h-[60vh] flex flex-col justify-end overflow-hidden pb-16">
         <motion.div 
@@ -180,23 +199,23 @@ export function AboutPage() {
             <div className="p-12 sm:p-16 text-center hover:bg-slate-50 dark:hover:bg-[#111115] transition-colors">
               <h3 className="font-serif text-2xl text-slate-900 dark:text-white mb-2">Boutique</h3>
               <p className="text-sm text-slate-500 mb-8 font-light">Up to 1,000 reviews/mo</p>
-              <p className="text-5xl font-serif text-slate-900 dark:text-white mb-8">$299<span className="text-lg font-light text-slate-500">/mo</span></p>
-              <button className="px-6 py-3 border border-slate-900 dark:border-white text-slate-900 dark:text-white text-sm uppercase tracking-widest hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">Select</button>
+              <p className="text-5xl font-serif text-slate-900 dark:text-white mb-8">₹24,999<span className="text-lg font-light text-slate-500">/mo</span></p>
+              <button onClick={() => showToast("Redirecting to Razorpay Checkout...")} className="px-6 py-3 border border-slate-900 dark:border-white text-slate-900 dark:text-white text-sm uppercase tracking-widest hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">Select</button>
             </div>
             
             <div className="p-12 sm:p-16 text-center bg-slate-900 dark:bg-white text-white dark:text-slate-900 relative">
               <div className="absolute top-6 left-1/2 -translate-x-1/2 text-[10px] font-mono tracking-widest uppercase opacity-70">Popular</div>
               <h3 className="font-serif text-2xl mb-2 mt-4">Resort</h3>
               <p className="text-sm opacity-70 mb-8 font-light">Unlimited reviews & managers</p>
-              <p className="text-5xl font-serif mb-8">$599<span className="text-lg font-light opacity-70">/mo</span></p>
-              <button className="px-6 py-3 border border-white dark:border-slate-900 text-white dark:text-slate-900 text-sm uppercase tracking-widest hover:bg-white hover:text-black dark:hover:bg-slate-900 dark:hover:text-white transition-colors">Select</button>
+              <p className="text-5xl font-serif mb-8">₹49,999<span className="text-lg font-light opacity-70">/mo</span></p>
+              <button onClick={() => showToast("Redirecting to Razorpay Checkout...")} className="px-6 py-3 border border-white dark:border-slate-900 text-white dark:text-slate-900 text-sm uppercase tracking-widest hover:bg-white hover:text-black dark:hover:bg-slate-900 dark:hover:text-white transition-colors">Select</button>
             </div>
 
             <div className="p-12 sm:p-16 text-center hover:bg-slate-50 dark:hover:bg-[#111115] transition-colors">
               <h3 className="font-serif text-2xl text-slate-900 dark:text-white mb-2">Enterprise</h3>
               <p className="text-sm text-slate-500 mb-8 font-light">Custom SLA deployment</p>
               <p className="text-5xl font-serif text-slate-900 dark:text-white mb-8">POA</p>
-              <button className="px-6 py-3 border border-slate-900 dark:border-white text-slate-900 dark:text-white text-sm uppercase tracking-widest hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">Contact</button>
+              <button onClick={() => showToast("Opening contact form. Our sales team will reach out soon.")} className="px-6 py-3 border border-slate-900 dark:border-white text-slate-900 dark:text-white text-sm uppercase tracking-widest hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">Contact</button>
             </div>
           </div>
         </div>

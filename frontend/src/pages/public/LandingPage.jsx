@@ -1,7 +1,13 @@
-import React, { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import React, { useRef, useState } from 'react';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 
 export function LandingPage() {
+  const [toast, setToast] = useState(null);
+  const showToast = (message) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 3000);
+  };
+
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -12,7 +18,19 @@ export function LandingPage() {
   const opacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
 
   return (
-    <div className="flex flex-col w-full bg-white dark:bg-[#09090b] overflow-hidden">
+    <div className="flex flex-col w-full bg-white dark:bg-[#09090b] overflow-hidden relative">
+      <AnimatePresence>
+        {toast && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-8 right-8 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-4 rounded-md shadow-2xl z-50 font-medium tracking-wide border border-slate-700 dark:border-slate-200"
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Dynamic Cinematic Hero Section */}
       <div ref={heroRef} className="relative w-full min-h-screen flex flex-col justify-end overflow-hidden pb-32">
@@ -177,7 +195,7 @@ export function LandingPage() {
             SentiNaut natively ingests data from TripAdvisor, Booking.com, WhatsApp Business API, and your internal property management systems seamlessly.
           </p>
           <div className="flex flex-wrap justify-center gap-6">
-            <a href="/about#integrations" className="px-8 py-4 bg-white text-black text-sm uppercase tracking-widest font-semibold hover:bg-slate-200 hover:scale-105 transition-all inline-block duration-300 shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)]">View Integrations</a>
+            <button onClick={() => showToast("Opening Integrations Catalog...")} className="px-8 py-4 bg-white text-black text-sm uppercase tracking-widest font-semibold hover:bg-slate-200 hover:scale-105 transition-all inline-block duration-300 shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)]">View Integrations</button>
           </div>
         </motion.div>
       </section>
