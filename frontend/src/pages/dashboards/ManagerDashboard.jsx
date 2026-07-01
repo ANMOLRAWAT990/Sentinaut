@@ -5,8 +5,10 @@ import { useToast } from '../../components/ui/Toast';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { useAuth } from '../../context/AuthContext';
 
 export function ManagerDashboard() {
+  const { user } = useAuth();
   const [reviews, setReviews] = useState([]);
   const [actions, setActions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +26,7 @@ export function ManagerDashboard() {
       const res = await fetch(`${API_URL}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'Invited Staff', email: inviteEmail, password: 'password123', role: 'staff' })
+        body: JSON.stringify({ name: 'Invited Staff', email: inviteEmail, password: 'password123', role: 'staff', property: user?.property || 'Unassigned' })
       });
       
       if (res.ok) {
@@ -41,12 +43,13 @@ export function ManagerDashboard() {
   };
 
   React.useEffect(() => {
+    if (!user) return;
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
     Promise.all([
-      fetch(`${API_URL}/api/reviews`).then(res => res.json()),
-      fetch(`${API_URL}/api/actions`).then(res => res.json()),
-      fetch(`${API_URL}/api/users?role=staff`).then(res => res.json())
+      fetch(`${API_URL}/api/reviews?property=${user.property}`).then(res => res.json()),
+      fetch(`${API_URL}/api/actions?property=${user.property}`).then(res => res.json()),
+      fetch(`${API_URL}/api/users?role=staff&property=${user.property}`).then(res => res.json())
     ]).then(([reviewsData, actionsData, staffData]) => {
       const fetchedReviews = reviewsData.map(r => ({
         id: r.id, text: r.text, sentiment: r.sentiment, approved: r.status === "Done", fullData: r

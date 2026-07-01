@@ -4,9 +4,11 @@ import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
 import { useToast } from '../../components/ui/Toast';
+import { useAuth } from '../../context/AuthContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export function OwnerDashboard() {
+  const { user } = useAuth();
   const [dateRange, setDateRange] = useState('7days');
   const [analyticsData, setAnalyticsData] = useState(null);
   const { addToast } = useToast();
@@ -26,11 +28,12 @@ export function OwnerDashboard() {
   const [selectedProperty, setSelectedProperty] = useState('');
 
   useEffect(() => {
+    if (!user) return;
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     Promise.all([
-      fetch(`${API_URL}/api/properties`).then(res => res.json()),
-      fetch(`${API_URL}/api/users?role=manager`).then(res => res.json()),
-      fetch(`${API_URL}/api/analytics`).then(res => res.json())
+      fetch(`${API_URL}/api/properties?owner_email=${user.email}`).then(res => res.json()),
+      fetch(`${API_URL}/api/users?role=manager&owner_email=${user.email}`).then(res => res.json()),
+      fetch(`${API_URL}/api/analytics?owner_email=${user.email}`).then(res => res.json())
     ]).then(([propsData, managersData, analyticsRes]) => {
       if (Array.isArray(propsData) && propsData.length > 0) {
         setProperties(propsData);
@@ -53,7 +56,7 @@ export function OwnerDashboard() {
       const res = await fetch(`${API_URL}/api/properties`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: propertyName, location: propertyLocation, status: 'Active' })
+        body: JSON.stringify({ name: propertyName, location: propertyLocation, status: 'Active', owner_email: user?.email })
       });
       
       if (res.ok) {

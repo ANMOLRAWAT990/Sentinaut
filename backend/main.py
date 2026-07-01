@@ -32,9 +32,12 @@ def review_helper(review) -> dict:
 
 # 1. GET /api/reviews - list all reviews
 @app.get("/api/reviews", response_model=List[Review])
-def get_reviews():
+def get_reviews(property: Optional[str] = None):
+    query = {}
+    if property:
+        query["property"] = property
     reviews = []
-    for review in reviews_collection.find():
+    for review in reviews_collection.find(query):
         reviews.append(review_helper(review))
     return reviews
 
@@ -118,9 +121,12 @@ def action_helper(action) -> dict:
     }
 
 @app.get("/api/actions", response_model=List[Action])
-def get_actions():
+def get_actions(property: Optional[str] = None):
+    query = {}
+    if property:
+        query["property"] = property
     actions = []
-    for action in actions_collection.find():
+    for action in actions_collection.find(query):
         actions.append(action_helper(action))
     return actions
 
@@ -160,13 +166,17 @@ def property_helper(prop) -> dict:
         "id": str(prop["_id"]),
         "name": prop.get("name"),
         "location": prop.get("location"),
-        "status": prop.get("status", "Active")
+        "status": prop.get("status", "Active"),
+        "owner_email": prop.get("owner_email")
     }
 
 @app.get("/api/properties", response_model=List[Property])
-def get_properties():
+def get_properties(owner_email: Optional[str] = None):
+    query = {}
+    if owner_email:
+        query["owner_email"] = owner_email
     props = []
-    for prop in properties_collection.find():
+    for prop in properties_collection.find(query):
         props.append(property_helper(prop))
     return props
 
@@ -216,10 +226,16 @@ def signup(data: SignupRequest):
     return {"message": "Account created successfully", "user": user_helper(created)}
 
 @app.get("/api/users", response_model=List[UserResponse])
-def get_users(role: Optional[str] = None):
+def get_users(role: Optional[str] = None, owner_email: Optional[str] = None, property: Optional[str] = None):
     query = {}
     if role:
         query["role"] = role
+    if property:
+        query["property"] = property
+    elif owner_email:
+        # To get managers for an owner, we find all properties owned by them and filter by those properties.
+        owned_props = [p["name"] for p in properties_collection.find({"owner_email": owner_email})]
+        query["property"] = {"$in": owned_props}
     users = []
     for user in users_collection.find(query):
         u = user_helper(user)
@@ -267,7 +283,8 @@ def analyze_reviews(payload: dict):
             "text": text,
             "sentiment": sentiment,
             "tags": tags,
-            "status": "Pending"
+            "status": "Pending",
+            "property": payload.get("property", "Unassigned")
         }
         res = reviews_collection.insert_one(review)
         review["_id"] = res.inserted_id
@@ -276,7 +293,7 @@ def analyze_reviews(payload: dict):
     if is_batch:
         actions = []
         if positive_count < len(texts):
-            action_doc = {"task": "Review negative themes identified in recent batch upload", "status": "Pending"}
+            action_doc = {"task": "Review negative themes identified in recent batch upload", "status": "Pending", "property": payload.get("property", "Unassigned")}
             res = actions_collection.insert_one(action_doc)
             action_doc["_id"] = res.inserted_id
             actions.append(action_helper(action_doc))
@@ -297,8 +314,15 @@ def analyze_reviews(payload: dict):
 
 
 @app.get("/api/analytics")
-def get_analytics():
-    all_reviews = list(reviews_collection.find())
+def get_analytics(owner_email: Optional[str] = None, property: Optional[str] = None):
+    query = {}
+    if property:
+        query["property"] = property
+    elif owner_email:
+        owned_props = [p["name"] for p in properties_collection.find({"owner_email": owner_email})]
+        query["property"] = {"$in": owned_props}
+        
+    all_reviews = list(reviews_collection.find(query))
     total = len(all_reviews)
     positive = sum(1 for r in all_reviews if r.get("sentiment") == "Positive")
     pos_pct = round((positive / total * 100) if total > 0 else 0)

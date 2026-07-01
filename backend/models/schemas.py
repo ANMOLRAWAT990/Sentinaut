@@ -9,17 +9,20 @@ class Review(BaseModel):
     sentiment: str = "Neutral"
     tags: List[str] = []
     status: str = "Pending"
+    property: Optional[str] = None
 
 class Action(BaseModel):
     id: Optional[str] = None
     task: str
     status: str
+    property: Optional[str] = None
 
 class Property(BaseModel):
     id: Optional[str] = None
     name: str
     location: str
     status: str = "Active"
+    owner_email: Optional[str] = None
 
 class SignupRequest(BaseModel):
     name: str

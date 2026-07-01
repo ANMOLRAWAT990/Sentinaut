@@ -5,8 +5,10 @@ import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
 import { Loader2, AlertCircle, Search, Copy, CheckCircle2 } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
+import { useAuth } from '../../context/AuthContext';
 
 export function StaffDashboard() {
+  const { user } = useAuth();
   const { addToast } = useToast();
   const [reviewText, setReviewText] = useState('');
   const [mode, setMode] = useState('single'); // 'single' or 'batch'
@@ -47,7 +49,7 @@ export function StaffDashboard() {
         const res = await fetch('http://localhost:8000/api/reviews/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: reviewText })
+          body: JSON.stringify({ text: reviewText, property: user?.property || 'Unassigned' })
         });
         
         if (!res.ok) throw new Error("API call failed");
@@ -59,7 +61,7 @@ export function StaffDashboard() {
         const res = await fetch('http://localhost:8000/api/reviews/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ batch: rawReviews })
+          body: JSON.stringify({ batch: rawReviews, property: user?.property || 'Unassigned' })
         });
 
         if (!res.ok) throw new Error("API call failed");
