@@ -83,6 +83,58 @@ MongoDB was chosen for SentiNaut for three reasons:
 
 ![SentiNaut MongoDB Schema](./W5_SchemaDiagram_TBI-26100062.png)
 
+#### Entity-Relationship Diagram
+```mermaid
+erDiagram
+    USER_OWNER {
+        ObjectId _id PK
+        string name
+        string email UK
+        string password
+        string role "owner"
+    }
+
+    PROPERTY {
+        ObjectId _id PK
+        string name UK
+        string location
+        string status "Active"
+        string owner_email FK
+    }
+
+    USER_STAFF {
+        ObjectId _id PK
+        string name
+        string email UK
+        string password
+        string role "manager/staff"
+        string property FK
+    }
+
+    REVIEW {
+        ObjectId _id PK
+        string guestName
+        string platform
+        string text
+        string sentiment
+        array tags
+        string status
+        string property FK
+    }
+
+    ACTION {
+        ObjectId _id PK
+        string task
+        string status
+        string property FK
+    }
+
+    USER_OWNER ||--o{ PROPERTY : "Owns"
+    PROPERTY ||--o{ USER_STAFF : "Employs"
+    PROPERTY ||--o{ REVIEW : "Receives"
+    PROPERTY ||--o{ ACTION : "Generates"
+```
+
 > The `users` collection feeds into `reviews` (a user creates a review). Reviews generate `actions` (operational tasks derived from feedback patterns).
 
 ---
