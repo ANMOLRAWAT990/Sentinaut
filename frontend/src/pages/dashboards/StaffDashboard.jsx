@@ -44,45 +44,34 @@ export function StaffDashboard() {
     
     try {
       if (mode === 'single') {
-        const sentimentGuess = reviewText.toLowerCase().includes('good') ? 'Positive' : 'Negative';
-        const newReview = { guestName: 'Unknown', platform: 'Direct', text: reviewText, sentiment: sentimentGuess, tags: ["General"], status: 'Pending' };
-
-        const res = await fetch('http://localhost:8000/api/reviews', {
+        const res = await fetch('http://localhost:8000/api/reviews/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newReview)
+          body: JSON.stringify({ text: reviewText })
         });
         
         if (!res.ok) throw new Error("API call failed");
         const data = await res.json();
-        
-        setSingleResult({
-          sentiment: data.sentiment,
-          confidence: '94%',
-          themes: data.tags.length > 0 ? data.tags : ['Cleanliness'],
-          reply: `Thank you for your feedback! We noticed you mentioned: ${reviewText.substring(0,20)}... We will look into it.`
-        });
+        setSingleResult(data);
       } else {
-        // BATCH MODE: Split by double newline and POST to database
         const rawReviews = reviewText.split(/\n\s*\n/).filter(r => r.trim().length > 0);
         
-        const savedReviews = await Promise.all(rawReviews.map(async (text) => {
-           const sentimentGuess = text.toLowerCase().includes('good') ? 'Positive' : 'Negative';
-           const res = await fetch('http://localhost:8000/api/reviews', {
-             method: 'POST',
-             headers: { 'Content-Type': 'application/json' },
-             body: JSON.stringify({ guestName: 'Batch Upload', platform: 'Direct', text, sentiment: sentimentGuess, tags: ["Batch"], status: 'Pending' })
-           });
-           return await res.json();
-        }));
+        const res = await fetch('http://localhost:8000/api/reviews/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ batch: rawReviews })
+        });
 
+        if (!res.ok) throw new Error("API call failed");
+        const data = await res.json();
+        
         setBatchResults({
-          reviews: savedReviews.map(data => ({
-             id: data.id, text: data.text, sentiment: data.sentiment, theme: data.tags[0] || 'Experience', confidence: "98%", reply: "Thank you for the detailed feedback." 
+          reviews: data.reviews.map(r => ({
+             id: r.id, text: r.text, sentiment: r.sentiment, theme: r.tags[0] || 'Experience', confidence: "98%", reply: "Thanks for the feedback."
           })),
-          rootCauses: ["Recurring theme identified in batch upload"],
-          working: ["Review ingestion pipeline operational"],
-          actions: [`Review ${savedReviews.length} new feedback entries`]
+          rootCauses: data.rootCauses,
+          working: data.working,
+          actions: data.actions
         });
       }
       

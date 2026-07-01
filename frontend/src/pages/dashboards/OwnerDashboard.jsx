@@ -6,19 +6,9 @@ import { Input } from '../../components/ui/Input';
 import { useToast } from '../../components/ui/Toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const mockData = {
-  '7days': [
-    { name: 'Mon', score: 8.2 }, { name: 'Tue', score: 8.4 }, { name: 'Wed', score: 8.1 }, 
-    { name: 'Thu', score: 8.5 }, { name: 'Fri', score: 8.9 }, { name: 'Sat', score: 9.2 }, { name: 'Sun', score: 9.0 }
-  ],
-  '30days': [
-    { name: 'Week 1', score: 8.0 }, { name: 'Week 2', score: 8.3 }, 
-    { name: 'Week 3', score: 8.7 }, { name: 'Week 4', score: 8.9 }
-  ]
-};
-
 export function OwnerDashboard() {
   const [dateRange, setDateRange] = useState('7days');
+  const [analyticsData, setAnalyticsData] = useState(null);
   const { addToast } = useToast();
   
   const [properties, setProperties] = useState([
@@ -39,13 +29,17 @@ export function OwnerDashboard() {
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     Promise.all([
       fetch(`${API_URL}/api/properties`).then(res => res.json()),
-      fetch(`${API_URL}/api/users?role=manager`).then(res => res.json())
-    ]).then(([propsData, managersData]) => {
+      fetch(`${API_URL}/api/users?role=manager`).then(res => res.json()),
+      fetch(`${API_URL}/api/analytics`).then(res => res.json())
+    ]).then(([propsData, managersData, analyticsRes]) => {
       if (Array.isArray(propsData) && propsData.length > 0) {
         setProperties(propsData);
       }
       if (Array.isArray(managersData) && managersData.length > 0) {
         setManagers(managersData);
+      }
+      if (analyticsRes) {
+        setAnalyticsData(analyticsRes);
       }
     }).catch(err => console.error("Failed to load owner data:", err));
   }, []);
@@ -96,14 +90,8 @@ export function OwnerDashboard() {
       });
       
       if (res.ok) {
-        const newManager = {
-          id: Date.now(),
-          name: 'Invited Manager',
-          email: managerEmail,
-          property: selectedProperty || properties[0]?.name || 'Unassigned',
-          initials: 'IM'
-        };
-        setManagers([...managers, newManager]);
+        const data = await res.json();
+        setManagers([...managers, data.user]);
         addToast(`Manager account created! They can login with password: password123`, 'success');
       } else {
         const data = await res.json();
@@ -145,8 +133,8 @@ export function OwnerDashboard() {
           <CardContent className="p-6">
             <p className="text-sm font-medium text-slate-500 dark:text-[#8b949e]">Overall Health Score</p>
             <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-slate-900 dark:text-[#e6edf3]">8.6</span>
-              <span className="text-sm text-green-600">+0.2 from last week</span>
+              <span className="text-4xl font-bold text-slate-900 dark:text-[#e6edf3]">{analyticsData?.healthScore || '0.0'}</span>
+              <span className="text-sm text-green-600">Live Data</span>
             </div>
           </CardContent>
         </Card>
@@ -154,8 +142,8 @@ export function OwnerDashboard() {
           <CardContent className="p-6">
             <p className="text-sm font-medium text-slate-500 dark:text-[#8b949e]">Total Reviews Analyzed</p>
             <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-slate-900 dark:text-[#e6edf3]">1,248</span>
-              <span className="text-sm text-slate-500 dark:text-[#8b949e]">this month</span>
+              <span className="text-4xl font-bold text-slate-900 dark:text-[#e6edf3]">{analyticsData?.totalReviews || 0}</span>
+              <span className="text-sm text-slate-500 dark:text-[#8b949e]">all time</span>
             </div>
           </CardContent>
         </Card>
@@ -163,8 +151,8 @@ export function OwnerDashboard() {
           <CardContent className="p-6">
             <p className="text-sm font-medium text-slate-500 dark:text-[#8b949e]">Positive Sentiment</p>
             <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-slate-900 dark:text-[#e6edf3]">76%</span>
-              <span className="text-sm text-green-600">+4%</span>
+              <span className="text-4xl font-bold text-slate-900 dark:text-[#e6edf3]">{analyticsData?.positiveSentimentPct || 0}%</span>
+              <span className="text-sm text-green-600">Global</span>
             </div>
           </CardContent>
         </Card>
@@ -179,7 +167,7 @@ export function OwnerDashboard() {
           <CardContent>
             <div className="h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={mockData[dateRange]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                <LineChart data={analyticsData?.chartData?.[dateRange] || []} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                   <Line type="monotone" dataKey="score" stroke="#2563eb" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                   <CartesianGrid stroke="#e2e8f0" strokeDasharray="5 5" vertical={false} />
                   <XAxis dataKey="name" stroke="#64748b" axisLine={false} tickLine={false} />

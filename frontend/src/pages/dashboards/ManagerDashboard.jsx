@@ -13,6 +13,7 @@ export function ManagerDashboard() {
   const { addToast } = useToast();
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [staffList, setStaffList] = useState([]);
 
   const handleInviteStaff = async (e) => {
     e.preventDefault();
@@ -44,20 +45,17 @@ export function ManagerDashboard() {
 
     Promise.all([
       fetch(`${API_URL}/api/reviews`).then(res => res.json()),
-      fetch(`${API_URL}/api/actions`).then(res => res.json())
-    ]).then(([reviewsData, actionsData]) => {
+      fetch(`${API_URL}/api/actions`).then(res => res.json()),
+      fetch(`${API_URL}/api/users?role=staff`).then(res => res.json())
+    ]).then(([reviewsData, actionsData, staffData]) => {
       const fetchedReviews = reviewsData.map(r => ({
         id: r.id, text: r.text, sentiment: r.sentiment, approved: r.status === "Done", fullData: r
       }));
-      setReviews([...fetchedReviews, { id: "mock-1", text: "AC was not cooling in Taj Palace room 302 due to Delhi heat.", sentiment: "Negative", approved: false }, { id: "mock-2", text: "Loved the breakfast spread at The Oberoi, fantastic Dal Makhani!", sentiment: "Positive", approved: true }]);
-      
-      setActions(actionsData.length > 0 ? actionsData : [
-        { id: "mock-a", task: "Inspect AC compressor in 302 (Taj Palace)", status: "Pending" },
-        { id: "mock-b", task: "Commend Head Chef for Breakfast Service", status: "Done" },
-      ]);
+      setReviews(fetchedReviews);
+      setActions(actionsData);
+      setStaffList(Array.isArray(staffData) ? staffData : []);
     }).catch(err => console.error(err))
       .finally(() => {
-        // Add a tiny synthetic delay so the skeleton animation is actually visible (feels premium)
         setTimeout(() => setLoading(false), 800);
       });
   }, []);
@@ -183,15 +181,17 @@ export function ManagerDashboard() {
       <div className="pt-6 border-t border-black/10 dark:border-white/10">
         <h2 className="text-xl font-bold text-[#111111] dark:text-[#ededed] tracking-tight mb-6">Staff Management</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="flex items-center justify-between bg-white dark:bg-[#111111] p-4 rounded-lg border border-black/10 dark:border-white/10 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-sm font-bold">DS</div>
-              <div>
-                <h4 className="text-sm font-semibold text-slate-900 dark:text-[#ededed]">Demo Staff</h4>
-                <p className="text-xs text-slate-500 dark:text-[#a1a1aa]">Front Desk</p>
+          {staffList.map(staff => (
+            <div key={staff.id} className="flex items-center justify-between bg-white dark:bg-[#111111] p-4 rounded-lg border border-black/10 dark:border-white/10 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-sm font-bold">{staff.initials || 'S'}</div>
+                <div>
+                  <h4 className="text-sm font-semibold text-slate-900 dark:text-[#ededed]">{staff.name}</h4>
+                  <p className="text-xs text-slate-500 dark:text-[#a1a1aa]">{staff.property || 'Unassigned'}</p>
+                </div>
               </div>
             </div>
-          </div>
+          ))}
           <button 
             onClick={() => setIsInviteModalOpen(true)}
             className="flex items-center justify-center h-[74px] border-2 border-dashed border-black/10 dark:border-white/10 rounded-lg text-sm font-medium text-slate-500 dark:text-[#8b949e] hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
