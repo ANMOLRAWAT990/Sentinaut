@@ -180,7 +180,7 @@ export function OwnerDashboard() {
         <select 
           value={dateRange}
           onChange={(e) => setDateRange(e.target.value)}
-          className="border border-slate-200 dark:border-[#30363d] rounded-md px-3 py-1.5 text-sm text-slate-700 dark:text-[#e6edf3] bg-white dark:bg-[#161b22] focus:ring-2 focus:ring-primary-500"
+          className="border border-slate-200 dark:border-slate-800 rounded-md px-3 py-1.5 text-sm text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-primary-500"
         >
           <option value="7days">Last 7 Days</option>
           <option value="30days">Last 30 Days</option>
@@ -192,7 +192,7 @@ export function OwnerDashboard() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-[#e6edf3] tracking-tighter">{analyticsData?.healthScore || '0.0'}</span>
+              <span className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-slate-200 tracking-tighter">{analyticsData?.healthScore || '0.0'}</span>
               <span className={`text-sm font-medium ${analyticsData?.periodOverPeriod >= 0 ? 'text-green-600' : 'text-red-500'}`}>
                 {analyticsData?.periodOverPeriod > 0 ? '+' : ''}{analyticsData?.periodOverPeriod || 0}% PoP
               </span>
@@ -203,8 +203,8 @@ export function OwnerDashboard() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-[#e6edf3] tracking-tighter">{analyticsData?.totalReviews || 0}</span>
-              <span className="text-sm font-medium text-slate-500 dark:text-[#8b949e]">SLA: {analyticsData?.managerSLA || '0h'}</span>
+              <span className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-slate-200 tracking-tighter">{analyticsData?.totalReviews || 0}</span>
+              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">SLA: {analyticsData?.managerSLA || '0h'}</span>
             </div>
             <p className="text-xs uppercase tracking-widest font-semibold text-slate-400 dark:text-slate-500 mt-2">Total Reviews Analyzed</p>
           </CardContent>
@@ -212,7 +212,7 @@ export function OwnerDashboard() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-[#e6edf3] tracking-tighter">{analyticsData?.positiveSentimentPct || 0}%</span>
+              <span className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-slate-200 tracking-tighter">{analyticsData?.positiveSentimentPct || 0}%</span>
               <span className="text-sm font-medium text-primary-600 dark:text-primary-400">Conv: {analyticsData?.conversionRate || '0%'}</span>
             </div>
             <p className="text-xs uppercase tracking-widest font-semibold text-slate-400 dark:text-slate-500 mt-2">Positive Sentiment</p>
@@ -253,28 +253,28 @@ export function OwnerDashboard() {
             <div className={`space-y-5 transition-opacity ${isRefreshingComps ? 'opacity-50' : 'opacity-100'}`}>
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-slate-900 dark:text-[#e6edf3]">{activeProperty || 'Your Property'}</span>
+                  <span className="font-medium text-slate-900 dark:text-slate-200">{activeProperty || 'Your Property'}</span>
                   <span className="text-primary-600 font-bold">{competitorScores.own}/10</span>
                 </div>
-                <div className="w-full bg-slate-100 dark:bg-[#21262d] rounded-full h-2">
+                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
                   <div className="bg-primary-600 h-2 rounded-full" style={{ width: `${(competitorScores.own / 10) * 100}%` }}></div>
                 </div>
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-slate-600 dark:text-[#8b949e]">Competitor A</span>
-                  <span className="font-medium text-slate-900 dark:text-[#e6edf3]">{competitorScores.compA}/10</span>
+                  <span className="text-slate-600 dark:text-slate-400">Competitor A</span>
+                  <span className="font-medium text-slate-900 dark:text-slate-200">{competitorScores.compA}/10</span>
                 </div>
-                <div className="w-full bg-slate-100 dark:bg-[#21262d] rounded-full h-2">
+                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
                   <div className="bg-slate-400 h-2 rounded-full" style={{ width: `${(competitorScores.compA / 10) * 100}%` }}></div>
                 </div>
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-slate-600 dark:text-[#8b949e]">Competitor B</span>
-                  <span className="font-medium text-slate-900 dark:text-[#e6edf3]">{competitorScores.compB}/10</span>
+                  <span className="text-slate-600 dark:text-slate-400">Competitor B</span>
+                  <span className="font-medium text-slate-900 dark:text-slate-200">{competitorScores.compB}/10</span>
                 </div>
-                <div className="w-full bg-slate-100 dark:bg-[#21262d] rounded-full h-2">
+                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
                   <div className="bg-slate-400 h-2 rounded-full" style={{ width: `${(competitorScores.compB / 10) * 100}%` }}></div>
                 </div>
               </div>
@@ -291,18 +291,18 @@ export function OwnerDashboard() {
           <CardContent>
             <div className="space-y-4">
               {properties.map(p => (
-                <div key={p.id} className="flex items-center gap-4 bg-slate-50 dark:bg-[#161b22] p-3 rounded-lg border border-slate-200 dark:border-[#30363d]">
+                <div key={p.id} className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
                   <img src="/images/resort_thumb.png" alt="Resort" className="w-16 h-16 rounded object-cover" />
                   <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-slate-900 dark:text-[#e6edf3]">{p.name}</h4>
-                    <p className="text-xs text-slate-500 dark:text-[#8b949e]">{p.location}</p>
+                    <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-200">{p.name}</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{p.location}</p>
                   </div>
                   <span className="text-xs font-medium px-2 py-1 bg-green-100 text-green-700 rounded-full">{p.status}</span>
                 </div>
               ))}
               <button 
                 onClick={() => setIsPropertyModalOpen(true)}
-                className="w-full py-3 border-2 border-dashed border-slate-200 dark:border-[#30363d] rounded-lg text-sm font-medium text-slate-500 dark:text-[#8b949e] hover:bg-slate-50 dark:hover:bg-[#161b22] transition-colors"
+                className="w-full py-3 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
               >
                 + Add New Property
               </button>
@@ -317,12 +317,12 @@ export function OwnerDashboard() {
           <CardContent>
             <div className="space-y-4">
               {managers.map(m => (
-                <div key={m.id} className="flex items-center justify-between bg-slate-50 dark:bg-[#161b22] p-3 rounded-lg border border-slate-200 dark:border-[#30363d]">
+                <div key={m.id} className="flex items-center justify-between bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">{m.initials}</div>
                     <div>
-                      <h4 className="text-sm font-semibold text-slate-900 dark:text-[#e6edf3]">{m.name}</h4>
-                      <p className="text-xs text-slate-500 dark:text-[#8b949e]">{m.email}</p>
+                      <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-200">{m.name}</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{m.email}</p>
                     </div>
                   </div>
                   <span className="text-xs text-slate-500">{m.property}</span>
@@ -330,7 +330,7 @@ export function OwnerDashboard() {
               ))}
               <button 
                 onClick={() => setIsManagerModalOpen(true)}
-                className="w-full py-3 border-2 border-dashed border-slate-200 dark:border-[#30363d] rounded-lg text-sm font-medium text-slate-500 dark:text-[#8b949e] hover:bg-slate-50 dark:hover:bg-[#161b22] transition-colors"
+                className="w-full py-3 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
               >
                 + Invite Manager
               </button>
@@ -379,11 +379,11 @@ export function OwnerDashboard() {
             onChange={(e) => setManagerEmail(e.target.value)} 
           />
           <div className="space-y-1.5">
-            <label className="text-[13px] font-medium text-[#111111] dark:text-[#ededed]">Assign to Property</label>
+            <label className="text-[13px] font-medium text-slate-900 dark:text-slate-200">Assign to Property</label>
             <select 
               value={selectedProperty}
               onChange={(e) => setSelectedProperty(e.target.value)}
-              className="h-10 w-full rounded-md bg-transparent border border-black/10 dark:border-white/10 px-3 text-[14px] text-[#111111] dark:text-[#ededed] focus:outline-none focus:border-black/30 dark:focus:border-white/30"
+              className="h-10 w-full rounded-md bg-transparent border border-black/10 dark:border-white/10 px-3 text-[14px] text-slate-900 dark:text-slate-200 focus:outline-none focus:border-black/30 dark:focus:border-white/30"
             >
               <option value="">Select a property...</option>
               {properties.map(p => (

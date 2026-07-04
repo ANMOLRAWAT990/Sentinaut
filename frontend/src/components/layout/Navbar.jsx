@@ -73,13 +73,41 @@ export function Navbar() {
   const linkClass = (path) => `text-sm font-medium transition-colors ${isActive(path) ? 'text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`;
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
+  const getPageName = () => {
+    if (location.pathname === '/dashboard') {
+      return user?.role === 'owner' ? 'Executive Dashboard' : user?.role === 'manager' ? 'Command Center' : 'Staff Workspace';
+    }
+    if (location.pathname === '/suggestions') return 'AI Insights';
+    if (location.pathname === '/reviews') return 'Guest Reviews';
+    if (location.pathname === '/guests') return 'Guest CRM';
+    if (location.pathname === '/settings') return 'Platform Settings';
+    return '';
+  };
+  const pageName = getPageName();
+
   return (
-    <nav className="w-full h-14 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#09090b] flex items-center px-6 lg:px-8 justify-between shrink-0">
-      <div className="flex items-center gap-8">
-        <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2">
-          <img src="/images/logo_emblem.png" alt="Logo" className="w-5 h-5 object-contain" />
-          <span className="text-sm font-semibold tracking-tight text-slate-900 dark:text-white">SentiNaut</span>
-        </Link>
+    <nav className="w-full h-14 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex items-center px-6 lg:px-8 justify-between shrink-0">
+      <div className="flex items-center gap-4 sm:gap-6">
+        <div className="flex items-center gap-3">
+          <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2">
+            <img src="/images/logo_emblem.png" alt="Logo" className="w-5 h-5 object-contain" />
+            <span className="text-sm font-semibold tracking-tight text-slate-900 dark:text-white">SentiNaut</span>
+          </Link>
+          {user && (
+            <div className="hidden sm:flex items-center gap-3 text-[13px]">
+              <span className="text-slate-300 dark:text-slate-700">/</span>
+              <span className="text-slate-500 dark:text-slate-400 font-medium">
+                {user.role === 'owner' ? (activeProperty || 'Portfolio') : (user.property || 'Property')}
+              </span>
+              {pageName && (
+                <>
+                  <span className="text-slate-300 dark:text-slate-700">/</span>
+                  <span className="text-slate-900 dark:text-slate-200 font-medium">{pageName}</span>
+                </>
+              )}
+            </div>
+          )}
+        </div>
         {!user && (
           <div className="hidden md:flex items-center gap-6">
             <Link to="/about" className={linkClass('/about')}>About Us</Link>
@@ -113,8 +141,8 @@ export function Navbar() {
                 )}
               </button>
               {isNotifOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#161b22] border border-slate-200 dark:border-[#30363d] rounded-lg shadow-lg overflow-hidden z-50">
-                  <div className="p-3 border-b border-slate-200 dark:border-[#30363d] flex justify-between items-center bg-slate-50 dark:bg-[#0d1117]">
+                <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg overflow-hidden z-50">
+                  <div className="p-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950">
                     <span className="text-sm font-semibold text-slate-900 dark:text-white">Notifications</span>
                     <span className="text-xs text-slate-500 dark:text-slate-400">{unreadCount} unread</span>
                   </div>

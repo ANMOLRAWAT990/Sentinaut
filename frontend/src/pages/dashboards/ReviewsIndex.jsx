@@ -10,7 +10,7 @@ import { Modal } from '../../components/ui/Modal';
 import { Skeleton } from '../../components/ui/Skeleton';
 
 export function ReviewsIndex() {
-  const { user } = useAuth();
+  const { user, activeProperty } = useAuth();
   const { addToast } = useToast();
   
   const [reviews, setReviews] = useState([]);
@@ -30,11 +30,14 @@ export function ReviewsIndex() {
   useEffect(() => {
     document.title = "Reviews · SentiNaut";
     fetchReviews();
-  }, []);
+  }, [activeProperty]);
 
   const fetchReviews = async () => {
+    setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/reviews');
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const propQuery = activeProperty ? `?property=${activeProperty}` : '';
+      const res = await fetch(`${API_URL}/api/reviews${propQuery}`);
       if(res.ok) {
         const data = await res.json();
         setReviews(data.reverse());
@@ -199,17 +202,17 @@ export function ReviewsIndex() {
   const renderTableView = () => (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-[#e6edf3]">
+        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-200">
           {user?.role === 'owner' ? 'Review Analytics Directory' : user?.role === 'staff' ? 'My Processed Reviews' : 'Review Moderation Queue'}
         </h2>
         <div className="flex gap-2 flex-wrap w-full sm:w-auto">
-          <select value={filterSentiment} onChange={e => { setFilterSentiment(e.target.value); setCurrentPage(1); }} className="border border-slate-200 dark:border-[#30363d] rounded-md px-3 py-2 text-sm text-slate-700 dark:text-[#e6edf3] bg-white dark:bg-[#161b22]">
+          <select value={filterSentiment} onChange={e => { setFilterSentiment(e.target.value); setCurrentPage(1); }} className="border border-slate-200 dark:border-slate-800 rounded-md px-3 py-2 text-sm text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900">
             <option value="All">All Sentiments</option>
             <option value="Positive">Positive</option>
             <option value="Neutral">Neutral</option>
             <option value="Negative">Negative</option>
           </select>
-          <select value={sortOrder} onChange={e => { setSortOrder(e.target.value); setCurrentPage(1); }} className="border border-slate-200 dark:border-[#30363d] rounded-md px-3 py-2 text-sm text-slate-700 dark:text-[#e6edf3] bg-white dark:bg-[#161b22]">
+          <select value={sortOrder} onChange={e => { setSortOrder(e.target.value); setCurrentPage(1); }} className="border border-slate-200 dark:border-slate-800 rounded-md px-3 py-2 text-sm text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900">
             <option value="Newest">Newest First</option>
             <option value="Oldest">Oldest First</option>
           </select>
@@ -225,9 +228,9 @@ export function ReviewsIndex() {
             { label: 'Neutral', count: reviews.filter(r => r.sentiment === 'Neutral').length },
             { label: 'Negative', count: reviews.filter(r => r.sentiment === 'Negative').length }
           ].map((stat, i) => (
-            <div key={i} className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-[#30363d] rounded-lg p-4 text-center shadow-sm">
-              <div className="text-sm font-medium text-slate-600 dark:text-[#8b949e]">{stat.label}</div>
-              <div className="text-2xl font-bold text-slate-900 dark:text-[#e6edf3] mt-1">{loading ? '...' : stat.count}</div>
+            <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 text-center shadow-sm">
+              <div className="text-sm font-medium text-slate-600 dark:text-slate-400">{stat.label}</div>
+              <div className="text-2xl font-bold text-slate-900 dark:text-slate-200 mt-1">{loading ? '...' : stat.count}</div>
             </div>
           ))}
         </div>
@@ -271,14 +274,14 @@ export function ReviewsIndex() {
               </div>
               <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-3">
-                  <span className="font-semibold text-slate-900 dark:text-[#e6edf3]">{r.guestName}</span>
+                  <span className="font-semibold text-slate-900 dark:text-slate-200">{r.guestName}</span>
                   <Badge variant={r.sentiment === 'Negative' ? 'danger' : r.sentiment === 'Positive' ? 'success' : 'warning'}>{r.sentiment}</Badge>
-                  <span className="text-xs font-medium text-slate-500 dark:text-[#8b949e] uppercase px-2 py-0.5 bg-slate-100 dark:bg-[#30363d] rounded-full">{r.platform}</span>
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase px-2 py-0.5 bg-slate-100 dark:bg-[#30363d] rounded-full">{r.platform}</span>
                 </div>
-                <p className="text-slate-700 dark:text-[#e6edf3] text-sm">
+                <p className="text-slate-700 dark:text-slate-200 text-sm">
                   {translationMap[r.id] || r.text}
                 </p>
-                <div className="flex items-center gap-4 text-xs font-medium text-slate-500 dark:text-[#8b949e] uppercase tracking-wider">
+                <div className="flex items-center gap-4 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   <span>Themes: {r.tags.length > 0 ? r.tags.join(", ") : "None"}</span>
                   <span>|</span>
                   <span>Status: {r.status}</span>
@@ -297,14 +300,14 @@ export function ReviewsIndex() {
                 </div>
                 <div className={`overflow-hidden transition-all duration-300 ease-in-out ${drafts[r.id] ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0'}`}>
                   {drafts[r.id] && (
-                    <div className="p-3 bg-slate-50 dark:bg-[#0d1117] rounded-md border border-slate-200 dark:border-[#30363d]">
+                    <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-md border border-slate-200 dark:border-slate-800">
                       <p className="text-xs font-semibold text-slate-500 mb-1 flex items-center justify-between">
                         AI Suggested Reply:
                         <button onClick={() => setDrafts(prev => ({...prev, [r.id]: null}))} className="text-red-400 hover:text-red-500">Dismiss</button>
                       </p>
                       <textarea 
                         defaultValue={drafts[r.id]} 
-                        className="w-full text-sm p-2 bg-transparent border border-slate-300 dark:border-[#30363d] rounded resize-y min-h-[80px]"
+                        className="w-full text-sm p-2 bg-transparent border border-slate-300 dark:border-slate-800 rounded resize-y min-h-[80px]"
                       />
                     </div>
                   )}
@@ -325,13 +328,13 @@ export function ReviewsIndex() {
         
         {/* Pagination Controls */}
         {!loading && filteredReviews.length > 0 && (
-          <div className="flex items-center justify-between bg-white dark:bg-[#161b22] px-4 py-3 border border-slate-200 dark:border-[#30363d] rounded-lg">
+          <div className="flex items-center justify-between bg-white dark:bg-slate-900 px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-lg">
             <div className="flex items-center gap-2">
               {user?.role === 'manager' && <input type="checkbox" onChange={toggleAll} checked={selectedReviews.length === currentReviews.length && currentReviews.length > 0} className="w-4 h-4 rounded border-slate-300" />}
-              <span className="text-sm text-slate-600 dark:text-[#8b949e]">Select Page</span>
+              <span className="text-sm text-slate-600 dark:text-slate-400">Select Page</span>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-slate-600 dark:text-[#8b949e]">Page {currentPage} of {totalPages}</span>
+              <span className="text-sm text-slate-600 dark:text-slate-400">Page {currentPage} of {totalPages}</span>
               <div className="flex gap-1">
                 <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} aria-label="Previous Page" className="p-2"><ChevronLeft className="h-4 w-4"/></Button>
                 <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} aria-label="Next Page" className="p-2"><ChevronRight className="h-4 w-4"/></Button>
@@ -368,8 +371,8 @@ export function ReviewsIndex() {
   return (
     <div className="pb-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-serif text-slate-900 dark:text-[#e6edf3]">Guest Intelligence</h1>
-        <p className="text-slate-500 dark:text-[#8b949e] font-light text-sm mt-2">Manage, filter, and export guest feedback data.</p>
+        <h1 className="text-3xl font-serif text-slate-900 dark:text-slate-200">Guest Intelligence</h1>
+        <p className="text-slate-500 dark:text-slate-400 font-light text-sm mt-2">Manage, filter, and export guest feedback data.</p>
       </div>
       {renderTableView()}
     </div>

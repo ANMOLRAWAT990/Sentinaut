@@ -18,7 +18,7 @@ export function LandingPage() {
   const opacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
 
   return (
-    <div className="flex flex-col w-full bg-white dark:bg-[#09090b] overflow-hidden relative">
+    <div className="flex flex-col w-full bg-white dark:bg-slate-950 overflow-hidden relative">
       <AnimatePresence>
         {toast && (
           <motion.div 
@@ -65,7 +65,7 @@ export function LandingPage() {
       </div>
       
       {/* Stats Section with Elegant Borders */}
-      <section className="relative z-20 border-y border-slate-200 dark:border-slate-800 bg-white dark:bg-[#09090b]">
+      <section className="relative z-20 border-y border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
         <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-slate-200 dark:divide-slate-800">
           {[
             { label: 'Data Processing Limit', value: '100k+ / day' },
@@ -79,7 +79,7 @@ export function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.1 }}
               transition={{ delay: i * 0.1, duration: 0.8, ease: "easeOut" }}
-              className="px-6 py-12 sm:px-8 lg:px-12 bg-transparent hover:bg-slate-50 dark:hover:bg-[#111115] transition-colors flex flex-col justify-center items-center text-center group"
+              className="px-6 py-12 sm:px-8 lg:px-12 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors flex flex-col justify-center items-center text-center group"
             >
               <div className="text-3xl sm:text-4xl font-serif text-slate-900 dark:text-white mb-2 group-hover:scale-105 transition-transform duration-500 ease-out">{stat.value}</div>
               <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-mono uppercase tracking-widest">{stat.label}</div>
@@ -89,12 +89,12 @@ export function LandingPage() {
       </section>
 
       {/* Trusted By Section - Infinite Marquee */}
-      <section className="py-24 w-full text-center overflow-hidden relative bg-white dark:bg-[#09090b]">
+      <section className="py-24 w-full text-center overflow-hidden relative bg-white dark:bg-slate-950">
         <p className="text-xs font-mono tracking-[0.3em] text-slate-400 uppercase mb-16">Selected Deployments</p>
         
         {/* Gradient fades for the edges of the marquee */}
-        <div className="absolute inset-y-0 left-0 w-24 sm:w-48 bg-gradient-to-r from-white dark:from-[#09090b] to-transparent z-10 pointer-events-none"></div>
-        <div className="absolute inset-y-0 right-0 w-24 sm:w-48 bg-gradient-to-l from-white dark:from-[#09090b] to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute inset-y-0 left-0 w-24 sm:w-48 bg-gradient-to-r from-white dark:from-slate-950 to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute inset-y-0 right-0 w-24 sm:w-48 bg-gradient-to-l from-white dark:from-slate-950 to-transparent z-10 pointer-events-none"></div>
         
         <div className="relative flex w-full">
           <motion.div
@@ -155,7 +155,7 @@ export function LandingPage() {
 
 
       {/* Elegant Staggered Workflow Section */}
-      <section className="bg-white dark:bg-[#09090b] border-y border-slate-200 dark:border-slate-800">
+      <section className="bg-white dark:bg-slate-950 border-y border-slate-200 dark:border-slate-800">
         <div className="px-6 sm:px-8 lg:px-16 py-24 sm:py-32 max-w-7xl mx-auto w-full">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -205,7 +205,7 @@ export function LandingPage() {
       </section>
 
       {/* Integrations Section */}
-      <section className="py-24 sm:py-32 w-full text-center bg-[#050505] relative overflow-hidden group">
+      <section className="py-24 sm:py-32 w-full text-center bg-slate-950 relative overflow-hidden group">
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" 
              style={{ background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.03) 0%, transparent 60%)' }}></div>
         

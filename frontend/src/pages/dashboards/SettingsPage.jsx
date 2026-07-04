@@ -115,7 +115,7 @@ export function SettingsPage() {
   return (
     <div className="space-y-6 max-w-2xl mx-auto w-full animate-in fade-in duration-500">
       <div>
-        <h1 className="text-2xl font-bold text-[#111111] dark:text-[#ededed] tracking-tight">Profile Manager</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">Profile Manager</h1>
         <p className="text-[13px] text-[#666666] dark:text-[#a1a1aa] mt-1">Manage your account credentials and role access.</p>
       </div>
 
@@ -141,7 +141,7 @@ export function SettingsPage() {
             
             <div className="flex items-center justify-between pt-2">
               <div>
-                <label className="text-[13px] font-medium text-[#111111] dark:text-[#ededed]">Dark Mode</label>
+                <label className="text-[13px] font-medium text-slate-900 dark:text-slate-200">Dark Mode</label>
                 <p className="text-[11px] text-slate-500">Enable dark theme across the application.</p>
               </div>
               <input 
@@ -153,7 +153,7 @@ export function SettingsPage() {
             </div>
             
             <div className="space-y-1.5 pt-2">
-              <label className="text-[13px] font-medium text-[#111111] dark:text-[#ededed]">Authorization Scope</label>
+              <label className="text-[13px] font-medium text-slate-900 dark:text-slate-200">Authorization Scope</label>
               <div className="flex items-center gap-3">
                 <span className="px-3 py-1.5 bg-black/5 dark:bg-white/5 rounded-md text-[13px] font-medium capitalize border border-black/10 dark:border-white/10 text-slate-600 dark:text-slate-300">
                   {user?.role} Access
@@ -204,7 +204,7 @@ export function SettingsPage() {
         <CardContent>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-[#111111] dark:text-[#ededed]">Delete Account</p>
+              <p className="text-sm font-medium text-slate-900 dark:text-slate-200">Delete Account</p>
               <p className="text-xs text-[#666666] dark:text-[#a1a1aa] max-w-sm mt-1">Permanently remove your account and all associated operational data. This action is irreversible.</p>
             </div>
             <Button type="button" variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-900/30 dark:hover:bg-red-900/20" onClick={() => setDeleteModalOpen(true)}>

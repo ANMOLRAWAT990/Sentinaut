@@ -53,15 +53,16 @@ export function StaffDashboard() {
 
   // Initial data load to preserve the "table" feeling
   React.useEffect(() => {
-    document.title = "Front Desk · SentiNaut";
-    if (!user) return;
-    fetch('http://localhost:8000/api/reviews')
-      .then(res => res.json())
-      .then(data => {
+    document.title = "Staff Console · SentiNaut";
+    if (user?.property) {
+      fetch(`http://localhost:8000/api/reviews?property=${user.property}`)
+        .then(res => res.json())
+        .then(data => {
         // We'll just map this to the batch results structure to populate the left table initially if we wanted to
         // For simplicity, we won't auto-fill unless they click Analyze, or we can just leave it to user interaction
       })
       .catch(err => console.error("Failed to fetch reviews:", err));
+    }
   }, []);
 
   const handleAnalyze = async () => {
@@ -152,12 +153,12 @@ export function StaffDashboard() {
       {/* LEFT COLUMN - INPUT (45%) */}
       <div className="w-full md:w-[45%]">
         <div className="mb-4">
-          <h3 className="font-bold text-[16px] text-slate-900 dark:text-[#e6edf3]">Review Input</h3>
-          <p className="text-sm text-slate-500 dark:text-[#8b949e]">Paste one or more reviews below</p>
+          <h3 className="font-bold text-[16px] text-slate-900 dark:text-slate-200">Review Input</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Paste one or more reviews below</p>
         </div>
         <PillToggle />
         <textarea
-          className="w-full min-h-[180px] p-3 text-[14px] bg-white dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#30363d] rounded-[8px] focus:ring-2 focus:ring-blue-500 focus:outline-none mb-4"
+          className="w-full min-h-[180px] p-3 text-[14px] bg-white dark:bg-slate-950 border border-[#e2e8f0] dark:border-slate-800 rounded-[8px] focus:ring-2 focus:ring-blue-500 focus:outline-none mb-4"
           placeholder="Paste guest feedback here..."
           value={reviewText}
           onChange={(e) => setReviewText(e.target.value)}
@@ -172,7 +173,7 @@ export function StaffDashboard() {
 
       {/* RIGHT COLUMN - RESULT (55%) */}
       <div className="w-full md:w-[55%] relative">
-        <div className="absolute top-0 right-0 bg-slate-100 dark:bg-[#161b22] text-slate-500 dark:text-[#8b949e] text-[10px] px-2 py-1 rounded-full border border-slate-200 dark:border-[#30363d]">
+        <div className="absolute top-0 right-0 bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 text-[10px] px-2 py-1 rounded-full border border-slate-200 dark:border-slate-800">
           Powered by Gemini Flash
         </div>
         
@@ -194,20 +195,20 @@ export function StaffDashboard() {
               <Badge variant={singleResult.sentiment === 'Positive' ? 'success' : singleResult.sentiment === 'Negative' ? 'danger' : 'warning'} className="px-3 py-1 text-sm">
                 {singleResult.sentiment}
               </Badge>
-              <Badge variant="secondary" className="px-3 py-1 text-sm bg-slate-100 dark:bg-[#161b22]">
+              <Badge variant="secondary" className="px-3 py-1 text-sm bg-slate-100 dark:bg-slate-900">
                 {singleResult.confidence} Confidence
               </Badge>
             </div>
             <div className="flex flex-wrap gap-2 mb-6">
               {singleResult.themes.map(t => (
-                <span key={t} className="bg-[#f1f5f9] dark:bg-[#161b22] text-slate-600 dark:text-[#8b949e] text-xs px-2.5 py-1 rounded-full border border-slate-200 dark:border-[#30363d]">
+                <span key={t} className="bg-[#f1f5f9] dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-xs px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-800">
                   {t}
                 </span>
               ))}
             </div>
             <div className="h-[1px] bg-slate-200 dark:bg-[#30363d] w-full mb-4"></div>
-            <div className="text-[11px] uppercase text-slate-500 dark:text-[#8b949e] font-semibold mb-2">Suggested Management Reply</div>
-            <div className="bg-[#f8fafc] dark:bg-[#161b22] p-4 rounded-lg border border-slate-200 dark:border-[#30363d] text-[14px] text-slate-700 dark:text-[#e6edf3] mb-3">
+            <div className="text-[11px] uppercase text-slate-500 dark:text-slate-400 font-semibold mb-2">Suggested Management Reply</div>
+            <div className="bg-[#f8fafc] dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 text-[14px] text-slate-700 dark:text-slate-200 mb-3">
               {singleResult.reply}
             </div>
             <Button variant="outline" size="sm" onClick={() => handleCopy(singleResult.reply)} className="gap-2 text-slate-600">
@@ -224,7 +225,7 @@ export function StaffDashboard() {
       <PillToggle />
       <div className="mb-6 relative">
         <textarea
-          className="w-full min-h-[100px] p-3 text-[14px] bg-white dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#30363d] rounded-[8px] focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-[#94a3b8]"
+          className="w-full min-h-[100px] p-3 text-[14px] bg-white dark:bg-slate-950 border border-[#e2e8f0] dark:border-slate-800 rounded-[8px] focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-[#94a3b8]"
           placeholder="Paste multiple reviews here for batch analysis..."
           value={reviewText}
           onChange={(e) => setReviewText(e.target.value)}
@@ -238,19 +239,19 @@ export function StaffDashboard() {
       </div>
 
       {error && (
-        <div className="border-2 border-dashed border-[#e2e8f0] dark:border-[#30363d] rounded-lg min-h-[200px] flex flex-col items-center justify-center text-center p-6">
+        <div className="border-2 border-dashed border-[#e2e8f0] dark:border-slate-800 rounded-lg min-h-[200px] flex flex-col items-center justify-center text-center p-6">
           <AlertCircle className="h-8 w-8 text-red-400 mb-2" />
-          <h3 className="font-semibold text-slate-900 dark:text-[#e6edf3]">Analysis failed</h3>
-          <p className="text-slate-500 dark:text-[#8b949e] text-sm mt-1 mb-4">Something went wrong. Please try again.</p>
+          <h3 className="font-semibold text-slate-900 dark:text-slate-200">Analysis failed</h3>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 mb-4">Something went wrong. Please try again.</p>
           <Button onClick={handleAnalyze}>Retry</Button>
         </div>
       )}
 
       {!batchResults && !loading && !error && (
-        <div className="border-2 border-dashed border-[#e2e8f0] dark:border-[#30363d] rounded-lg min-h-[200px] flex flex-col items-center justify-center text-center p-6 bg-slate-50/50 dark:bg-[#0d1117]/50">
+        <div className="border-2 border-dashed border-[#e2e8f0] dark:border-slate-800 rounded-lg min-h-[200px] flex flex-col items-center justify-center text-center p-6 bg-slate-50/50 dark:bg-slate-950/50">
           <Search className="h-8 w-8 text-slate-300 dark:text-slate-600 mb-3" />
-          <h3 className="font-semibold text-slate-900 dark:text-[#e6edf3]">No reviews analyzed yet</h3>
-          <p className="text-slate-500 dark:text-[#8b949e] text-sm mt-1">Paste reviews above and click Analyze</p>
+          <h3 className="font-semibold text-slate-900 dark:text-slate-200">No reviews analyzed yet</h3>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Paste reviews above and click Analyze</p>
         </div>
       )}
 
@@ -259,23 +260,23 @@ export function StaffDashboard() {
           {/* LEFT TABLE */}
           <div className="w-full lg:w-2/3">
             <div className="flex gap-2 mb-4">
-              <select className="border border-[#e2e8f0] dark:border-[#30363d] rounded-[8px] px-3 py-1.5 text-sm text-slate-600 dark:text-[#8b949e] bg-white dark:bg-[#0d1117]">
+              <select className="border border-[#e2e8f0] dark:border-slate-800 rounded-[8px] px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-950">
                 <option>All Sentiments</option>
               </select>
-              <select className="border border-[#e2e8f0] dark:border-[#30363d] rounded-[8px] px-3 py-1.5 text-sm text-slate-600 dark:text-[#8b949e] bg-white dark:bg-[#0d1117]">
+              <select className="border border-[#e2e8f0] dark:border-slate-800 rounded-[8px] px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-950">
                 <option>All Themes</option>
               </select>
             </div>
             <div className="space-y-3">
               {batchResults.reviews.map(r => (
-                <div key={r.id} className="bg-white dark:bg-[#161b22] border border-[#e2e8f0] dark:border-[#30363d] rounded-[8px] p-3 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                <div key={r.id} className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded-[8px] p-3 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                   <div className="flex-1">
-                    <p className="text-sm text-slate-700 dark:text-[#e6edf3] line-clamp-2 mb-2">{r.text}</p>
+                    <p className="text-sm text-slate-700 dark:text-slate-200 line-clamp-2 mb-2">{r.text}</p>
                     <div className="flex flex-wrap gap-2">
                       <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${r.sentiment === 'Positive' ? 'bg-green-100 text-green-700' : r.sentiment === 'Negative' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}`}>
                         {r.sentiment}
                       </span>
-                      <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-slate-100 dark:bg-[#30363d] text-slate-600 dark:text-[#8b949e]">
+                      <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-slate-100 dark:bg-[#30363d] text-slate-600 dark:text-slate-400">
                         {r.theme}
                       </span>
                       <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
@@ -284,7 +285,7 @@ export function StaffDashboard() {
                     </div>
                   </div>
                   <div className="w-full sm:w-1/3 flex flex-col items-end gap-2">
-                    <p className="text-xs text-slate-500 dark:text-[#8b949e] truncate w-full text-right italic">"{r.reply}"</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate w-full text-right italic">"{r.reply}"</p>
                     <Button variant="ghost" size="sm" onClick={() => handleCopy(r.reply, r.id)} className="text-xs h-7 px-2">
                       {copiedRow === r.id ? <><CheckCircle2 className="h-3 w-3 mr-1 text-green-500" /> Copied ✓</> : <><Copy className="h-3 w-3 mr-1" /> Copy</>}
                     </Button>
@@ -295,34 +296,34 @@ export function StaffDashboard() {
           </div>
 
           {/* RIGHT INSIGHT PANEL */}
-          <div className="w-full lg:w-1/3 bg-[#f8fafc] dark:bg-[#0d1117] border-l-2 border-[#e2e8f0] dark:border-[#30363d] p-5 rounded-r-lg">
-            <h3 className="font-bold text-slate-900 dark:text-[#e6edf3] mb-4">Batch Insights</h3>
+          <div className="w-full lg:w-1/3 bg-[#f8fafc] dark:bg-slate-950 border-l-2 border-[#e2e8f0] dark:border-slate-800 p-5 rounded-r-lg">
+            <h3 className="font-bold text-slate-900 dark:text-slate-200 mb-4">Batch Insights</h3>
             
             <div className="mb-6">
-              <div className="text-[11px] uppercase text-slate-500 dark:text-[#8b949e] font-semibold mb-2">Root Causes</div>
+              <div className="text-[11px] uppercase text-slate-500 dark:text-slate-400 font-semibold mb-2">Root Causes</div>
               {batchResults.rootCauses.map((item, i) => (
                 <div key={i} className="flex gap-2 items-start mb-2">
                   <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-slate-700 dark:text-[#e6edf3]">{item}</span>
+                  <span className="text-sm text-slate-700 dark:text-slate-200">{item}</span>
                 </div>
               ))}
             </div>
 
             <div className="mb-6">
-              <div className="text-[11px] uppercase text-slate-500 dark:text-[#8b949e] font-semibold mb-2">What Is Working</div>
+              <div className="text-[11px] uppercase text-slate-500 dark:text-slate-400 font-semibold mb-2">What Is Working</div>
               {batchResults.working.map((item, i) => (
                 <div key={i} className="flex gap-2 items-start mb-2">
                   <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-slate-700 dark:text-[#e6edf3]">{item}</span>
+                  <span className="text-sm text-slate-700 dark:text-slate-200">{item}</span>
                 </div>
               ))}
             </div>
 
             <div>
-              <div className="text-[11px] uppercase text-slate-500 dark:text-[#8b949e] font-semibold mb-2">Priority Actions</div>
+              <div className="text-[11px] uppercase text-slate-500 dark:text-slate-400 font-semibold mb-2">Priority Actions</div>
               {batchResults.actions.map((item, i) => (
-                <div key={i} className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-[#30363d] p-3 rounded-lg flex flex-col gap-2">
-                  <span className="text-sm text-slate-700 dark:text-[#e6edf3]">{item}</span>
+                <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-lg flex flex-col gap-2">
+                  <span className="text-sm text-slate-700 dark:text-slate-200">{item}</span>
                   <Button variant="outline" size="sm" className="text-xs w-fit" onClick={() => handleAddToTracker(item)}>Add to Tracker</Button>
                 </div>
               ))}

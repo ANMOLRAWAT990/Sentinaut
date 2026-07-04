@@ -10,7 +10,7 @@ export function AboutPage() {
   };
 
   return (
-    <div className="flex flex-col w-full bg-white dark:bg-[#09090b] min-h-screen relative">
+    <div className="flex flex-col w-full bg-white dark:bg-slate-950 min-h-screen relative">
       <AnimatePresence>
         {toast && (
           <motion.div 
@@ -35,7 +35,7 @@ export function AboutPage() {
           <img src="/images/auth_side.png" alt="Resort Architecture" className="w-full h-full object-cover" />
         </motion.div>
         
-        <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-[#09090b]/60 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent"></div>
         
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
@@ -59,7 +59,7 @@ export function AboutPage() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: false, amount: 0.1 }}
             transition={{ duration: 1 }}
-            className="p-8 sm:p-16 lg:p-24 bg-slate-50 dark:bg-[#0f0f12] flex flex-col justify-center"
+            className="p-8 sm:p-16 lg:p-24 bg-slate-50 dark:bg-slate-950 flex flex-col justify-center"
           >
             <h3 className="text-xl sm:text-2xl font-serif text-slate-900 dark:text-white mb-6">The Legacy Fault</h3>
             <div className="space-y-4 text-sm text-slate-600 dark:text-slate-400 font-light leading-relaxed">
@@ -93,7 +93,7 @@ export function AboutPage() {
         </div>
       </section>
 
-      <section className="flex-1 bg-white dark:bg-[#09090b]">
+      <section className="flex-1 bg-white dark:bg-slate-950">
         <div className="px-6 sm:px-8 lg:px-16 py-16 sm:py-24 max-w-5xl mx-auto">
           <motion.h2 
             initial={{ opacity: 0 }}
@@ -145,7 +145,7 @@ export function AboutPage() {
       </section>
 
       {/* Product Sections */}
-      <section id="features" className="bg-white dark:bg-[#09090b]">
+      <section id="features" className="bg-white dark:bg-slate-950">
         <div className="px-6 sm:px-8 lg:px-16 py-24 sm:py-32 max-w-7xl mx-auto flex flex-col md:flex-row gap-16 items-center">
           <div className="w-full md:w-1/2">
             <h2 className="text-3xl md:text-5xl font-serif text-slate-900 dark:text-white mb-10 leading-tight">Platform Features</h2>
@@ -173,7 +173,7 @@ export function AboutPage() {
         </div>
       </section>
 
-      <section id="integrations" className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0f0f12]">
+      <section id="integrations" className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
         <div className="px-6 sm:px-8 lg:px-16 py-24 sm:py-32 max-w-5xl mx-auto text-center">
           <h2 className="text-3xl md:text-5xl font-serif text-slate-900 dark:text-white mb-8">System Integrations</h2>
           <p className="text-lg text-slate-600 dark:text-slate-400 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
@@ -188,7 +188,7 @@ export function AboutPage() {
         </div>
       </section>
 
-      <section id="pricing" className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#09090b]">
+      <section id="pricing" className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
         <div className="px-6 sm:px-8 lg:px-16 py-24 sm:py-32 max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-serif text-slate-900 dark:text-white mb-6">Pricing Plans</h2>
@@ -196,7 +196,7 @@ export function AboutPage() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-y border-slate-200 dark:border-slate-800 divide-y md:divide-y-0 md:divide-x divide-slate-200 dark:divide-slate-800">
-            <div className="p-12 sm:p-16 text-center hover:bg-slate-50 dark:hover:bg-[#111115] transition-colors">
+            <div className="p-12 sm:p-16 text-center hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
               <h3 className="font-serif text-2xl text-slate-900 dark:text-white mb-2">Boutique</h3>
               <p className="text-sm text-slate-500 mb-8 font-light">Up to 1,000 reviews/mo</p>
               <p className="text-5xl font-serif text-slate-900 dark:text-white mb-8">₹24,999<span className="text-lg font-light text-slate-500">/mo</span></p>
@@ -211,7 +211,7 @@ export function AboutPage() {
               <button onClick={() => showToast("Redirecting to Razorpay Checkout...")} className="px-6 py-3 border border-white dark:border-slate-900 text-white dark:text-slate-900 text-sm uppercase tracking-widest hover:bg-white hover:text-black dark:hover:bg-slate-900 dark:hover:text-white transition-colors">Select</button>
             </div>
 
-            <div className="p-12 sm:p-16 text-center hover:bg-slate-50 dark:hover:bg-[#111115] transition-colors">
+            <div className="p-12 sm:p-16 text-center hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
               <h3 className="font-serif text-2xl text-slate-900 dark:text-white mb-2">Enterprise</h3>
               <p className="text-sm text-slate-500 mb-8 font-light">Custom SLA deployment</p>
               <p className="text-5xl font-serif text-slate-900 dark:text-white mb-8">POA</p>
@@ -222,12 +222,12 @@ export function AboutPage() {
       </section>
 
       {/* Project Status Section */}
-      <section id="careers" className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0f0f12]">
+      <section id="careers" className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
         <div className="px-6 sm:px-8 lg:px-16 py-16 sm:py-24 max-w-5xl mx-auto">
           <h2 className="text-2xl font-semibold text-slate-900 dark:text-white mb-6">About the Developer</h2>
           <p className="text-slate-600 dark:text-slate-400 mb-6">This platform was designed and developed as a comprehensive side project to demonstrate proficiency in React, FastAPI, MongoDB, and AI integrations.</p>
           <div className="space-y-4">
-            <div className="p-4 bg-white dark:bg-[#16161b] border border-slate-200 dark:border-slate-800 rounded-lg flex justify-between items-center">
+            <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg flex justify-between items-center">
               <div>
                 <h4 className="font-medium text-slate-900 dark:text-white">Currently Interning</h4>
                 <p className="text-sm text-slate-500">Software Engineering</p>
@@ -238,14 +238,14 @@ export function AboutPage() {
         </div>
       </section>
 
-      <section id="blog" className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#09090b]">
+      <section id="blog" className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
         <div className="px-6 sm:px-8 lg:px-16 py-16 sm:py-24 max-w-5xl mx-auto">
           <h2 className="text-2xl font-semibold text-slate-900 dark:text-white mb-6">Development Log</h2>
           <p className="text-slate-600 dark:text-slate-400 italic">I regularly document the architecture decisions and state management patterns used in this project on my personal blog.</p>
         </div>
       </section>
 
-      <section id="contact" className="border-y border-slate-200 dark:border-slate-800 bg-white dark:bg-[#09090b]">
+      <section id="contact" className="border-y border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
         <div className="px-6 sm:px-8 lg:px-16 py-24 sm:py-32 max-w-5xl mx-auto flex flex-col items-center">
           <h2 className="text-3xl md:text-5xl font-serif text-slate-900 dark:text-white mb-6">Let's Connect</h2>
           <p className="text-slate-500 font-light mb-12 text-center max-w-xl">Whether you're interested in deploying SentiNaut or just want to discuss hospitality engineering, I'd love to hear from you.</p>

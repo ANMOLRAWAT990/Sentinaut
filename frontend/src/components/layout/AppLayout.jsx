@@ -5,7 +5,7 @@ import { Sidebar } from './Sidebar';
 
 export function AppLayout() {
   return (
-    <div className="h-screen bg-slate-50 dark:bg-[#0d1117] flex flex-col overflow-hidden">
+    <div className="h-screen bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden">
       <Navbar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />

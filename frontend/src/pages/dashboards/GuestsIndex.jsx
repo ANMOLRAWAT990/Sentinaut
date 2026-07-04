@@ -51,8 +51,8 @@ export function GuestsIndex() {
   return (
     <div className="space-y-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-serif text-slate-900 dark:text-[#e6edf3]">Guest CRM</h1>
-        <p className="text-slate-500 dark:text-[#8b949e] font-light text-sm mt-2">Manage profiles, stay history, and automated follow-ups.</p>
+        <h1 className="text-3xl font-serif text-slate-900 dark:text-slate-200">Guest CRM</h1>
+        <p className="text-slate-500 dark:text-slate-400 font-light text-sm mt-2">Manage profiles, stay history, and automated follow-ups.</p>
       </div>
 
       <div className="grid gap-4">
@@ -60,9 +60,9 @@ export function GuestsIndex() {
           <Card key={idx}>
             <CardContent className="p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <h3 className="font-bold text-slate-900 dark:text-[#e6edf3] text-lg">{g.name}</h3>
+                <h3 className="font-bold text-slate-900 dark:text-slate-200 text-lg">{g.name}</h3>
                 <p className="text-sm text-slate-500">Phone: {g.phone}</p>
-                <div className="mt-2 text-xs text-slate-600 dark:text-[#8b949e]">
+                <div className="mt-2 text-xs text-slate-600 dark:text-slate-400">
                   <span>Stays: {g.checkouts.length}</span> | <span>Reviews: {g.reviews.length}</span>
                 </div>
               </div>
@@ -73,7 +73,7 @@ export function GuestsIndex() {
           </Card>
         ))}
         {guests.length === 0 && (
-           <div className="p-8 text-center bg-white dark:bg-[#161b22] border border-slate-200 dark:border-[#30363d] rounded-lg shadow-sm">
+           <div className="p-8 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
              <p className="text-slate-500">No guests found for this property.</p>
            </div>
         )}

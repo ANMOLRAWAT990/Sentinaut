@@ -4,7 +4,7 @@ import { Modal } from '../ui/Modal';
 export function Footer() {
   const [activeModal, setActiveModal] = useState(null);
   return (
-    <footer className="w-full border-t border-slate-200 dark:border-[#30363d] bg-white dark:bg-[#09090b] pt-16 pb-8 mt-auto">
+    <footer className="w-full border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 pt-16 pb-8 mt-auto">
       <div className="mx-auto max-w-7xl px-6 lg:px-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 lg:gap-8 mb-16">
           <div className="col-span-1 md:col-span-2 lg:col-span-1 space-y-4">
@@ -41,13 +41,13 @@ export function Footer() {
             <h4 className="font-semibold text-slate-900 dark:text-white mb-4">Subscribe to our newsletter</h4>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Get the latest news on AI in hospitality.</p>
             <form className="flex gap-2">
-              <input type="email" placeholder="Enter your email" className="bg-slate-50 dark:bg-[#161b22] border border-slate-200 dark:border-[#30363d] text-slate-900 dark:text-white text-sm rounded-md px-3 py-2 w-full focus:outline-none focus:border-blue-500" required />
+              <input type="email" placeholder="Enter your email" className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm rounded-md px-3 py-2 w-full focus:outline-none focus:border-blue-500" required />
               <button type="submit" className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-medium px-4 py-2 rounded-md hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors">Subscribe</button>
             </form>
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-slate-200 dark:border-[#30363d]">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-slate-200 dark:border-slate-800">
           <p className="text-sm text-slate-500 dark:text-slate-400">
             © {new Date().getFullYear()} SentiNaut. All rights reserved.
           </p>
@@ -59,7 +59,7 @@ export function Footer() {
       </div>
 
       <Modal isOpen={activeModal === 'privacy'} onClose={() => setActiveModal(null)} title="Privacy Policy">
-        <div className="space-y-4 text-sm text-slate-600 dark:text-[#8b949e]">
+        <div className="space-y-4 text-sm text-slate-600 dark:text-slate-400">
           <p><strong>1. Data Collection:</strong> We collect review text, metadata, and user information strictly for the purpose of analyzing sentiment and improving operations.</p>
           <p><strong>2. AI Processing:</strong> Your data is securely processed via Google Gemini APIs. No guest data is used to train public models.</p>
           <p><strong>3. Security:</strong> We implement industry-standard security measures to protect your property's reputation data.</p>
@@ -67,7 +67,7 @@ export function Footer() {
       </Modal>
 
       <Modal isOpen={activeModal === 'terms'} onClose={() => setActiveModal(null)} title="Terms of Service">
-        <div className="space-y-4 text-sm text-slate-600 dark:text-[#8b949e]">
+        <div className="space-y-4 text-sm text-slate-600 dark:text-slate-400">
           <p><strong>1. Usage:</strong> SentiNaut is provided "as is". We are not responsible for automated decisions or AI hallucinations that may impact your business.</p>
           <p><strong>2. Intellectual Property:</strong> All dashboards, analysis structures, and code logic are the intellectual property of SentiNaut.</p>
           <p><strong>3. Termination:</strong> We reserve the right to suspend accounts that abuse our API rate limits or violate these terms.</p>

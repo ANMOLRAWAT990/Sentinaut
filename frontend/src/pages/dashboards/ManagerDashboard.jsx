@@ -203,10 +203,10 @@ export function ManagerDashboard() {
         </div>
       </div>
 
-      <div className="border border-black/10 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-[#111111] shadow-sm">
+      <div className="border border-black/10 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-sm">
         <div className="px-6 py-4 border-b border-black/10 dark:border-white/10 flex items-center justify-between bg-black/[0.02] dark:bg-white/[0.02]">
-          <h2 className="text-[14px] font-semibold text-[#111111] dark:text-[#ededed]">Ingestion Queue</h2>
-          <span className="text-[12px] font-medium text-[#888888]">{reviews.length} pending items</span>
+          <h2 className="text-[14px] font-semibold text-slate-900 dark:text-slate-200">Ingestion Queue</h2>
+          <span className="text-[12px] font-medium text-slate-400">{reviews.length} pending items</span>
         </div>
         <div className="divide-y divide-black/5 dark:divide-white/5">
           {loading ? (
@@ -237,14 +237,14 @@ export function ManagerDashboard() {
 
       <div>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-[#111111] dark:text-[#ededed] tracking-tight">Active Operations</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">Active Operations</h2>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {['Pending', 'In Progress', 'Done', 'Verified'].map(column => (
             <div key={column} className="flex flex-col gap-3 min-h-[400px]">
               <div className="flex items-center justify-between pb-2 border-b border-black/10 dark:border-white/10">
-                <h3 className="text-[12px] font-semibold text-[#111111] dark:text-[#ededed] tracking-tight">{column}</h3>
+                <h3 className="text-[12px] font-semibold text-slate-900 dark:text-slate-200 tracking-tight">{column}</h3>
                 <span className="text-[11px] font-medium text-[#666666] dark:text-[#a1a1aa]">
                   {actions.filter(a => !a.is_archived && (column === 'Done' ? a.status === 'Done' : column === 'Pending' ? a.status === 'Pending' : false)).length}
                 </span>
@@ -252,7 +252,7 @@ export function ManagerDashboard() {
               <div className="space-y-3">
                 {loading ? (
                   Array(2).fill(0).map((_, i) => (
-                    <div key={i} className="bg-white dark:bg-[#111111] border border-black/10 dark:border-white/10 rounded-lg p-3 shadow-sm h-[94px] flex flex-col">
+                    <div key={i} className="bg-white dark:bg-slate-900 border border-black/10 dark:border-white/10 rounded-lg p-3 shadow-sm h-[94px] flex flex-col">
                       <Skeleton className="h-3 w-full mb-1" />
                       <Skeleton className="h-3 w-2/3 mb-auto" />
                       <div className="flex items-center justify-between mt-auto">
@@ -263,7 +263,7 @@ export function ManagerDashboard() {
                   ))
                 ) : (
                   actions.filter(a => !a.is_archived && (column === 'Done' ? a.status === 'Done' : column === 'Pending' ? a.status === 'Pending' : false)).map(a => (
-                    <div key={a.id} className="bg-white dark:bg-[#111111] border border-black/10 dark:border-white/10 rounded-lg p-3 shadow-sm hover:border-black/20 dark:hover:border-white/20 transition-all flex flex-col min-h-[94px]">
+                    <div key={a.id} className="bg-white dark:bg-slate-900 border border-black/10 dark:border-white/10 rounded-lg p-3 shadow-sm hover:border-black/20 dark:hover:border-white/20 transition-all flex flex-col min-h-[94px]">
                       <div className="flex justify-between items-start mb-2">
                         <select 
                           className="text-[10px] uppercase font-bold bg-transparent cursor-pointer outline-none"
@@ -275,7 +275,7 @@ export function ManagerDashboard() {
                           <option value="Low" className="text-green-500">Low</option>
                         </select>
                         <select
-                          className="text-[10px] bg-slate-100 dark:bg-[#21262d] rounded px-1 max-w-[60px] truncate"
+                          className="text-[10px] bg-slate-100 dark:bg-slate-800 rounded px-1 max-w-[60px] truncate"
                           value={a.assigned_to || ''}
                           onChange={(e) => handleAssign(a.id, e.target.value)}
                         >
@@ -283,9 +283,9 @@ export function ManagerDashboard() {
                           {staffList.map(s => <option key={s.name} value={s.name}>{s.initials}</option>)}
                         </select>
                       </div>
-                      <h4 className="text-[13px] font-medium text-[#111111] dark:text-[#ededed] mb-2 leading-snug line-clamp-2 cursor-pointer hover:underline" onClick={() => handleActionClick(a)}>{a.task}</h4>
+                      <h4 className="text-[13px] font-medium text-slate-900 dark:text-slate-200 mb-2 leading-snug line-clamp-2 cursor-pointer hover:underline" onClick={() => handleActionClick(a)}>{a.task}</h4>
                       <div className="flex items-center justify-between mt-auto">
-                        <span className="text-[11px] font-mono text-[#888888] cursor-pointer" onClick={() => handleActionClick(a)}>TSK-{String(a.id).slice(-4).toUpperCase()}</span>
+                        <span className="text-[11px] font-mono text-slate-400 cursor-pointer" onClick={() => handleActionClick(a)}>TSK-{String(a.id).slice(-4).toUpperCase()}</span>
                         {column !== 'Done' && (
                           <Button size="sm" variant="secondary" className="h-6 px-2 text-[11px]" onClick={() => toggleAction(a.id)}>Execute</Button>
                         )}
@@ -306,14 +306,14 @@ export function ManagerDashboard() {
       </div>
 
       <div className="pt-6 border-t border-black/10 dark:border-white/10">
-        <h2 className="text-xl font-bold text-[#111111] dark:text-[#ededed] tracking-tight mb-6">Staff Management</h2>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-200 tracking-tight mb-6">Staff Management</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {staffList.map(staff => (
-            <div key={staff.id} className="flex items-center justify-between bg-white dark:bg-[#111111] p-4 rounded-lg border border-black/10 dark:border-white/10 shadow-sm">
+            <div key={staff.id} className="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-lg border border-black/10 dark:border-white/10 shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-sm font-bold">{staff.initials || 'S'}</div>
                 <div>
-                  <h4 className="text-sm font-semibold text-slate-900 dark:text-[#ededed]">{staff.name}</h4>
+                  <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-200">{staff.name}</h4>
                   <p className="text-xs text-slate-500 dark:text-[#a1a1aa]">{staff.property || 'Unassigned'}</p>
                 </div>
               </div>
@@ -321,7 +321,7 @@ export function ManagerDashboard() {
           ))}
           <button 
             onClick={() => setIsInviteModalOpen(true)}
-            className="flex items-center justify-center h-[74px] border-2 border-dashed border-black/10 dark:border-white/10 rounded-lg text-sm font-medium text-slate-500 dark:text-[#8b949e] hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            className="flex items-center justify-center h-[74px] border-2 border-dashed border-black/10 dark:border-white/10 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
           >
             + Invite Staff Member
           </button>
@@ -352,15 +352,15 @@ export function ManagerDashboard() {
         {selectedAction && (
           <div className="space-y-4">
             <div>
-              <h4 className="text-sm font-semibold text-slate-900 dark:text-[#ededed]">Task</h4>
+              <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-200">Task</h4>
               <p className="text-sm text-slate-700 dark:text-[#a1a1aa]">{selectedAction.task}</p>
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-slate-900 dark:text-[#ededed] mb-2">Notes</h4>
+              <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-200 mb-2">Notes</h4>
               {selectedAction.notes?.length > 0 ? (
                 <ul className="space-y-2 mb-4">
                   {selectedAction.notes.map((note, i) => (
-                    <li key={i} className="text-sm bg-slate-50 dark:bg-[#161b22] p-2 rounded border border-slate-200 dark:border-[#30363d] text-slate-700 dark:text-[#ededed]">{note}</li>
+                    <li key={i} className="text-sm bg-slate-50 dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200">{note}</li>
                   ))}
                 </ul>
               ) : (

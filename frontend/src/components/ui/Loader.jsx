@@ -10,7 +10,7 @@ export const Loader = ({ className = '', size = 'md' }) => {
   return (
     <div className={`flex justify-center items-center ${className}`}>
       <div 
-        className={`${sizeClasses[size]} border-4 border-gray-200 dark:border-[#30363d] border-t-primary dark:border-t-[#58a6ff] rounded-full animate-spin`}
+        className={`${sizeClasses[size]} border-4 border-gray-200 dark:border-slate-800 border-t-primary dark:border-t-[#58a6ff] rounded-full animate-spin`}
         role="status"
         aria-label="Loading"
       >

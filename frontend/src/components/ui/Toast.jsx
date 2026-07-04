@@ -56,21 +56,21 @@ const ToastItem = ({ toast, onClose }) => {
   };
 
   const bgColors = {
-    info: 'bg-white dark:bg-[#161b22] border-l-4 border-blue-500 dark:border-l-[#58a6ff]',
-    success: 'bg-white dark:bg-[#161b22] border-l-4 border-green-500 dark:border-l-[#3fb950]',
-    warning: 'bg-white dark:bg-[#161b22] border-l-4 border-yellow-500 dark:border-l-[#d29922]',
-    error: 'bg-white dark:bg-[#161b22] border-l-4 border-red-500 dark:border-l-[#f85149]'
+    info: 'bg-white dark:bg-slate-900 border-l-4 border-blue-500 dark:border-l-[#58a6ff]',
+    success: 'bg-white dark:bg-slate-900 border-l-4 border-green-500 dark:border-l-[#3fb950]',
+    warning: 'bg-white dark:bg-slate-900 border-l-4 border-yellow-500 dark:border-l-[#d29922]',
+    error: 'bg-white dark:bg-slate-900 border-l-4 border-red-500 dark:border-l-[#f85149]'
   };
 
   return (
-    <div className={`flex items-start gap-3 p-4 min-w-[300px] shadow-lg dark:shadow-none rounded-md border text-gray-800 dark:text-[#e6edf3] dark:border-[#30363d] animate-slide-up ${bgColors[toast.type || 'info']}`}>
+    <div className={`flex items-start gap-3 p-4 min-w-[300px] shadow-lg dark:shadow-none rounded-md border text-gray-800 dark:text-slate-200 dark:border-slate-800 animate-slide-up ${bgColors[toast.type || 'info']}`}>
       <div className="flex-shrink-0 mt-0.5">
         {icons[toast.type || 'info']}
       </div>
       <div className="flex-1 text-sm font-medium">
         {toast.message}
       </div>
-      <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-[#e6edf3]">
+      <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200">
         <X className="w-4 h-4" />
       </button>
     </div>
