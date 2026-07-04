@@ -11,6 +11,7 @@ class Review(BaseModel):
     status: str = "Pending"
     property: Optional[str] = None
     replied: bool = False
+    translated_text: Optional[str] = None
     created_at: Optional[str] = None
 
 class Action(BaseModel):
