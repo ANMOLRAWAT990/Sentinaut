@@ -6,6 +6,34 @@ import { useToast } from '../../components/ui/Toast';
 export function SuggestionsIndex() {
   const { user } = useAuth();
   const { addToast } = useToast();
+  const [insights, setInsights] = React.useState({ summary: "", anomalies: [], tasks: [] });
+  const [loading, setLoading] = React.useState(false);
+
+  const fetchInsights = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`http://localhost:8000/api/insights?property=${user?.property || 'Unassigned'}`);
+      if(res.ok) setInsights(await res.json());
+    } catch(e) {}
+    setLoading(false);
+  };
+
+  React.useEffect(() => {
+    if (user?.role === 'manager' || user?.role === 'owner') {
+      fetchInsights();
+    }
+  }, [user]);
+
+  const generateInsights = async () => {
+    addToast('Generating insights... this takes a moment', 'info');
+    try {
+      const res = await fetch(`http://localhost:8000/api/insights/generate?property=${user?.property || 'Unassigned'}`, {method: 'POST'});
+      if(res.ok) {
+        setInsights(await res.json());
+        addToast('Insights generated', 'success');
+      } else throw new Error();
+    } catch(e) { addToast('Failed to generate insights', 'error'); }
+  };
 
   const handleComingSoon = () => addToast('This functionality is currently locked in your environment.', 'info');
 
@@ -41,36 +69,30 @@ export function SuggestionsIndex() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-[#111111] dark:text-[#ededed] tracking-tight">Operational Intelligence</h2>
-          <p className="text-[13px] text-[#666666] dark:text-[#a1a1aa] mt-1">Algorithmic deductions based on review volume anomalies.</p>
+          <p className="text-[13px] text-[#666666] dark:text-[#a1a1aa] mt-1">{insights.summary || 'Algorithmic deductions based on review volume anomalies.'}</p>
         </div>
-        <Button size="sm" variant="secondary" onClick={handleComingSoon}>Force Re-index</Button>
+        <Button size="sm" variant="secondary" onClick={generateInsights}>Force AI Re-index</Button>
       </div>
 
       <div className="bg-white dark:bg-[#111111] border border-black/10 dark:border-white/10 rounded-xl shadow-sm overflow-hidden">
         <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.02] text-[11px] font-semibold text-[#666666] dark:text-[#a1a1aa] uppercase tracking-wider">
-          <div className="col-span-3">Anomaly ID</div>
-          <div className="col-span-7">Deduction & Recommended Action</div>
-          <div className="col-span-2 text-right">Confidence</div>
+          <div className="col-span-3">Anomaly Status</div>
+          <div className="col-span-9">Deduction & Recommended Action</div>
         </div>
         
         <div className="divide-y divide-black/5 dark:divide-white/5">
-          {[
-            { id: 'ANM-492', title: 'HVAC Maintenance Deterioration', desc: '3 negative reviews mention AC issues on the 3rd floor in 48h. Suggest scheduling preventative maintenance for rooms 301-310 immediately.', conf: '94%' },
-            { id: 'ANM-481', title: 'Breakfast Peak Overcrowding', desc: 'Sustained complaints regarding wait times between 08:30-09:00. Recommend staggering slots or dynamic staffing.', conf: '88%' },
-            { id: 'ANM-477', title: 'Memory Foam Preference', desc: 'Statistically significant praise for new pillows. Recommend highlighting in primary marketing copy.', conf: '96%' }
-          ].map((s, i) => (
+          {loading ? <div className="p-4 text-sm text-slate-500">Loading AI Insights...</div> : insights.anomalies.map((s, i) => (
             <div key={i} className="grid grid-cols-12 gap-4 px-6 py-4 items-start group hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors">
               <div className="col-span-3">
-                <div className="text-[13px] font-medium text-[#111111] dark:text-[#ededed] font-mono">{s.id}</div>
+                <div className={`text-[13px] font-medium font-mono ${s.severity === 'High' ? 'text-red-500' : 'text-yellow-500'}`}>[{s.severity.toUpperCase()}]</div>
               </div>
-              <div className="col-span-7 pr-8">
+              <div className="col-span-9 pr-8">
                 <div className="text-[14px] font-medium text-[#111111] dark:text-[#ededed] mb-1">{s.title}</div>
-                <div className="text-[13px] text-[#666666] dark:text-[#a1a1aa] leading-relaxed mb-3">{s.desc}</div>
-                <Button size="sm" variant="secondary" className="text-[12px] h-7 px-3" onClick={handleComingSoon}>Initialize Task</Button>
+                {insights.tasks[i] && <div className="text-[13px] text-[#666666] dark:text-[#a1a1aa] leading-relaxed mb-3">Suggested Task: {insights.tasks[i].task}</div>}
               </div>
-              <div className="col-span-2 text-right text-[13px] font-mono text-[#666666] dark:text-[#a1a1aa]">{s.conf}</div>
             </div>
           ))}
+          {!loading && insights.anomalies.length === 0 && <div className="p-4 text-sm text-slate-500">No anomalies detected or data not yet generated.</div>}
         </div>
       </div>
     </div>

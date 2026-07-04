@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
+import { Card, CardContent } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Search, Filter, MessageSquare, Star, ArrowUpRight, Trash2, CheckCircle, Globe, MapPin, Building2, Download, Languages, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
@@ -19,6 +19,8 @@ export function ReviewsIndex() {
   const [sortOrder, setSortOrder] = useState('Newest');
   const [selectedReviews, setSelectedReviews] = useState([]);
   const [translationMap, setTranslationMap] = useState({});
+  const [drafts, setDrafts] = useState({});
+  const [isDrafting, setIsDrafting] = useState({});
 
   useEffect(() => {
     fetchReviews();
@@ -115,12 +117,36 @@ export function ReviewsIndex() {
     setSelectedReviews(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const handleTranslate = (id, text) => {
-    setTranslationMap(prev => ({
-      ...prev,
-      [id]: prev[id] ? null : `[Translated to English] ${text}`
-    }));
-    if(!translationMap[id]) addToast('Translation API mocked', 'info');
+  const handleTranslate = async (id, text) => {
+    if (translationMap[id]) {
+      setTranslationMap(prev => ({ ...prev, [id]: null }));
+      return;
+    }
+    addToast('Translating...', 'info');
+    try {
+      const res = await fetch(`http://localhost:8000/api/reviews/${id}/translate`, { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setTranslationMap(prev => ({ ...prev, [id]: `[Translated] ${data.translated_text}` }));
+      } else throw new Error();
+    } catch (e) {
+      addToast('Translation failed. Service unavailable.', 'error');
+    }
+  };
+
+  const handleDraftReply = async (id) => {
+    setIsDrafting(prev => ({ ...prev, [id]: true }));
+    try {
+      const res = await fetch(`http://localhost:8000/api/reviews/${id}/draft-reply`, { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setDrafts(prev => ({ ...prev, [id]: data.draft }));
+      } else throw new Error();
+    } catch (e) {
+      addToast('AI Draft failed. Please draft manually.', 'error');
+    } finally {
+      setIsDrafting(prev => ({ ...prev, [id]: false }));
+    }
   };
 
   const exportCSV = () => {
@@ -229,7 +255,23 @@ export function ReviewsIndex() {
                   </label>
                   <span>|</span>
                   <button onClick={() => handleTranslate(r.id, r.text)} className="flex items-center gap-1 text-blue-500 hover:underline"><Languages className="h-3 w-3"/> Translate</button>
+                  <span>|</span>
+                  <button onClick={() => handleDraftReply(r.id)} disabled={isDrafting[r.id]} className="flex items-center gap-1 text-purple-500 hover:underline disabled:opacity-50">
+                    <MessageSquare className="h-3 w-3"/> {isDrafting[r.id] ? 'Drafting...' : 'AI Draft Reply'}
+                  </button>
                 </div>
+                {drafts[r.id] && (
+                  <div className="mt-3 p-3 bg-slate-50 dark:bg-[#0d1117] rounded-md border border-slate-200 dark:border-[#30363d]">
+                    <p className="text-xs font-semibold text-slate-500 mb-1 flex items-center justify-between">
+                      AI Suggested Reply:
+                      <button onClick={() => setDrafts(prev => ({...prev, [r.id]: null}))} className="text-red-400 hover:text-red-500">Dismiss</button>
+                    </p>
+                    <textarea 
+                      defaultValue={drafts[r.id]} 
+                      className="w-full text-sm p-2 bg-transparent border border-slate-300 dark:border-[#30363d] rounded resize-y min-h-[80px]"
+                    />
+                  </div>
+                )}
               </div>
               {user?.role === 'manager' && (
                 <div className="flex gap-2 w-full md:w-auto">

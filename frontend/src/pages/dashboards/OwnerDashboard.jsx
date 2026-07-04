@@ -24,11 +24,12 @@ export function OwnerDashboard() {
   const [selectedProperty, setSelectedProperty] = useState('');
 
   // Feature 1: Competitor Mock State
-  const [competitorScores, setCompetitorScores] = useState({
+  const [competitorScores] = useState({
     own: 8.6,
     compA: 8.2,
     compB: 7.9
   });
+  const [competitorSummary, setCompetitorSummary] = useState("Loading competitor benchmarking data...");
   const [isRefreshingComps, setIsRefreshingComps] = useState(false);
 
   useEffect(() => {
@@ -40,11 +41,13 @@ export function OwnerDashboard() {
       Promise.all([
         fetch(`${API_URL}/api/properties?owner_email=${user.email}`).then(res => res.json()),
         fetch(`${API_URL}/api/users?role=manager&owner_email=${user.email}`).then(res => res.json()),
-        fetch(`${API_URL}/api/analytics?owner_email=${user.email}${propQuery}`).then(res => res.json())
-      ]).then(([propsData, managersData, analyticsRes]) => {
+        fetch(`${API_URL}/api/analytics?owner_email=${user.email}${propQuery}`).then(res => res.json()),
+        fetch(`${API_URL}/api/competitors/summary?property=${activeProperty || 'Unassigned'}`).then(res => res.json()).catch(() => ({}))
+      ]).then(([propsData, managersData, analyticsRes, compRes]) => {
         if (Array.isArray(propsData)) setProperties(propsData);
         if (Array.isArray(managersData)) setManagers(managersData);
         if (analyticsRes) setAnalyticsData(analyticsRes);
+        if (compRes?.summary) setCompetitorSummary(compRes.summary);
       }).catch(err => console.error("Failed to load owner data:", err));
     };
 
@@ -115,18 +118,24 @@ export function OwnerDashboard() {
     setSelectedProperty('');
   };
 
-  const refreshCompetitors = () => {
+  const refreshCompetitors = async () => {
     setIsRefreshingComps(true);
-    addToast("Fetching latest OTA scores from Outscraper...", "default");
-    setTimeout(() => {
-      setCompetitorScores({
-        own: (Math.random() * (9.5 - 8.0) + 8.0).toFixed(1),
-        compA: (Math.random() * (9.0 - 7.5) + 7.5).toFixed(1),
-        compB: (Math.random() * (8.5 - 7.0) + 7.0).toFixed(1)
-      });
+    addToast("Fetching latest OTA scores and generating AI benchmark...", "info");
+    try {
+      const res = await fetch(`http://localhost:8000/api/competitors/refresh?property=${activeProperty || 'Unassigned'}`, {method: 'POST'});
+      if (res.ok) {
+        const data = await res.json();
+        setCompetitorSummary(data.summary);
+        addToast("Competitor benchmark updated.", "success");
+      } else {
+        const data = await res.json();
+        addToast(data.detail || "Failed to refresh", "error");
+      }
+    } catch(e) {
+      addToast("Failed to connect to API", "error");
+    } finally {
       setIsRefreshingComps(false);
-      addToast("Competitor benchmark updated. (Blocked on Outscraper API)", "success");
-    }, 1500);
+    }
   };
 
   return (
@@ -251,8 +260,9 @@ export function OwnerDashboard() {
                   <div className="bg-slate-400 h-2 rounded-full" style={{ width: `${(competitorScores.compB / 10) * 100}%` }}></div>
                 </div>
               </div>
-              <div className="pt-4 border-t border-slate-100 dark:border-[#30363d]">
-                <p className="text-xs text-slate-500 dark:text-[#8b949e]">Rank: <strong className="text-slate-900 dark:text-[#e6edf3]">#{[competitorScores.own, competitorScores.compA, competitorScores.compB].sort((a,b)=>b-a).indexOf(competitorScores.own) + 1}</strong> among tracked properties.</p>
+              <div className="pt-4 border-t border-slate-100 dark:border-[#30363d] space-y-2">
+                <p className="text-sm font-medium text-slate-800 dark:text-[#e6edf3]">AI Strategic Summary:</p>
+                <p className="text-xs text-slate-500 dark:text-[#8b949e] leading-relaxed">{competitorSummary}</p>
               </div>
             </div>
           </CardContent>

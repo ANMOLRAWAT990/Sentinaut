@@ -44,8 +44,8 @@ export function ManagerDashboard() {
     } catch (err) {
       addToast('Failed to add note. Changes reverted.', 'error');
       // Rollback
-      setActions(actions.map(a => a.id === selectedAction.id ? actionToUpdate : a));
-      setSelectedAction(actionToUpdate);
+      setActions(actions.map(a => a.id === selectedAction.id ? selectedAction : a));
+      setSelectedAction(selectedAction);
     }
   };
 
