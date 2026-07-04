@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Card, CardContent } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
-import { Search, Filter, MessageSquare, Star, ArrowUpRight, Trash2, CheckCircle, Globe, MapPin, Building2, Download, Languages, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Filter, MessageSquare, Star, ArrowUpRight, Trash2, CheckCircle, Globe, MapPin, Building2, Download, Languages, ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { useToast } from '../../components/ui/Toast';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { Modal } from '../../components/ui/Modal';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 export function ReviewsIndex() {
   const { user } = useAuth();
@@ -21,8 +24,11 @@ export function ReviewsIndex() {
   const [translationMap, setTranslationMap] = useState({});
   const [drafts, setDrafts] = useState({});
   const [isDrafting, setIsDrafting] = useState({});
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null, isBulk: false });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
+    document.title = "Reviews · SentiNaut";
     fetchReviews();
   }, []);
 
@@ -41,14 +47,18 @@ export function ReviewsIndex() {
   };
 
   const deleteReview = async (id) => {
+    setIsDeleting(true);
     try {
       const res = await fetch(`http://localhost:8000/api/reviews/${id}`, { method: 'DELETE' });
       if(res.ok) {
         setReviews(reviews.filter(r => r.id !== id));
         addToast('Review deleted successfully', 'success');
+        setDeleteModal({ isOpen: false, id: null, isBulk: false });
       }
     } catch (err) {
       addToast('Failed to delete review', 'error');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -88,13 +98,18 @@ export function ReviewsIndex() {
   };
 
   const handleBulkDelete = async () => {
-    if(!window.confirm("Delete selected reviews?")) return;
-    for (const id of selectedReviews) {
-      await fetch(`http://localhost:8000/api/reviews/${id}`, { method: 'DELETE' });
+    setIsDeleting(true);
+    try {
+      for (const id of selectedReviews) {
+        await fetch(`http://localhost:8000/api/reviews/${id}`, { method: 'DELETE' });
+      }
+      setReviews(reviews.filter(r => !selectedReviews.includes(r.id)));
+      setSelectedReviews([]);
+      addToast('Bulk delete completed', 'success');
+      setDeleteModal({ isOpen: false, id: null, isBulk: false });
+    } finally {
+      setIsDeleting(false);
     }
-    setReviews(reviews.filter(r => !selectedReviews.includes(r.id)));
-    setSelectedReviews([]);
-    addToast('Bulk delete completed', 'success');
   };
 
   const handleBulkApprove = async () => {
@@ -222,15 +237,33 @@ export function ReviewsIndex() {
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/50 p-3 rounded-lg flex items-center justify-between">
           <span className="text-sm font-medium text-blue-800 dark:text-blue-300">{selectedReviews.length} selected</span>
           <div className="flex gap-2">
-            <Button size="sm" variant="secondary" onClick={handleBulkDelete} className="text-red-500 hover:text-red-700">Delete Selected</Button>
+            <Button size="sm" variant="secondary" onClick={() => setDeleteModal({ isOpen: true, id: null, isBulk: true })} className="text-red-500 hover:text-red-700">Delete Selected</Button>
             <Button size="sm" onClick={handleBulkApprove} className="bg-green-600 hover:bg-green-700 text-white">Approve Selected</Button>
           </div>
         </div>
       )}
 
       <div className="grid gap-4">
-        {loading ? <div className="p-8 text-center text-slate-500 bg-white dark:bg-[#161b22] rounded-lg">Loading from database...</div> : currentReviews.map((r, i) => (
-          <Card key={r.id} className={selectedReviews.includes(r.id) ? 'ring-2 ring-blue-500' : ''}>
+        {loading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-5 flex flex-col md:flex-row gap-4 items-start md:items-center">
+                <Skeleton className="h-4 w-4 rounded-full" />
+                <div className="flex-1 space-y-3 w-full">
+                  <div className="flex gap-3">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-5 w-16" />
+                  </div>
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6" />
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : currentReviews.map((r, i) => {
+          const sentimentBorder = r.sentiment === 'Positive' ? 'border-l-4 border-l-green-500 dark:border-l-green-500' : r.sentiment === 'Negative' ? 'border-l-4 border-l-red-500 dark:border-l-red-500' : 'border-l-4 border-l-slate-300 dark:border-l-slate-600';
+          return (
+          <Card key={r.id} className={`${selectedReviews.includes(r.id) ? 'ring-2 ring-primary-500' : ''} ${sentimentBorder}`}>
             <CardContent className="p-5 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
               <div className="flex items-center gap-3">
                 {user?.role === 'manager' && <input type="checkbox" checked={selectedReviews.includes(r.id)} onChange={() => toggleSelection(r.id)} className="w-4 h-4 rounded border-slate-300" />}
@@ -250,32 +283,36 @@ export function ReviewsIndex() {
                   <span>|</span>
                   <span>Status: {r.status}</span>
                   <span>|</span>
-                  <label className="flex items-center gap-1 cursor-pointer hover:text-slate-700 dark:hover:text-slate-300">
-                    <input type="checkbox" checked={r.replied || false} onChange={() => toggleReplied(r)} className="rounded border-slate-300 w-3 h-3 cursor-pointer" /> Replied
+                  <label className="flex items-center gap-1 cursor-pointer hover:text-slate-700 dark:hover:text-slate-300 focus-within:ring-2 focus-within:ring-blue-500 rounded px-1">
+                    <input type="checkbox" checked={r.replied || false} onChange={() => toggleReplied(r)} className="rounded border-slate-300 w-3 h-3 cursor-pointer focus:outline-none focus-visible:ring-0" /> Replied
                   </label>
                   <span>|</span>
-                  <button onClick={() => handleTranslate(r.id, r.text)} className="flex items-center gap-1 text-blue-500 hover:underline"><Languages className="h-3 w-3"/> Translate</button>
+                  <Button variant="ghost" size="sm" onClick={() => handleTranslate(r.id, r.text)} className="h-6 px-2 text-[11px] gap-1 text-blue-600 hover:text-blue-800 dark:text-blue-400">
+                    <Languages className="h-3 w-3"/> Translate
+                  </Button>
                   <span>|</span>
-                  <button onClick={() => handleDraftReply(r.id)} disabled={isDrafting[r.id]} className="flex items-center gap-1 text-purple-500 hover:underline disabled:opacity-50">
-                    <MessageSquare className="h-3 w-3"/> {isDrafting[r.id] ? 'Drafting...' : 'AI Draft Reply'}
-                  </button>
+                  <Button variant="ghost" size="sm" onClick={() => handleDraftReply(r.id)} disabled={isDrafting[r.id]} isLoading={isDrafting[r.id]} className="h-6 px-2 text-[11px] gap-1 text-purple-600 hover:text-purple-800 dark:text-purple-400">
+                    <MessageSquare className="h-3 w-3"/> AI Draft Reply
+                  </Button>
                 </div>
-                {drafts[r.id] && (
-                  <div className="mt-3 p-3 bg-slate-50 dark:bg-[#0d1117] rounded-md border border-slate-200 dark:border-[#30363d]">
-                    <p className="text-xs font-semibold text-slate-500 mb-1 flex items-center justify-between">
-                      AI Suggested Reply:
-                      <button onClick={() => setDrafts(prev => ({...prev, [r.id]: null}))} className="text-red-400 hover:text-red-500">Dismiss</button>
-                    </p>
-                    <textarea 
-                      defaultValue={drafts[r.id]} 
-                      className="w-full text-sm p-2 bg-transparent border border-slate-300 dark:border-[#30363d] rounded resize-y min-h-[80px]"
-                    />
-                  </div>
-                )}
+                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${drafts[r.id] ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0'}`}>
+                  {drafts[r.id] && (
+                    <div className="p-3 bg-slate-50 dark:bg-[#0d1117] rounded-md border border-slate-200 dark:border-[#30363d]">
+                      <p className="text-xs font-semibold text-slate-500 mb-1 flex items-center justify-between">
+                        AI Suggested Reply:
+                        <button onClick={() => setDrafts(prev => ({...prev, [r.id]: null}))} className="text-red-400 hover:text-red-500">Dismiss</button>
+                      </p>
+                      <textarea 
+                        defaultValue={drafts[r.id]} 
+                        className="w-full text-sm p-2 bg-transparent border border-slate-300 dark:border-[#30363d] rounded resize-y min-h-[80px]"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
               {user?.role === 'manager' && (
                 <div className="flex gap-2 w-full md:w-auto">
-                  <Button variant="secondary" size="sm" onClick={() => deleteReview(r.id)} className="flex-1 md:flex-none text-red-500 hover:text-red-700 hover:bg-red-50">Delete</Button>
+                  <Button variant="secondary" size="sm" onClick={() => setDeleteModal({ isOpen: true, id: r.id, isBulk: false })} className="flex-1 md:flex-none text-red-500 hover:text-red-700 hover:bg-red-50">Delete</Button>
                   {r.status !== 'Approved' && (
                     <Button size="sm" onClick={() => approveReview(r)} className="flex-1 md:flex-none gap-2 bg-green-600 hover:bg-green-700 text-white"><CheckCircle className="w-4 h-4"/>Approve</Button>
                   )}
@@ -283,7 +320,8 @@ export function ReviewsIndex() {
               )}
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
         
         {/* Pagination Controls */}
         {!loading && filteredReviews.length > 0 && (
@@ -295,23 +333,35 @@ export function ReviewsIndex() {
             <div className="flex items-center gap-4">
               <span className="text-sm text-slate-600 dark:text-[#8b949e]">Page {currentPage} of {totalPages}</span>
               <div className="flex gap-1">
-                <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="p-2"><ChevronLeft className="h-4 w-4"/></Button>
-                <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="p-2"><ChevronRight className="h-4 w-4"/></Button>
+                <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} aria-label="Previous Page" className="p-2"><ChevronLeft className="h-4 w-4"/></Button>
+                <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} aria-label="Next Page" className="p-2"><ChevronRight className="h-4 w-4"/></Button>
               </div>
             </div>
           </div>
         )}
 
         {!loading && filteredReviews.length === 0 && (
-          <div className="relative w-full h-64 rounded-xl overflow-hidden border border-black/10 dark:border-white/10 flex items-center justify-center shadow-sm">
-            <div className="relative z-10 text-center animate-in slide-in-from-bottom-2 fade-in duration-500">
-              <MessageSquare className="h-8 w-8 text-[#888] mx-auto mb-3" />
-              <h3 className="text-[16px] font-semibold text-[#111] dark:text-[#eee]">No Reviews Found</h3>
-              <p className="text-[13px] text-[#666] dark:text-[#aaa] mt-1 max-w-sm">Try adjusting your filters.</p>
-            </div>
-          </div>
+          <EmptyState 
+            icon={Inbox}
+            title="No Reviews Found"
+            description="There are no reviews matching your current filters."
+            actionLabel={filterSentiment !== 'All' ? "Clear Filters" : null}
+            onAction={() => setFilterSentiment('All')}
+          />
         )}
       </div>
+
+      <Modal 
+        isOpen={deleteModal.isOpen} 
+        onClose={() => setDeleteModal({ isOpen: false, id: null, isBulk: false })}
+        title={deleteModal.isBulk ? "Delete Selected Reviews?" : "Delete Review?"}
+        destructive
+        confirmText="Delete"
+        isLoading={isDeleting}
+        onConfirm={() => deleteModal.isBulk ? handleBulkDelete() : deleteReview(deleteModal.id)}
+      >
+        <p>This action will permanently remove {deleteModal.isBulk ? `the ${selectedReviews.length} selected reviews` : 'this review'} from the database. Are you sure you want to proceed?</p>
+      </Modal>
     </div>
   );
 

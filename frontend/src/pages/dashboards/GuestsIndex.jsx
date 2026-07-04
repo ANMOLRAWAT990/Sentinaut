@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
+import { Card, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useToast } from '../../components/ui/Toast';
 
@@ -11,6 +11,7 @@ export function GuestsIndex() {
   const { addToast } = useToast();
 
   useEffect(() => {
+    document.title = "Guests · SentiNaut";
     if (!user) return;
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     const propQuery = activeProperty || user.property || 'Unassigned';

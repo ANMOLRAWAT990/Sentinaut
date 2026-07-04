@@ -2,12 +2,15 @@ import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { useToast } from '../../components/ui/Toast';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 export function SuggestionsIndex() {
   const { user } = useAuth();
   const { addToast } = useToast();
   const [insights, setInsights] = React.useState({ summary: "", anomalies: [], tasks: [] });
   const [loading, setLoading] = React.useState(false);
+  const [isGenerating, setIsGenerating] = React.useState(false);
 
   const fetchInsights = async () => {
     setLoading(true);
@@ -19,12 +22,14 @@ export function SuggestionsIndex() {
   };
 
   React.useEffect(() => {
+    document.title = "Suggestions · SentiNaut";
     if (user?.role === 'manager' || user?.role === 'owner') {
       fetchInsights();
     }
   }, [user]);
 
   const generateInsights = async () => {
+    setIsGenerating(true);
     addToast('Generating insights... this takes a moment', 'info');
     try {
       const res = await fetch(`http://localhost:8000/api/insights/generate?property=${user?.property || 'Unassigned'}`, {method: 'POST'});
@@ -33,6 +38,7 @@ export function SuggestionsIndex() {
         addToast('Insights generated', 'success');
       } else throw new Error();
     } catch(e) { addToast('Failed to generate insights', 'error'); }
+    finally { setIsGenerating(false); }
   };
 
   const handleComingSoon = () => addToast('This functionality is currently locked in your environment.', 'info');
@@ -48,7 +54,7 @@ export function SuggestionsIndex() {
           { task: 'Inspect HVAC filter block in Room 302', priority: 'High', due: 'Immediate' },
           { task: 'Restock auxiliary towels in primary pool sector', priority: 'Medium', due: 'Next Shift' }
         ].map((t, i) => (
-          <div key={i} className="bg-white dark:bg-[#111111] border border-black/10 dark:border-white/10 rounded-lg p-4 flex items-center justify-between group hover:border-black/20 dark:hover:border-white/20 transition-colors">
+          <div key={i} className={`bg-white dark:bg-[#111111] border border-black/10 dark:border-white/10 ${t.priority === 'High' ? 'border-l-4 border-l-red-500' : t.priority === 'Medium' ? 'border-l-4 border-l-yellow-500' : ''} rounded-lg p-4 flex items-center justify-between group hover:border-black/20 dark:hover:border-white/20 transition-colors`}>
             <div>
               <p className="text-[14px] font-medium text-[#111111] dark:text-[#ededed]">{t.task}</p>
               <div className="flex gap-3 mt-1 text-[11px] font-mono text-[#888888]">
@@ -71,29 +77,45 @@ export function SuggestionsIndex() {
           <h2 className="text-xl font-bold text-[#111111] dark:text-[#ededed] tracking-tight">Operational Intelligence</h2>
           <p className="text-[13px] text-[#666666] dark:text-[#a1a1aa] mt-1">{insights.summary || 'Algorithmic deductions based on review volume anomalies.'}</p>
         </div>
-        <Button size="sm" variant="secondary" onClick={generateInsights}>Force AI Re-index</Button>
+        <Button size="sm" variant="secondary" onClick={generateInsights} isLoading={isGenerating}>Force AI Re-index</Button>
       </div>
 
       <div className="bg-white dark:bg-[#111111] border border-black/10 dark:border-white/10 rounded-xl shadow-sm overflow-hidden">
-        <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.02] text-[11px] font-semibold text-[#666666] dark:text-[#a1a1aa] uppercase tracking-wider">
+        <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 border-b border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.02] text-[11px] font-semibold text-[#666666] dark:text-[#a1a1aa] uppercase tracking-wider">
           <div className="col-span-3">Anomaly Status</div>
           <div className="col-span-9">Deduction & Recommended Action</div>
         </div>
-        
         <div className="divide-y divide-black/5 dark:divide-white/5">
-          {loading ? <div className="p-4 text-sm text-slate-500">Loading AI Insights...</div> : insights.anomalies.map((s, i) => (
-            <div key={i} className="grid grid-cols-12 gap-4 px-6 py-4 items-start group hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors">
-              <div className="col-span-3">
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-4 px-6 py-4 items-start">
+                <div className="md:col-span-3">
+                  <Skeleton className="h-5 w-16" />
+                </div>
+                <div className="md:col-span-9 md:pr-8 space-y-2 w-full">
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              </div>
+            ))
+          ) : insights.anomalies.map((s, i) => (
+            <div key={i} className="flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-4 px-6 py-4 items-start group hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors">
+              <div className="md:col-span-3">
                 <div className={`text-[13px] font-medium font-mono ${s.severity === 'High' ? 'text-red-500' : 'text-yellow-500'}`}>[{s.severity.toUpperCase()}]</div>
               </div>
-              <div className="col-span-9 pr-8">
+              <div className="md:col-span-9 md:pr-8">
                 <div className="text-[14px] font-medium text-[#111111] dark:text-[#ededed] mb-1">{s.title}</div>
                 {insights.tasks[i] && <div className="text-[13px] text-[#666666] dark:text-[#a1a1aa] leading-relaxed mb-3">Suggested Task: {insights.tasks[i].task}</div>}
               </div>
             </div>
           ))}
-          {!loading && insights.anomalies.length === 0 && <div className="p-4 text-sm text-slate-500">No anomalies detected or data not yet generated.</div>}
         </div>
+        {!loading && insights.anomalies.length === 0 && (
+          <EmptyState 
+            title="Operational Harmony"
+            description="No critical anomalies detected in recent guest feedback."
+          />
+        )}
       </div>
     </div>
   );

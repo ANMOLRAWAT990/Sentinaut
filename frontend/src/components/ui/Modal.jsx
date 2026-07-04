@@ -1,61 +1,39 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { Button } from './Button';
 
-export const Modal = ({ isOpen, onClose, title, children }) => {
-  const modalRef = useRef(null);
-
-  useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen, onClose]);
-
-  useEffect(() => {
-    if (isOpen) {
-      modalRef.current?.focus();
-    }
-  }, [isOpen]);
-
+export const Modal = ({ isOpen, onClose, title, children, footer, destructive, onConfirm, confirmText = 'Confirm', isLoading }) => {
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
-      <div 
-        ref={modalRef}
-        tabIndex="-1"
-        className="bg-white dark:bg-[#161b22] dark:border dark:border-[#30363d] rounded-lg shadow-xl dark:shadow-none w-full max-w-md overflow-hidden transform transition-all outline-none"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
-      >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-[#30363d]">
-          <h3 id="modal-title" className="text-lg font-semibold text-gray-900 dark:text-[#e6edf3]">
-            {title}
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-500 dark:hover:text-[#e6edf3] focus:outline-none focus:ring-2 focus:ring-primary rounded-md"
-            aria-label="Close"
-          >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-[#30363d] rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-[#30363d]">
+          <h3 className={`text-lg font-semibold ${destructive ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-[#e6edf3]'}`}>{title}</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-[#e6edf3] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 rounded" aria-label="Close modal">
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="px-6 py-4">
+        <div className="p-5 text-sm text-slate-600 dark:text-[#8b949e]">
           {children}
         </div>
+        {(footer || onConfirm) && (
+          <div className="px-5 py-4 bg-slate-50 dark:bg-[#0d1117] border-t border-slate-200 dark:border-[#30363d] flex justify-end gap-3">
+            {footer ? footer : (
+              <>
+                <Button variant="secondary" onClick={onClose}>Cancel</Button>
+                <Button 
+                  onClick={onConfirm} 
+                  isLoading={isLoading} 
+                  className={destructive ? 'bg-red-600 hover:bg-red-700 text-white dark:bg-red-600' : ''}
+                >
+                  {confirmText}
+                </Button>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>,
     document.body

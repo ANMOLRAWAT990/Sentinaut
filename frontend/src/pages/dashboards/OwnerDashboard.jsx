@@ -33,6 +33,7 @@ export function OwnerDashboard() {
   const [isRefreshingComps, setIsRefreshingComps] = useState(false);
 
   useEffect(() => {
+    document.title = "Executive Dashboard · SentiNaut";
     if (!user) return;
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     
@@ -149,6 +150,23 @@ export function OwnerDashboard() {
         </div>
       </div>
 
+      {competitorSummary && competitorSummary !== "Loading competitor benchmarking data..." && (
+        <div className="bg-gradient-to-r from-primary-50/50 to-teal-50/50 dark:from-primary-900/10 dark:to-teal-900/10 border border-primary-100 dark:border-primary-800/30 rounded-xl p-5 flex items-start gap-4 shadow-sm animate-in fade-in duration-500">
+          <div className="p-2 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-lg shrink-0 mt-0.5">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-primary-900 dark:text-primary-300 tracking-tight flex items-center gap-2">
+              Strategic AI Summary
+              {isRefreshingComps && <span className="flex h-2 w-2 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span></span>}
+            </h3>
+            <p className="text-[13px] leading-relaxed text-primary-800/80 dark:text-primary-200/70 mt-1.5">{competitorSummary}</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="text-sm font-medium text-slate-500">
           <span className="flex items-center gap-2">
@@ -162,7 +180,7 @@ export function OwnerDashboard() {
         <select 
           value={dateRange}
           onChange={(e) => setDateRange(e.target.value)}
-          className="border border-slate-200 dark:border-[#30363d] rounded-md px-3 py-1.5 text-sm text-slate-700 dark:text-[#e6edf3] bg-white dark:bg-[#161b22] focus:ring-2 focus:ring-blue-500"
+          className="border border-slate-200 dark:border-[#30363d] rounded-md px-3 py-1.5 text-sm text-slate-700 dark:text-[#e6edf3] bg-white dark:bg-[#161b22] focus:ring-2 focus:ring-primary-500"
         >
           <option value="7days">Last 7 Days</option>
           <option value="30days">Last 30 Days</option>
@@ -173,31 +191,31 @@ export function OwnerDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm font-medium text-slate-500 dark:text-[#8b949e]">Overall Health Score</p>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-slate-900 dark:text-[#e6edf3]">{analyticsData?.healthScore || '0.0'}</span>
-              <span className={`text-sm ${analyticsData?.periodOverPeriod >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-[#e6edf3] tracking-tighter">{analyticsData?.healthScore || '0.0'}</span>
+              <span className={`text-sm font-medium ${analyticsData?.periodOverPeriod >= 0 ? 'text-green-600' : 'text-red-500'}`}>
                 {analyticsData?.periodOverPeriod > 0 ? '+' : ''}{analyticsData?.periodOverPeriod || 0}% PoP
               </span>
             </div>
+            <p className="text-xs uppercase tracking-widest font-semibold text-slate-400 dark:text-slate-500 mt-2">Overall Health Score</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm font-medium text-slate-500 dark:text-[#8b949e]">Total Reviews Analyzed</p>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-slate-900 dark:text-[#e6edf3]">{analyticsData?.totalReviews || 0}</span>
-              <span className="text-sm text-slate-500 dark:text-[#8b949e]">SLA: {analyticsData?.managerSLA || '0h'}</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-[#e6edf3] tracking-tighter">{analyticsData?.totalReviews || 0}</span>
+              <span className="text-sm font-medium text-slate-500 dark:text-[#8b949e]">SLA: {analyticsData?.managerSLA || '0h'}</span>
             </div>
+            <p className="text-xs uppercase tracking-widest font-semibold text-slate-400 dark:text-slate-500 mt-2">Total Reviews Analyzed</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm font-medium text-slate-500 dark:text-[#8b949e]">Positive Sentiment</p>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-slate-900 dark:text-[#e6edf3]">{analyticsData?.positiveSentimentPct || 0}%</span>
-              <span className="text-sm text-blue-600 dark:text-blue-400">Conv: {analyticsData?.conversionRate || '0%'}</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-[#e6edf3] tracking-tighter">{analyticsData?.positiveSentimentPct || 0}%</span>
+              <span className="text-sm font-medium text-primary-600 dark:text-primary-400">Conv: {analyticsData?.conversionRate || '0%'}</span>
             </div>
+            <p className="text-xs uppercase tracking-widest font-semibold text-slate-400 dark:text-slate-500 mt-2">Positive Sentiment</p>
           </CardContent>
         </Card>
       </div>
@@ -212,7 +230,7 @@ export function OwnerDashboard() {
             <div className="h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={analyticsData?.chartData?.[dateRange] || []} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                  <Line type="monotone" dataKey="score" stroke="#2563eb" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="score" stroke="#0d9488" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                   <CartesianGrid stroke="#e2e8f0" strokeDasharray="5 5" vertical={false} />
                   <XAxis dataKey="name" stroke="#64748b" axisLine={false} tickLine={false} />
                   <YAxis stroke="#64748b" axisLine={false} tickLine={false} domain={['auto', 'auto']} />
@@ -229,17 +247,17 @@ export function OwnerDashboard() {
         <Card>
           <CardHeader className="flex flex-row justify-between items-center pb-2">
             <CardTitle>Competitor Benchmark</CardTitle>
-            <Button size="sm" variant="outline" onClick={refreshCompetitors} disabled={isRefreshingComps}>Refresh</Button>
+            <Button size="sm" variant="outline" onClick={refreshCompetitors} isLoading={isRefreshingComps}>Refresh</Button>
           </CardHeader>
           <CardContent>
             <div className={`space-y-5 transition-opacity ${isRefreshingComps ? 'opacity-50' : 'opacity-100'}`}>
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="font-medium text-slate-900 dark:text-[#e6edf3]">{activeProperty || 'Your Property'}</span>
-                  <span className="text-blue-600 font-bold">{competitorScores.own}/10</span>
+                  <span className="text-primary-600 font-bold">{competitorScores.own}/10</span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-[#21262d] rounded-full h-2">
-                  <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${(competitorScores.own / 10) * 100}%` }}></div>
+                  <div className="bg-primary-600 h-2 rounded-full" style={{ width: `${(competitorScores.own / 10) * 100}%` }}></div>
                 </div>
               </div>
               <div>
@@ -259,10 +277,6 @@ export function OwnerDashboard() {
                 <div className="w-full bg-slate-100 dark:bg-[#21262d] rounded-full h-2">
                   <div className="bg-slate-400 h-2 rounded-full" style={{ width: `${(competitorScores.compB / 10) * 100}%` }}></div>
                 </div>
-              </div>
-              <div className="pt-4 border-t border-slate-100 dark:border-[#30363d] space-y-2">
-                <p className="text-sm font-medium text-slate-800 dark:text-[#e6edf3]">AI Strategic Summary:</p>
-                <p className="text-xs text-slate-500 dark:text-[#8b949e] leading-relaxed">{competitorSummary}</p>
               </div>
             </div>
           </CardContent>

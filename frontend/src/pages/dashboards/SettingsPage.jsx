@@ -4,6 +4,7 @@ import { useToast } from '../../components/ui/Toast';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
+import { Modal } from '../../components/ui/Modal';
 
 export function SettingsPage() {
   const { user, login } = useAuth();
@@ -16,9 +17,12 @@ export function SettingsPage() {
   const { activeProperty } = useAuth();
   const [activePropObj, setActivePropObj] = useState(null);
   const [newTag, setNewTag] = useState('');
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   React.useEffect(() => {
-    if (user?.role === 'owner') {
+    document.title = "Settings · SentiNaut";
+    if (!user || user.role !== 'owner') return;
       const propQuery = activeProperty || user?.property || 'Unassigned';
       fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/properties?owner_email=${user.email}`)
         .then(res => res.json())
@@ -28,7 +32,6 @@ export function SettingsPage() {
             setActivePropObj(matched);
           }
         }).catch(err => console.error(err));
-    }
   }, [user, activeProperty]);
 
   const handleAddTag = async (e) => {
@@ -93,7 +96,7 @@ export function SettingsPage() {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete your account?")) return;
+    setIsDeleting(true);
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
       const res = await fetch(`${API_URL}/api/users/${user.id}`, { method: 'DELETE' });
@@ -103,6 +106,9 @@ export function SettingsPage() {
       }
     } catch (err) {
       addToast('Failed to delete account', 'error');
+    } finally {
+      setIsDeleting(false);
+      setDeleteModalOpen(false);
     }
   };
 
@@ -201,12 +207,24 @@ export function SettingsPage() {
               <p className="text-sm font-medium text-[#111111] dark:text-[#ededed]">Delete Account</p>
               <p className="text-xs text-[#666666] dark:text-[#a1a1aa] max-w-sm mt-1">Permanently remove your account and all associated operational data. This action is irreversible.</p>
             </div>
-            <Button type="button" variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-900/30 dark:hover:bg-red-900/20" onClick={handleDelete}>
+            <Button type="button" variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-900/30 dark:hover:bg-red-900/20" onClick={() => setDeleteModalOpen(true)}>
               Delete Account
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      <Modal 
+        isOpen={deleteModalOpen} 
+        onClose={() => setDeleteModalOpen(false)}
+        title="Delete Account?"
+        destructive
+        confirmText="Permanently Delete"
+        isLoading={isDeleting}
+        onConfirm={handleDelete}
+      >
+        <p>This action will permanently remove your account, associated properties, and all historical data from the SentiNaut platform. This cannot be undone.</p>
+      </Modal>
     </div>
   );
 }

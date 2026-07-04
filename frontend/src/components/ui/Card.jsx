@@ -2,7 +2,7 @@ import React from 'react';
 
 export function Card({ children, className = '', ...props }) {
   return (
-    <div className={`bg-white dark:bg-[#09090b] border border-black/10 dark:border-white/10 rounded-none shadow-none transition-shadow duration-300 hover:border-black/30 dark:hover:border-white/30 ${className}`} {...props}>
+    <div className={`bg-white dark:bg-[#161b22] border border-slate-200 dark:border-[#30363d] rounded-xl shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:border-slate-300 dark:hover:border-slate-600 ${className}`} {...props}>
       {children}
     </div>
   );

@@ -136,6 +136,7 @@ export function ManagerDashboard() {
   };
 
   React.useEffect(() => {
+    document.title = "Command Center · SentiNaut";
     if (!user) return;
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -291,7 +292,7 @@ export function ManagerDashboard() {
                         {column === 'Done' && (
                           <div className="flex gap-1">
                             <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={() => toggleAction(a.id)}>Revert</Button>
-                            <Button size="sm" variant="primary" className="h-6 px-2 text-[11px] bg-blue-600 hover:bg-blue-700" onClick={() => handleArchive(a.id)}>Archive</Button>
+                            <Button size="sm" variant="primary" className="h-6 px-2 text-[11px] bg-primary-600 hover:bg-primary-700" onClick={() => handleArchive(a.id)}>Archive</Button>
                           </div>
                         )}
                       </div>

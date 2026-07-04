@@ -88,6 +88,32 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* Trusted By Section - Infinite Marquee */}
+      <section className="py-24 w-full text-center overflow-hidden relative bg-white dark:bg-[#09090b]">
+        <p className="text-xs font-mono tracking-[0.3em] text-slate-400 uppercase mb-16">Selected Deployments</p>
+        
+        {/* Gradient fades for the edges of the marquee */}
+        <div className="absolute inset-y-0 left-0 w-24 sm:w-48 bg-gradient-to-r from-white dark:from-[#09090b] to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute inset-y-0 right-0 w-24 sm:w-48 bg-gradient-to-l from-white dark:from-[#09090b] to-transparent z-10 pointer-events-none"></div>
+        
+        <div className="relative flex w-full">
+          <motion.div
+            className="flex whitespace-nowrap gap-16 sm:gap-32 w-max opacity-50 hover:opacity-100 transition-opacity duration-700"
+            animate={{ x: ["0%", "-50%"] }}
+            transition={{ ease: "linear", duration: 25, repeat: Infinity }}
+          >
+            {[...Array(4)].map((_, i) => (
+              <React.Fragment key={i}>
+                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">TAJ PALACE</span>
+                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">THE OBEROI</span>
+                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">ITC MAURYA</span>
+                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">LEELA PALACE</span>
+              </React.Fragment>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
       {/* Elegant Features Section */}
       <section className="px-6 sm:px-8 lg:px-16 py-32 max-w-7xl mx-auto w-full">
         <div className="flex flex-col md:flex-row gap-16 md:gap-24 items-center">
@@ -200,31 +226,7 @@ export function LandingPage() {
         </motion.div>
       </section>
 
-      {/* Trusted By Section - Infinite Marquee (Upscayl Inspired) */}
-      <section className="py-32 w-full text-center overflow-hidden relative bg-white dark:bg-[#09090b]">
-        <p className="text-xs font-mono tracking-[0.3em] text-slate-400 uppercase mb-16">Selected Deployments</p>
-        
-        {/* Gradient fades for the edges of the marquee */}
-        <div className="absolute inset-y-0 left-0 w-24 sm:w-48 bg-gradient-to-r from-white dark:from-[#09090b] to-transparent z-10 pointer-events-none"></div>
-        <div className="absolute inset-y-0 right-0 w-24 sm:w-48 bg-gradient-to-l from-white dark:from-[#09090b] to-transparent z-10 pointer-events-none"></div>
-        
-        <div className="relative flex w-full">
-          <motion.div
-            className="flex whitespace-nowrap gap-16 sm:gap-32 w-max opacity-50 hover:opacity-100 transition-opacity duration-700"
-            animate={{ x: ["0%", "-50%"] }}
-            transition={{ ease: "linear", duration: 25, repeat: Infinity }}
-          >
-            {[...Array(4)].map((_, i) => (
-              <React.Fragment key={i}>
-                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">TAJ PALACE</span>
-                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">THE OBEROI</span>
-                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">ITC MAURYA</span>
-                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">LEELA PALACE</span>
-              </React.Fragment>
-            ))}
-          </motion.div>
-        </div>
-      </section>
+
     </div>
   );
 }

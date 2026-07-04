@@ -53,6 +53,8 @@ export function StaffDashboard() {
 
   // Initial data load to preserve the "table" feeling
   React.useEffect(() => {
+    document.title = "Front Desk · SentiNaut";
+    if (!user) return;
     fetch('http://localhost:8000/api/reviews')
       .then(res => res.json())
       .then(data => {

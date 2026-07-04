@@ -1,7 +1,10 @@
 import React from 'react';
 
-export function Skeleton({ className = '' }) {
+export const Skeleton = ({ className, ...props }) => {
   return (
-    <div className={`animate-pulse bg-slate-200 dark:bg-white/10 rounded-md ${className}`} />
+    <div
+      className={`animate-pulse rounded-md bg-black/10 dark:bg-white/10 ${className}`}
+      {...props}
+    />
   );
-}
+};
