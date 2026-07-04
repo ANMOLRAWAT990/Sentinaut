@@ -15,7 +15,7 @@ app = FastAPI(title="SentiNaut Backend API")
 # Configure CORS so the React frontend can communicate with it
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[config.FRONTEND_URL, "http://localhost:5173", "http://127.0.0.1:5173"],  # Configurable CORS
+    allow_origins=["*"],  # Allow all origins for development
     allow_credentials=False,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
