@@ -11,18 +11,99 @@ export function SettingsPage() {
   
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
+  const [darkMode, setDarkMode] = useState(user?.dark_mode || false);
   const [loading, setLoading] = useState(false);
+  const { activeProperty } = useAuth();
+  const [activePropObj, setActivePropObj] = useState(null);
+  const [newTag, setNewTag] = useState('');
+
+  React.useEffect(() => {
+    if (user?.role === 'owner') {
+      const propQuery = activeProperty || user?.property || 'Unassigned';
+      fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/properties?owner_email=${user.email}`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data) && data.length > 0) {
+            const matched = data.find(p => p.name === propQuery) || data[0];
+            setActivePropObj(matched);
+          }
+        }).catch(err => console.error(err));
+    }
+  }, [user, activeProperty]);
+
+  const handleAddTag = async (e) => {
+    e.preventDefault();
+    if (!newTag || !activePropObj) return;
+    const updatedTags = [...(activePropObj.custom_tags || []), newTag];
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/properties/${activePropObj.id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ custom_tags: updatedTags })
+      });
+      if (res.ok) {
+        setActivePropObj({...activePropObj, custom_tags: updatedTags});
+        setNewTag('');
+        addToast('Tag added successfully', 'success');
+      } else { throw new Error("Failed"); }
+    } catch (err) {
+      addToast('Failed to add tag', 'error');
+    }
+  };
+
+  const handleRemoveTag = async (tagToRemove) => {
+    if (!activePropObj) return;
+    const updatedTags = (activePropObj.custom_tags || []).filter(t => t !== tagToRemove);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/properties/${activePropObj.id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ custom_tags: updatedTags })
+      });
+      if (res.ok) {
+        setActivePropObj({...activePropObj, custom_tags: updatedTags});
+        addToast('Tag removed', 'success');
+      } else { throw new Error("Failed"); }
+    } catch (err) {
+      addToast('Failed to remove tag', 'error');
+    }
+  };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
     setLoading(true);
     
-    // Simulate API delay for a polished UX
-    setTimeout(() => {
-      login({ ...user, name, email });
-      addToast('Profile updated successfully', 'success');
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/users/${user.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, dark_mode: darkMode })
+      });
+      if (res.ok) {
+        login({ ...user, dark_mode: darkMode, name, email });
+        addToast('Profile updated successfully', 'success');
+      } else {
+        const errorData = await res.json();
+        addToast(errorData.detail || 'Failed to update profile', 'error');
+      }
+    } catch (err) {
+      addToast('Network error', 'error');
+    } finally {
       setLoading(false);
-    }, 600);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete your account?")) return;
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/users/${user.id}`, { method: 'DELETE' });
+      if (res.ok) {
+        login(null);
+        window.location.href = '/';
+      }
+    } catch (err) {
+      addToast('Failed to delete account', 'error');
+    }
   };
 
   return (
@@ -52,6 +133,19 @@ export function SettingsPage() {
               required 
             />
             
+            <div className="flex items-center justify-between pt-2">
+              <div>
+                <label className="text-[13px] font-medium text-[#111111] dark:text-[#ededed]">Dark Mode</label>
+                <p className="text-[11px] text-slate-500">Enable dark theme across the application.</p>
+              </div>
+              <input 
+                type="checkbox" 
+                checked={darkMode}
+                onChange={(e) => setDarkMode(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300"
+              />
+            </div>
+            
             <div className="space-y-1.5 pt-2">
               <label className="text-[13px] font-medium text-[#111111] dark:text-[#ededed]">Authorization Scope</label>
               <div className="flex items-center gap-3">
@@ -71,6 +165,32 @@ export function SettingsPage() {
         </CardContent>
       </Card>
       
+      {user?.role === 'owner' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Property Configuration ({activePropObj?.name || 'Loading...'})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-[13px] text-slate-500 mb-4">Manage custom review tags used by the AI ingestion engine.</p>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {(activePropObj?.custom_tags || []).map((tag, idx) => (
+                <span key={idx} className="flex items-center gap-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-medium">
+                  {tag}
+                  <button type="button" onClick={() => handleRemoveTag(tag)} className="hover:text-blue-900 dark:hover:text-blue-200 ml-1">×</button>
+                </span>
+              ))}
+              {(!activePropObj?.custom_tags || activePropObj.custom_tags.length === 0) && (
+                <span className="text-xs text-slate-500 italic">No custom tags defined.</span>
+              )}
+            </div>
+            <form onSubmit={handleAddTag} className="flex gap-2">
+              <Input label="" value={newTag} onChange={(e) => setNewTag(e.target.value)} placeholder="e.g. Cleanliness, WiFi" />
+              <Button type="submit" disabled={!activePropObj}>Add Tag</Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="border-red-100 dark:border-red-900/30">
         <CardHeader>
           <CardTitle className="text-red-600 dark:text-red-400">Danger Zone</CardTitle>
@@ -81,7 +201,7 @@ export function SettingsPage() {
               <p className="text-sm font-medium text-[#111111] dark:text-[#ededed]">Delete Account</p>
               <p className="text-xs text-[#666666] dark:text-[#a1a1aa] max-w-sm mt-1">Permanently remove your account and all associated operational data. This action is irreversible.</p>
             </div>
-            <Button type="button" variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-900/30 dark:hover:bg-red-900/20" onClick={() => addToast('Please contact system administrator to delete account.', 'error')}>
+            <Button type="button" variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-900/30 dark:hover:bg-red-900/20" onClick={handleDelete}>
               Delete Account
             </Button>
           </div>

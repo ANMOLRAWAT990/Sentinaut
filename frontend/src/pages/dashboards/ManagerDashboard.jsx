@@ -16,6 +16,99 @@ export function ManagerDashboard() {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [staffList, setStaffList] = useState([]);
+  
+  const [selectedAction, setSelectedAction] = useState(null);
+  const [newNote, setNewNote] = useState('');
+
+  const handleActionClick = (action) => setSelectedAction(action);
+  
+  const handleAddNote = async (e) => {
+    e.preventDefault();
+    if (!newNote) return;
+    
+    const updatedNotes = [...(selectedAction.notes || []), newNote];
+    const updatedAction = { ...selectedAction, notes: updatedNotes };
+    
+    setActions(actions.map(a => a.id === selectedAction.id ? updatedAction : a));
+    setSelectedAction(updatedAction);
+    setNewNote('');
+    
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/actions/${selectedAction.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedAction)
+      });
+      if (!res.ok) throw new Error("Failed to add note");
+    } catch (err) {
+      addToast('Failed to add note. Changes reverted.', 'error');
+      // Rollback
+      setActions(actions.map(a => a.id === selectedAction.id ? actionToUpdate : a));
+      setSelectedAction(actionToUpdate);
+    }
+  };
+
+  const handleArchive = async (id) => {
+    const actionToUpdate = actions.find(a => a.id === id);
+    if (!actionToUpdate) return;
+    const updatedAction = { ...actionToUpdate, is_archived: true };
+    
+    setActions(actions.map(a => a.id === id ? updatedAction : a));
+    
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/actions/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedAction)
+      });
+      if (!res.ok) throw new Error("Failed to archive");
+    } catch (err) {
+      addToast('Failed to archive action. Changes reverted.', 'error');
+      setActions(actions.map(a => a.id === id ? actionToUpdate : a));
+    }
+  };
+
+  const handleAssign = async (id, staffName) => {
+    const actionToUpdate = actions.find(a => a.id === id);
+    if (!actionToUpdate) return;
+    const updatedAction = { ...actionToUpdate, assigned_to: staffName };
+    setActions(actions.map(a => a.id === id ? updatedAction : a));
+    
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/actions/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedAction)
+      });
+      if (!res.ok) throw new Error("Failed to assign staff");
+    } catch (err) {
+      addToast('Failed to assign staff. Changes reverted.', 'error');
+      setActions(actions.map(a => a.id === id ? actionToUpdate : a));
+    }
+  };
+  
+  const handleSetPriority = async (id, priority) => {
+    const actionToUpdate = actions.find(a => a.id === id);
+    if (!actionToUpdate) return;
+    const updatedAction = { ...actionToUpdate, priority };
+    setActions(actions.map(a => a.id === id ? updatedAction : a));
+    
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/actions/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedAction)
+      });
+      if (!res.ok) throw new Error("Failed to set priority");
+    } catch (err) {
+      addToast('Failed to set priority. Changes reverted.', 'error');
+      setActions(actions.map(a => a.id === id ? actionToUpdate : a));
+    }
+  };
 
   const handleInviteStaff = async (e) => {
     e.preventDefault();
@@ -69,11 +162,15 @@ export function ManagerDashboard() {
     setReviews(reviews.map(r => r.id === id ? { ...r, approved: !r.approved } : r));
     if (String(id).startsWith('mock-')) return; 
     try {
-      await fetch(`http://localhost:8000/api/reviews/${id}`, {
+      const res = await fetch(`http://localhost:8000/api/reviews/${id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...reviewToUpdate.fullData, status: !reviewToUpdate.approved ? "Done" : "Pending" })
       });
-    } catch(err) {}
+      if (!res.ok) throw new Error("Failed to toggle approval");
+    } catch(err) {
+      addToast('Failed to change authorization. Changes reverted.', 'error');
+      setReviews(reviews.map(r => r.id === id ? reviewToUpdate : r));
+    }
   };
 
   const toggleAction = async (id) => {
@@ -83,11 +180,15 @@ export function ManagerDashboard() {
     setActions(actions.map(a => a.id === id ? { ...a, status: newStatus } : a));
     if (String(id).startsWith('mock-')) return; 
     try {
-      await fetch(`http://localhost:8000/api/actions/${id}`, {
+      const res = await fetch(`http://localhost:8000/api/actions/${id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...actionToUpdate, status: newStatus })
       });
-    } catch(err) {}
+      if (!res.ok) throw new Error("Failed to execute action");
+    } catch(err) {
+      addToast('Failed to update action status. Changes reverted.', 'error');
+      setActions(actions.map(a => a.id === id ? actionToUpdate : a));
+    }
   };
 
   return (
@@ -144,7 +245,7 @@ export function ManagerDashboard() {
               <div className="flex items-center justify-between pb-2 border-b border-black/10 dark:border-white/10">
                 <h3 className="text-[12px] font-semibold text-[#111111] dark:text-[#ededed] tracking-tight">{column}</h3>
                 <span className="text-[11px] font-medium text-[#666666] dark:text-[#a1a1aa]">
-                  {actions.filter(a => (column === 'Done' ? a.status === 'Done' : column === 'Pending' ? a.status === 'Pending' : false)).length}
+                  {actions.filter(a => !a.is_archived && (column === 'Done' ? a.status === 'Done' : column === 'Pending' ? a.status === 'Pending' : false)).length}
                 </span>
               </div>
               <div className="space-y-3">
@@ -160,16 +261,38 @@ export function ManagerDashboard() {
                     </div>
                   ))
                 ) : (
-                  actions.filter(a => (column === 'Done' ? a.status === 'Done' : column === 'Pending' ? a.status === 'Pending' : false)).map(a => (
-                    <div key={a.id} className="bg-white dark:bg-[#111111] border border-black/10 dark:border-white/10 rounded-lg p-3 shadow-sm hover:border-black/20 dark:hover:border-white/20 transition-all flex flex-col h-[94px]">
-                      <h4 className="text-[13px] font-medium text-[#111111] dark:text-[#ededed] mb-3 leading-snug line-clamp-2">{a.task}</h4>
+                  actions.filter(a => !a.is_archived && (column === 'Done' ? a.status === 'Done' : column === 'Pending' ? a.status === 'Pending' : false)).map(a => (
+                    <div key={a.id} className="bg-white dark:bg-[#111111] border border-black/10 dark:border-white/10 rounded-lg p-3 shadow-sm hover:border-black/20 dark:hover:border-white/20 transition-all flex flex-col min-h-[94px]">
+                      <div className="flex justify-between items-start mb-2">
+                        <select 
+                          className="text-[10px] uppercase font-bold bg-transparent cursor-pointer outline-none"
+                          value={a.priority || 'Medium'}
+                          onChange={(e) => handleSetPriority(a.id, e.target.value)}
+                        >
+                          <option value="High" className="text-red-500">High</option>
+                          <option value="Medium" className="text-yellow-500">Medium</option>
+                          <option value="Low" className="text-green-500">Low</option>
+                        </select>
+                        <select
+                          className="text-[10px] bg-slate-100 dark:bg-[#21262d] rounded px-1 max-w-[60px] truncate"
+                          value={a.assigned_to || ''}
+                          onChange={(e) => handleAssign(a.id, e.target.value)}
+                        >
+                          <option value="">Assign</option>
+                          {staffList.map(s => <option key={s.name} value={s.name}>{s.initials}</option>)}
+                        </select>
+                      </div>
+                      <h4 className="text-[13px] font-medium text-[#111111] dark:text-[#ededed] mb-2 leading-snug line-clamp-2 cursor-pointer hover:underline" onClick={() => handleActionClick(a)}>{a.task}</h4>
                       <div className="flex items-center justify-between mt-auto">
-                        <span className="text-[11px] font-mono text-[#888888]">TSK-{String(a.id).slice(-4).toUpperCase()}</span>
+                        <span className="text-[11px] font-mono text-[#888888] cursor-pointer" onClick={() => handleActionClick(a)}>TSK-{String(a.id).slice(-4).toUpperCase()}</span>
                         {column !== 'Done' && (
                           <Button size="sm" variant="secondary" className="h-6 px-2 text-[11px]" onClick={() => toggleAction(a.id)}>Execute</Button>
                         )}
                         {column === 'Done' && (
-                          <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={() => toggleAction(a.id)}>Revert</Button>
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={() => toggleAction(a.id)}>Revert</Button>
+                            <Button size="sm" variant="primary" className="h-6 px-2 text-[11px] bg-blue-600 hover:bg-blue-700" onClick={() => handleArchive(a.id)}>Archive</Button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -222,6 +345,33 @@ export function ManagerDashboard() {
             <Button type="submit">Send Invite</Button>
           </div>
         </form>
+      </Modal>
+
+      <Modal isOpen={!!selectedAction} onClose={() => setSelectedAction(null)} title="Action Details">
+        {selectedAction && (
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-sm font-semibold text-slate-900 dark:text-[#ededed]">Task</h4>
+              <p className="text-sm text-slate-700 dark:text-[#a1a1aa]">{selectedAction.task}</p>
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-slate-900 dark:text-[#ededed] mb-2">Notes</h4>
+              {selectedAction.notes?.length > 0 ? (
+                <ul className="space-y-2 mb-4">
+                  {selectedAction.notes.map((note, i) => (
+                    <li key={i} className="text-sm bg-slate-50 dark:bg-[#161b22] p-2 rounded border border-slate-200 dark:border-[#30363d] text-slate-700 dark:text-[#ededed]">{note}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-slate-500 mb-4">No notes yet.</p>
+              )}
+              <form onSubmit={handleAddNote} className="flex gap-2">
+                <Input value={newNote} onChange={e => setNewNote(e.target.value)} placeholder="Add a note..." />
+                <Button type="submit">Add</Button>
+              </form>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

@@ -5,8 +5,10 @@ from typing import List, Optional
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 import bcrypt
-from models.database import reviews_collection, actions_collection, users_collection, properties_collection
-from models.schemas import Review, Action, Property, SignupRequest, LoginRequest, UserResponse
+from models.database import reviews_collection, actions_collection, users_collection, properties_collection, checkouts_collection, invites_collection, notifications_collection
+from models.schemas import Review, Action, Property, SignupRequest, LoginRequest, UserResponse, Checkout, UserUpdate, PropertyUpdate, Invite, Notification
+from datetime import datetime, timedelta
+import uuid
 
 app = FastAPI(title="SentiNaut Backend API")
 
@@ -27,7 +29,10 @@ def review_helper(review) -> dict:
         "text": review.get("text"),
         "sentiment": review.get("sentiment", "Neutral"),
         "tags": review.get("tags", []),
-        "status": review.get("status", "Pending")
+        "status": review.get("status", "Pending"),
+        "property": review.get("property", "Unassigned"),
+        "replied": review.get("replied", False),
+        "created_at": review.get("created_at")
     }
 
 # 1. GET /api/reviews - list all reviews
@@ -72,6 +77,8 @@ def get_review(id: str):
 # 4. POST /api/reviews - create a review
 @app.post("/api/reviews", response_model=Review, status_code=201)
 def create_review(review: Review):
+    if not review.created_at:
+        review.created_at = datetime.utcnow().isoformat()
     review_dict = review.model_dump(exclude={"id"})
     new_review = reviews_collection.insert_one(review_dict)
     created_review = reviews_collection.find_one({"_id": new_review.inserted_id})
@@ -117,7 +124,14 @@ def action_helper(action) -> dict:
     return {
         "id": action_id,
         "task": action.get("task"),
-        "status": action.get("status")
+        "status": action.get("status"),
+        "property": action.get("property", "Unassigned"),
+        "assigned_to": action.get("assigned_to"),
+        "priority": action.get("priority", "Medium"),
+        "created_at": action.get("created_at"),
+        "completed_at": action.get("completed_at"),
+        "notes": action.get("notes", []),
+        "is_archived": action.get("is_archived", False)
     }
 
 @app.get("/api/actions", response_model=List[Action])
@@ -132,6 +146,10 @@ def get_actions(property: Optional[str] = None):
 
 @app.post("/api/actions", response_model=Action, status_code=201)
 def create_action(action: Action):
+    if not action.created_at:
+        action.created_at = datetime.utcnow().isoformat()
+    if action.status == "Done" and not action.completed_at:
+        action.completed_at = datetime.utcnow().isoformat()
     action_dict = action.model_dump(exclude={"id"})
     new_action = actions_collection.insert_one(action_dict)
     created_action = actions_collection.find_one({"_id": new_action.inserted_id})
@@ -139,6 +157,8 @@ def create_action(action: Action):
 
 @app.put("/api/actions/{id}", response_model=Action)
 def update_action(id: str, updated_action: Action):
+    if updated_action.status == "Done" and not updated_action.completed_at:
+        updated_action.completed_at = datetime.utcnow().isoformat()
     action_dict = updated_action.model_dump(exclude={"id"})
     
     try:
@@ -167,12 +187,14 @@ def property_helper(prop) -> dict:
         "name": prop.get("name"),
         "location": prop.get("location"),
         "status": prop.get("status", "Active"),
-        "owner_email": prop.get("owner_email")
+        "owner_email": prop.get("owner_email"),
+        "is_active": prop.get("is_active", True),
+        "custom_tags": prop.get("custom_tags", [])
     }
 
 @app.get("/api/properties", response_model=List[Property])
 def get_properties(owner_email: Optional[str] = None):
-    query = {}
+    query = {"is_active": {"$ne": False}}
     if owner_email:
         query["owner_email"] = owner_email
     props = []
@@ -200,7 +222,9 @@ def user_helper(user) -> dict:
         "name": user.get("name"),
         "email": user.get("email"),
         "role": user.get("role"),
-        "property": user.get("property", "Unassigned")
+        "property": user.get("property", "Unassigned"),
+        "is_active": user.get("is_active", True),
+        "dark_mode": user.get("dark_mode", False)
     }
 
 
@@ -220,6 +244,8 @@ def signup(data: SignupRequest):
         "password": hashed,
         "role": data.role,
         "property": data.property,
+        "is_active": True,
+        "dark_mode": False
     }
     result = users_collection.insert_one(new_user)
     created = users_collection.find_one({"_id": result.inserted_id})
@@ -227,7 +253,7 @@ def signup(data: SignupRequest):
 
 @app.get("/api/users", response_model=List[UserResponse])
 def get_users(role: Optional[str] = None, owner_email: Optional[str] = None, property: Optional[str] = None):
-    query = {}
+    query = {"is_active": {"$ne": False}}
     if role:
         query["role"] = role
     if property:
@@ -272,11 +298,25 @@ def analyze_reviews(payload: dict):
     
     saved_reviews = []
     positive_count = 0
+    
+    prop_name = payload.get("property")
+    prop = properties_collection.find_one({"name": prop_name})
+    custom_tags = prop.get("custom_tags", []) if prop else []
+
     for text in texts:
         sentiment = "Positive" if "good" in text.lower() or "great" in text.lower() or "love" in text.lower() else "Negative"
         if sentiment == "Positive":
             positive_count += 1
-        tags = ["Experience"] if sentiment == "Positive" else ["Operations", "Service"]
+            
+        tags = []
+        text_lower = text.lower()
+        for tag in custom_tags:
+            if tag.lower() in text_lower:
+                tags.append(tag)
+        
+        if not tags:
+            tags = ["Experience"] if sentiment == "Positive" else ["Operations", "Service"]
+
         review = {
             "guestName": "Batch Processing" if is_batch else "Direct Analysis",
             "platform": "Internal",
@@ -284,7 +324,8 @@ def analyze_reviews(payload: dict):
             "sentiment": sentiment,
             "tags": tags,
             "status": "Pending",
-            "property": payload.get("property", "Unassigned")
+            "property": payload.get("property", "Unassigned"),
+            "created_at": datetime.utcnow().isoformat()
         }
         res = reviews_collection.insert_one(review)
         review["_id"] = res.inserted_id
@@ -293,7 +334,7 @@ def analyze_reviews(payload: dict):
     if is_batch:
         actions = []
         if positive_count < len(texts):
-            action_doc = {"task": "Review negative themes identified in recent batch upload", "status": "Pending", "property": payload.get("property", "Unassigned")}
+            action_doc = {"task": "Review negative themes identified in recent batch upload", "status": "Pending", "property": payload.get("property", "Unassigned"), "created_at": datetime.utcnow().isoformat()}
             res = actions_collection.insert_one(action_doc)
             action_doc["_id"] = res.inserted_id
             actions.append(action_helper(action_doc))
@@ -327,15 +368,270 @@ def get_analytics(owner_email: Optional[str] = None, property: Optional[str] = N
     positive = sum(1 for r in all_reviews if r.get("sentiment") == "Positive")
     pos_pct = round((positive / total * 100) if total > 0 else 0)
     
-    base_score = pos_pct / 10 if total > 0 else 8.5
+    now = datetime.utcnow()
+    # Chart Data Calculation
+    chart_data_7days = []
+    chart_data_30days = []
+    
+    # Calculate period-over-period
+    last_7_days = []
+    prev_7_days = []
+    
+    for r in all_reviews:
+        if not r.get("created_at"):
+            continue
+        try:
+            r_date = datetime.fromisoformat(r["created_at"])
+            days_ago = (now - r_date).days
+            if days_ago < 7:
+                last_7_days.append(r)
+            elif days_ago < 14:
+                prev_7_days.append(r)
+        except ValueError:
+            pass
+
+    last_7_pos = sum(1 for r in last_7_days if r.get("sentiment") == "Positive")
+    prev_7_pos = sum(1 for r in prev_7_days if r.get("sentiment") == "Positive")
+    
+    last_7_pct = (last_7_pos / len(last_7_days) * 100) if last_7_days else 0
+    prev_7_pct = (prev_7_pos / len(prev_7_days) * 100) if prev_7_days else 0
+    pop_change = round(last_7_pct - prev_7_pct, 1)
+
+    for i in range(7):
+        target_date = now - timedelta(days=i)
+        day_reviews = [r for r in last_7_days if datetime.fromisoformat(r["created_at"]).date() == target_date.date()] if last_7_days else []
+        day_pos = sum(1 for r in day_reviews if r.get("sentiment") == "Positive")
+        score = (day_pos / len(day_reviews) * 10) if day_reviews else (pos_pct / 10 if total > 0 else 8.5)
+        chart_data_7days.insert(0, {"name": target_date.strftime("%b %d"), "score": round(score, 1)})
+        
+    for i in range(4):
+        week_start = now - timedelta(days=(i+1)*7)
+        week_end = now - timedelta(days=i*7)
+        week_reviews = []
+        for r in all_reviews:
+             if r.get("created_at"):
+                 try:
+                     r_date = datetime.fromisoformat(r["created_at"])
+                     if week_start <= r_date < week_end:
+                         week_reviews.append(r)
+                 except ValueError:
+                     pass
+        week_pos = sum(1 for r in week_reviews if r.get("sentiment") == "Positive")
+        score = (week_pos / len(week_reviews) * 10) if week_reviews else (pos_pct / 10 if total > 0 else 8.5)
+        chart_data_30days.insert(0, {"name": f"Week {4-i}", "score": round(score, 1)})
+
     chart_data = {
-        "7days": [{"name": f"Day {i}", "score": round(max(0, min(10, base_score + random.uniform(-0.5, 0.5))), 1)} for i in range(1, 8)],
-        "30days": [{"name": f"Week {i}", "score": round(max(0, min(10, base_score + random.uniform(-0.3, 0.3))), 1)} for i in range(1, 5)]
+        "7days": chart_data_7days,
+        "30days": chart_data_30days
     }
+
+    # SLA Calculation
+    all_actions = list(actions_collection.find(query))
+    sla_times = []
+    for a in all_actions:
+        if a.get("status") == "Done" and a.get("created_at") and a.get("completed_at"):
+            try:
+                c_at = datetime.fromisoformat(a["created_at"])
+                done_at = datetime.fromisoformat(a["completed_at"])
+                diff_hours = (done_at - c_at).total_seconds() / 3600
+                if diff_hours >= 0:
+                    sla_times.append(diff_hours)
+            except ValueError:
+                pass
+    sla_avg_hours = round(sum(sla_times) / len(sla_times), 1) if sla_times else 0
+
+    # Conversion Rate Calculation
+    all_checkouts = list(checkouts_collection.find(query))
+    last_30_checkouts = 0
+    last_30_reviews = 0
+    for c in all_checkouts:
+        if c.get("timestamp"):
+            try:
+                c_date = datetime.fromisoformat(c["timestamp"])
+                if (now - c_date).days < 30:
+                    last_30_checkouts += 1
+            except ValueError:
+                pass
+    for r in all_reviews:
+        if r.get("created_at"):
+             try:
+                 r_date = datetime.fromisoformat(r["created_at"])
+                 if (now - r_date).days < 30:
+                     last_30_reviews += 1
+             except ValueError:
+                 pass
+    conversion_rate = round((last_30_reviews / last_30_checkouts) * 100, 1) if last_30_checkouts > 0 else 0
+
+    base_score = pos_pct / 10 if total > 0 else 8.5
 
     return {
         "healthScore": round(base_score, 1),
         "totalReviews": total,
         "positiveSentimentPct": pos_pct,
-        "chartData": chart_data
+        "chartData": chart_data,
+        "periodOverPeriod": pop_change,
+        "managerSLA": f"{sla_avg_hours}h",
+        "conversionRate": f"{conversion_rate}%"
     }
+
+# --- Checkouts API ---
+
+def checkout_helper(checkout) -> dict:
+    return {
+        "id": str(checkout["_id"]),
+        "guestName": checkout.get("guestName"),
+        "phone": checkout.get("phone"),
+        "property": checkout.get("property"),
+        "timestamp": checkout.get("timestamp")
+    }
+
+@app.post("/api/checkouts", response_model=Checkout, status_code=201)
+def create_checkout(checkout: Checkout):
+    if not checkout.timestamp:
+        checkout.timestamp = datetime.utcnow().isoformat()
+    checkout_dict = checkout.model_dump(exclude={"id"})
+    new_checkout = checkouts_collection.insert_one(checkout_dict)
+    created_checkout = checkouts_collection.find_one({"_id": new_checkout.inserted_id})
+    return checkout_helper(created_checkout)
+
+@app.get("/api/checkouts", response_model=List[Checkout])
+def get_checkouts(property: Optional[str] = None):
+    query = {}
+    if property:
+        query["property"] = property
+    checkouts = []
+    for c in checkouts_collection.find(query):
+        checkouts.append(checkout_helper(c))
+    return checkouts
+
+
+# --- Soft Delete API ---
+@app.delete("/api/properties/{id}", status_code=204)
+def delete_property(id: str):
+    try:
+        filter_query = {"_id": ObjectId(id)}
+    except InvalidId:
+        filter_query = {"id": id}
+    update_result = properties_collection.update_one(filter_query, {"$set": {"is_active": False}})
+    if update_result.modified_count == 1 or update_result.matched_count == 1:
+        return
+    raise HTTPException(status_code=404, detail="Property not found")
+
+@app.patch("/api/properties/{id}", response_model=Property)
+def patch_property(id: str, prop_update: PropertyUpdate):
+    try:
+        filter_query = {"_id": ObjectId(id)}
+    except InvalidId:
+        filter_query = {"id": id}
+    
+    update_data = {k: v for k, v in prop_update.model_dump().items() if v is not None}
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields provided for update.")
+        
+    update_result = properties_collection.update_one(filter_query, {"$set": update_data})
+    if update_result.modified_count == 1 or update_result.matched_count == 1:
+        updated = properties_collection.find_one(filter_query)
+        return property_helper(updated)
+    raise HTTPException(status_code=404, detail="Property not found")
+
+@app.delete("/api/users/{id}", status_code=204)
+def delete_user(id: str):
+    try:
+        filter_query = {"_id": ObjectId(id)}
+    except InvalidId:
+        filter_query = {"id": id}
+    update_result = users_collection.update_one(filter_query, {"$set": {"is_active": False}})
+    if update_result.modified_count == 1 or update_result.matched_count == 1:
+        return
+    raise HTTPException(status_code=404, detail="User not found")
+
+@app.patch("/api/users/{id}", response_model=UserResponse)
+def patch_user(id: str, user_update: UserUpdate):
+    try:
+        filter_query = {"_id": ObjectId(id)}
+    except InvalidId:
+        filter_query = {"id": id}
+        
+    update_data = {k: v for k, v in user_update.model_dump().items() if v is not None}
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields provided for update.")
+        
+    update_result = users_collection.update_one(filter_query, {"$set": update_data})
+    if update_result.modified_count == 1 or update_result.matched_count == 1:
+        updated = users_collection.find_one(filter_query)
+        return user_helper(updated)
+    raise HTTPException(status_code=404, detail="User not found")
+
+# --- Magic Links / Invites ---
+@app.post("/api/auth/invite", status_code=201)
+def invite_user(email: str, role: str, property: str = "Unassigned"):
+    token = str(uuid.uuid4())
+    expiry = (datetime.utcnow() + timedelta(hours=24)).isoformat()
+    invite = {
+        "email": email,
+        "role": role,
+        "property": property,
+        "token": token,
+        "expires_at": expiry
+    }
+    invites_collection.insert_one(invite)
+    
+    # TODO: Secure Invite Links (Magic Links)
+    # Feature: Secure Invite Links
+    # Requires: SMTP/Email Service
+    # Why: Need to send a secure token via email instead of hardcoding 'password123'
+    # What I need from you: SMTP credentials (host, port, user, pass) or API key (e.g. Resend, SendGrid)
+    
+    return {"message": "Invite generated. Blocked on External Dependency for sending email.", "token": token}
+
+
+# --- Notifications API ---
+def notification_helper(notif) -> dict:
+    return {
+        "id": str(notif["_id"]),
+        "property": notif.get("property"),
+        "message": notif.get("message"),
+        "type": notif.get("type", "Info"),
+        "is_read": notif.get("is_read", False),
+        "created_at": notif.get("created_at")
+    }
+
+@app.get("/api/notifications", response_model=List[Notification])
+def get_notifications(property: str):
+    query = {"property": property}
+    notifs = []
+    # Sort by created_at descending
+    for notif in notifications_collection.find(query).sort("created_at", -1):
+        notifs.append(notification_helper(notif))
+    return notifs
+
+@app.put("/api/notifications/{id}/read", response_model=Notification)
+def mark_notification_read(id: str):
+    try:
+        filter_query = {"_id": ObjectId(id)}
+    except InvalidId:
+        filter_query = {"id": id}
+    
+    update_result = notifications_collection.update_one(filter_query, {"$set": {"is_read": True}})
+    if update_result.modified_count == 1 or update_result.matched_count == 1:
+        updated = notifications_collection.find_one(filter_query)
+        return notification_helper(updated)
+    raise HTTPException(status_code=404, detail="Notification not found")
+
+@app.post("/api/notifications", response_model=Notification, status_code=201)
+def create_notification(notif: Notification):
+    if not notif.created_at:
+        notif.created_at = datetime.utcnow().isoformat()
+    notif_dict = notif.model_dump(exclude={"id"})
+    new_notif = notifications_collection.insert_one(notif_dict)
+    created_notif = notifications_collection.find_one({"_id": new_notif.inserted_id})
+    return notification_helper(created_notif)
+
+# --- Follow Ups (Mocked) ---
+@app.post("/api/followup")
+def trigger_followup(guest_phone: str):
+    # Feature: Automated Follow-ups
+    # Requires: Twilio/WhatsApp Business API
+    # What I need from you: Twilio Account SID, Auth Token, and a registered WhatsApp sender number
+    return {"message": f"Follow up logic initiated for {guest_phone}. Blocked on Twilio API credentials."}
+

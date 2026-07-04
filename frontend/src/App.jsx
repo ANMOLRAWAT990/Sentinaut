@@ -13,6 +13,7 @@ import { SignupPage } from './pages/public/SignupPage';
 import { DashboardIndex } from './pages/dashboards/DashboardIndex';
 import { ReviewsIndex } from './pages/dashboards/ReviewsIndex';
 import { SuggestionsIndex } from './pages/dashboards/SuggestionsIndex';
+import { GuestsIndex } from './pages/dashboards/GuestsIndex';
 import { SettingsPage } from './pages/dashboards/SettingsPage';
 
 export default function App() {
@@ -35,6 +36,7 @@ export default function App() {
                 <Route index element={<DashboardIndex />} />
                 <Route path="reviews" element={<ReviewsIndex />} />
                 <Route path="suggestions" element={<SuggestionsIndex />} />
+                <Route path="guests" element={<GuestsIndex />} />
                 <Route path="settings" element={<SettingsPage />} />
               </Route>
             </Route>

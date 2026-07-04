@@ -14,12 +14,14 @@ export function Sidebar() {
         return [
           { name: 'Overview', path: '/dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
           { name: 'Analytics', path: '/dashboard/reviews', icon: <BarChart3 className="h-4 w-4" /> },
+          { name: 'Guest CRM', path: '/dashboard/guests', icon: <Users className="h-4 w-4" /> },
           { name: 'Strategic Insights', path: '/dashboard/suggestions', icon: <Lightbulb className="h-4 w-4" /> },
         ];
       case 'manager':
         return [
           { name: 'Action Board', path: '/dashboard', icon: <ClipboardList className="h-4 w-4" /> },
           { name: 'Review Queue', path: '/dashboard/reviews', icon: <MessageSquare className="h-4 w-4" /> },
+          { name: 'Guest CRM', path: '/dashboard/guests', icon: <Users className="h-4 w-4" /> },
           { name: 'Operational Intel', path: '/dashboard/suggestions', icon: <Lightbulb className="h-4 w-4" /> },
         ];
       case 'staff':

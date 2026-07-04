@@ -21,6 +21,29 @@ export function StaffDashboard() {
   const [checkoutName, setCheckoutName] = useState('');
   const [checkoutEmail, setCheckoutEmail] = useState('');
 
+  const handleAddToTracker = async (taskText) => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/actions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          task: taskText, 
+          status: 'Pending', 
+          property: user?.property || 'Unassigned',
+          priority: 'High'
+        })
+      });
+      if (res.ok) {
+        addToast('Action added to tracker', 'success');
+      } else {
+        addToast('Failed to add action', 'error');
+      }
+    } catch (err) {
+      addToast('Network error', 'error');
+    }
+  };
+
   const handleCopy = (text, id = 'single') => {
     navigator.clipboard.writeText(text);
     setCopiedRow(id);
@@ -298,7 +321,7 @@ export function StaffDashboard() {
               {batchResults.actions.map((item, i) => (
                 <div key={i} className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-[#30363d] p-3 rounded-lg flex flex-col gap-2">
                   <span className="text-sm text-slate-700 dark:text-[#e6edf3]">{item}</span>
-                  <Button variant="outline" size="sm" className="text-xs w-fit">Add to Tracker</Button>
+                  <Button variant="outline" size="sm" className="text-xs w-fit" onClick={() => handleAddToTracker(item)}>Add to Tracker</Button>
                 </div>
               ))}
             </div>

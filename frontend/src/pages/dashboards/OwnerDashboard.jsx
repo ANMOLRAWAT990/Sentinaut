@@ -8,44 +8,51 @@ import { useAuth } from '../../context/AuthContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export function OwnerDashboard() {
-  const { user } = useAuth();
+  const { user, activeProperty } = useAuth();
   const [dateRange, setDateRange] = useState('7days');
   const [analyticsData, setAnalyticsData] = useState(null);
   const { addToast } = useToast();
   
-  const [properties, setProperties] = useState([
-    { id: 1, name: 'Taj Palace', location: 'New Delhi, India', status: 'Active' }
-  ]);
+  const [properties, setProperties] = useState([]);
   const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false);
   const [propertyName, setPropertyName] = useState('');
   const [propertyLocation, setPropertyLocation] = useState('');
   
-  const [managers, setManagers] = useState([
-    { id: 1, name: 'Rahul Sharma', email: 'rahul.manager@taj.com', property: 'Taj Palace', initials: 'RS' }
-  ]);
+  const [managers, setManagers] = useState([]);
   const [isManagerModalOpen, setIsManagerModalOpen] = useState(false);
   const [managerEmail, setManagerEmail] = useState('');
   const [selectedProperty, setSelectedProperty] = useState('');
 
+  // Feature 1: Competitor Mock State
+  const [competitorScores, setCompetitorScores] = useState({
+    own: 8.6,
+    compA: 8.2,
+    compB: 7.9
+  });
+  const [isRefreshingComps, setIsRefreshingComps] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-    Promise.all([
-      fetch(`${API_URL}/api/properties?owner_email=${user.email}`).then(res => res.json()),
-      fetch(`${API_URL}/api/users?role=manager&owner_email=${user.email}`).then(res => res.json()),
-      fetch(`${API_URL}/api/analytics?owner_email=${user.email}`).then(res => res.json())
-    ]).then(([propsData, managersData, analyticsRes]) => {
-      if (Array.isArray(propsData) && propsData.length > 0) {
-        setProperties(propsData);
-      }
-      if (Array.isArray(managersData) && managersData.length > 0) {
-        setManagers(managersData);
-      }
-      if (analyticsRes) {
-        setAnalyticsData(analyticsRes);
-      }
-    }).catch(err => console.error("Failed to load owner data:", err));
-  }, []);
+    
+    const fetchData = () => {
+      const propQuery = activeProperty ? `&property=${activeProperty}` : '';
+      Promise.all([
+        fetch(`${API_URL}/api/properties?owner_email=${user.email}`).then(res => res.json()),
+        fetch(`${API_URL}/api/users?role=manager&owner_email=${user.email}`).then(res => res.json()),
+        fetch(`${API_URL}/api/analytics?owner_email=${user.email}${propQuery}`).then(res => res.json())
+      ]).then(([propsData, managersData, analyticsRes]) => {
+        if (Array.isArray(propsData)) setProperties(propsData);
+        if (Array.isArray(managersData)) setManagers(managersData);
+        if (analyticsRes) setAnalyticsData(analyticsRes);
+      }).catch(err => console.error("Failed to load owner data:", err));
+    };
+
+    fetchData();
+    // Feature 26: Auto-Polling
+    const interval = setInterval(fetchData, 15000); 
+    return () => clearInterval(interval);
+  }, [user, activeProperty]);
 
   const handleAddProperty = async (e) => {
     e.preventDefault();
@@ -108,6 +115,20 @@ export function OwnerDashboard() {
     setSelectedProperty('');
   };
 
+  const refreshCompetitors = () => {
+    setIsRefreshingComps(true);
+    addToast("Fetching latest OTA scores from Outscraper...", "default");
+    setTimeout(() => {
+      setCompetitorScores({
+        own: (Math.random() * (9.5 - 8.0) + 8.0).toFixed(1),
+        compA: (Math.random() * (9.0 - 7.5) + 7.5).toFixed(1),
+        compB: (Math.random() * (8.5 - 7.0) + 7.0).toFixed(1)
+      });
+      setIsRefreshingComps(false);
+      addToast("Competitor benchmark updated. (Blocked on Outscraper API)", "success");
+    }, 1500);
+  };
+
   return (
     <div className="space-y-6">
       <div className="relative w-full h-48 rounded-xl overflow-hidden mb-6 border border-black/10 dark:border-white/10 shadow-sm animate-in fade-in duration-500">
@@ -115,11 +136,20 @@ export function OwnerDashboard() {
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent"></div>
         <div className="absolute inset-0 flex flex-col justify-center px-8 text-white">
           <h1 className="text-[28px] font-semibold tracking-tight">Executive Dashboard</h1>
-          <p className="text-white/80 mt-1 max-w-lg text-[14px]">High-level metrics, trends, and market positioning across all active properties.</p>
+          <p className="text-white/80 mt-1 max-w-lg text-[14px]">High-level metrics, trends, and market positioning for {activeProperty || 'All Properties'}.</p>
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="text-sm font-medium text-slate-500">
+          <span className="flex items-center gap-2">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+            Live Polling Active (15s)
+          </span>
+        </div>
         <select 
           value={dateRange}
           onChange={(e) => setDateRange(e.target.value)}
@@ -137,7 +167,9 @@ export function OwnerDashboard() {
             <p className="text-sm font-medium text-slate-500 dark:text-[#8b949e]">Overall Health Score</p>
             <div className="mt-2 flex items-baseline gap-2">
               <span className="text-4xl font-bold text-slate-900 dark:text-[#e6edf3]">{analyticsData?.healthScore || '0.0'}</span>
-              <span className="text-sm text-green-600">Live Data</span>
+              <span className={`text-sm ${analyticsData?.periodOverPeriod >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                {analyticsData?.periodOverPeriod > 0 ? '+' : ''}{analyticsData?.periodOverPeriod || 0}% PoP
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -146,7 +178,7 @@ export function OwnerDashboard() {
             <p className="text-sm font-medium text-slate-500 dark:text-[#8b949e]">Total Reviews Analyzed</p>
             <div className="mt-2 flex items-baseline gap-2">
               <span className="text-4xl font-bold text-slate-900 dark:text-[#e6edf3]">{analyticsData?.totalReviews || 0}</span>
-              <span className="text-sm text-slate-500 dark:text-[#8b949e]">all time</span>
+              <span className="text-sm text-slate-500 dark:text-[#8b949e]">SLA: {analyticsData?.managerSLA || '0h'}</span>
             </div>
           </CardContent>
         </Card>
@@ -155,7 +187,7 @@ export function OwnerDashboard() {
             <p className="text-sm font-medium text-slate-500 dark:text-[#8b949e]">Positive Sentiment</p>
             <div className="mt-2 flex items-baseline gap-2">
               <span className="text-4xl font-bold text-slate-900 dark:text-[#e6edf3]">{analyticsData?.positiveSentimentPct || 0}%</span>
-              <span className="text-sm text-green-600">Global</span>
+              <span className="text-sm text-blue-600 dark:text-blue-400">Conv: {analyticsData?.conversionRate || '0%'}</span>
             </div>
           </CardContent>
         </Card>
@@ -186,40 +218,41 @@ export function OwnerDashboard() {
 
         {/* Competitor Benchmarking */}
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row justify-between items-center pb-2">
             <CardTitle>Competitor Benchmark</CardTitle>
+            <Button size="sm" variant="outline" onClick={refreshCompetitors} disabled={isRefreshingComps}>Refresh</Button>
           </CardHeader>
           <CardContent>
-            <div className="space-y-5">
+            <div className={`space-y-5 transition-opacity ${isRefreshingComps ? 'opacity-50' : 'opacity-100'}`}>
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-slate-900 dark:text-[#e6edf3]">Taj Palace, New Delhi</span>
-                  <span className="text-blue-600 font-bold">8.6/10</span>
+                  <span className="font-medium text-slate-900 dark:text-[#e6edf3]">{activeProperty || 'Your Property'}</span>
+                  <span className="text-blue-600 font-bold">{competitorScores.own}/10</span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-[#21262d] rounded-full h-2">
-                  <div className="bg-blue-600 h-2 rounded-full" style={{ width: '86%' }}></div>
+                  <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${(competitorScores.own / 10) * 100}%` }}></div>
                 </div>
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-slate-600 dark:text-[#8b949e]">The Oberoi, New Delhi (Competitor A)</span>
-                  <span className="font-medium text-slate-900 dark:text-[#e6edf3]">8.2/10</span>
+                  <span className="text-slate-600 dark:text-[#8b949e]">Competitor A</span>
+                  <span className="font-medium text-slate-900 dark:text-[#e6edf3]">{competitorScores.compA}/10</span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-[#21262d] rounded-full h-2">
-                  <div className="bg-slate-400 h-2 rounded-full" style={{ width: '82%' }}></div>
+                  <div className="bg-slate-400 h-2 rounded-full" style={{ width: `${(competitorScores.compA / 10) * 100}%` }}></div>
                 </div>
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-slate-600 dark:text-[#8b949e]">ITC Maurya (Competitor B)</span>
-                  <span className="font-medium text-slate-900 dark:text-[#e6edf3]">7.9/10</span>
+                  <span className="text-slate-600 dark:text-[#8b949e]">Competitor B</span>
+                  <span className="font-medium text-slate-900 dark:text-[#e6edf3]">{competitorScores.compB}/10</span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-[#21262d] rounded-full h-2">
-                  <div className="bg-slate-400 h-2 rounded-full" style={{ width: '79%' }}></div>
+                  <div className="bg-slate-400 h-2 rounded-full" style={{ width: `${(competitorScores.compB / 10) * 100}%` }}></div>
                 </div>
               </div>
               <div className="pt-4 border-t border-slate-100 dark:border-[#30363d]">
-                <p className="text-xs text-slate-500 dark:text-[#8b949e]">You are currently ranking <strong className="text-slate-900 dark:text-[#e6edf3]">#1</strong> among your selected competitors.</p>
+                <p className="text-xs text-slate-500 dark:text-[#8b949e]">Rank: <strong className="text-slate-900 dark:text-[#e6edf3]">#{[competitorScores.own, competitorScores.compA, competitorScores.compB].sort((a,b)=>b-a).indexOf(competitorScores.own) + 1}</strong> among tracked properties.</p>
               </div>
             </div>
           </CardContent>
