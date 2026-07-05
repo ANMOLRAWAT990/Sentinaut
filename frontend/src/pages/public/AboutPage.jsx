@@ -229,10 +229,10 @@ export function AboutPage() {
           <div className="space-y-4">
             <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg flex justify-between items-center">
               <div>
-                <h4 className="font-medium text-slate-900 dark:text-white">Currently Interning</h4>
-                <p className="text-sm text-slate-500">Software Engineering</p>
+                <h4 className="font-medium text-slate-900 dark:text-white">Anmol Rawat</h4>
+                <p className="text-sm text-slate-500">Software Engineering Intern</p>
               </div>
-              <button className="px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors">View GitHub</button>
+              <a href="https://github.com/ANMOLRAWAT990" target="_blank" rel="noopener noreferrer" className="px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors inline-block text-center">View GitHub</a>
             </div>
           </div>
         </div>
