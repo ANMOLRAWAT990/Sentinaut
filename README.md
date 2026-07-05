@@ -81,7 +81,8 @@ MongoDB was chosen for SentiNaut for three reasons:
 
 ### Schema Diagram
 
-![SentiNaut MongoDB Schema](./W5_SchemaDiagram_TBI-26100062.png)
+![SentiNaut MongoDB Schema](<img width="1160" height="711" alt="Screenshot 2026-07-01 210237" src="https://github.com/user-attachments/assets/54bfb86c-bdae-404c-b357-ab751d60c8ca" />
+)
 
 #### Entity-Relationship Diagram
 ```mermaid
