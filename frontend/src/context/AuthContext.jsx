@@ -29,7 +29,6 @@ export function AuthProvider({ children }) {
     setActiveProperty('');
     localStorage.removeItem('sentiNautUser');
     localStorage.removeItem('sentiNautActiveProp');
-    setTheme('light');
   };
 
   const switchProperty = (propName) => {
