@@ -145,7 +145,7 @@ export function ManagerDashboard() {
       fetch(`${API_URL}/api/actions?property=${user.property}`).then(res => res.json()),
       fetch(`${API_URL}/api/users?role=staff&property=${user.property}`).then(res => res.json())
     ]).then(([reviewsData, actionsData, staffData]) => {
-      const fetchedReviews = reviewsData.map(r => ({
+      const fetchedReviews = reviewsData.reverse().map(r => ({
         id: r.id, text: r.text, sentiment: r.sentiment, approved: r.status === "Done", fullData: r
       }));
       setReviews(fetchedReviews);
