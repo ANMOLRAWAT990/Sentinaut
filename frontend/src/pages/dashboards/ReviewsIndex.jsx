@@ -188,7 +188,10 @@ export function ReviewsIndex() {
 
   // Pagination & Filtering
   const filteredReviews = reviews.filter(r => filterSentiment === 'All' || r.sentiment === filterSentiment)
-                                 .sort((a, b) => sortOrder === 'Newest' ? -1 : 1);
+                                 .sort((a, b) => {
+                                   if (sortOrder === 'Newest') return a.id < b.id ? 1 : -1;
+                                   return a.id > b.id ? 1 : -1;
+                                 });
   const indexOfLast = currentPage * reviewsPerPage;
   const indexOfFirst = indexOfLast - reviewsPerPage;
   const currentReviews = filteredReviews.slice(indexOfFirst, indexOfLast);
