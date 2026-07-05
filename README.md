@@ -139,30 +139,6 @@ erDiagram
 
 ---
 
-## Project Structure
-
-```
-Sentinaut/
-├── frontend/                  # React app — role-based dashboards
-│   └── src/
-│       ├── pages/
-│       │   ├── public/        # Landing, Login, Signup pages
-│       │   └── dashboards/    # Staff, Manager, Owner dashboards
-│       ├── components/        # UI component library + layouts
-│       └── context/           # AuthContext, ThemeContext
-├── backend/
-│   ├── main.py                # FastAPI entry point — all API routes
-│   ├── models/
-│   │   ├── database.py        # MongoDB connection + collection references
-│   │   └── schemas.py         # Pydantic schema models for data validation
-│   ├── .env                   # Local environment variables (not committed)
-│   └── .env.example           # Template for required env variables
-├── W5_SchemaDiagram_TBI-26100062.png
-└── README.md
-```
-
----
-
 ## Environment Variables
 
 Copy `backend/.env.example` to `backend/.env` and fill in your values:
