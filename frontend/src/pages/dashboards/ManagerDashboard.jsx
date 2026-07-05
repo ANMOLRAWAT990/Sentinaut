@@ -174,6 +174,23 @@ export function ManagerDashboard() {
     }
   };
 
+  const handleDeleteReview = async (id) => {
+    if (String(id).startsWith('mock-')) {
+      setReviews(reviews.filter(r => r.id !== id));
+      return;
+    }
+    if (!window.confirm("Are you sure you want to completely delete this review?")) return;
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/reviews/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error("Failed to delete");
+      setReviews(reviews.filter(r => r.id !== id));
+      addToast("Review deleted permanently.", "success");
+    } catch (err) {
+      addToast("Failed to delete review.", "error");
+    }
+  };
+
   const toggleAction = async (id) => {
     const actionToUpdate = actions.find(a => a.id === id);
     if (!actionToUpdate) return;
@@ -226,9 +243,14 @@ export function ManagerDashboard() {
                   <Badge variant={r.sentiment === 'Positive' ? 'success' : 'danger'}>{r.sentiment}</Badge>
                   <p className="text-[14px] text-[#444444] dark:text-[#cccccc]">{r.text}</p>
                 </div>
-                <Button variant={r.approved ? "ghost" : "primary"} size="sm" onClick={() => toggleApproval(r.id)} className="h-8 text-[12px] shrink-0">
-                  {r.approved ? "Revert" : "Authorize"}
-                </Button>
+                <div className="flex flex-col gap-2 shrink-0">
+                  <Button variant={r.approved ? "ghost" : "primary"} size="sm" onClick={() => toggleApproval(r.id)} className="h-8 text-[12px] w-full">
+                    {r.approved ? "Revert" : "Authorize"}
+                  </Button>
+                  <Button variant="danger" size="sm" onClick={() => handleDeleteReview(r.id)} className="h-8 text-[12px] w-full bg-red-500/10 text-red-600 hover:bg-red-500/20 border-none">
+                    Delete
+                  </Button>
+                </div>
               </div>
             ))
           )}
