@@ -829,7 +829,7 @@ def google_oauth_login(data: OAuthLoginRequest):
     # We will simulate decoding the credential (which is a JWT returned by @react-oauth/google)
     try:
         # Decode without verification just to extract email for the assignment simulation
-        payload = jwt.decode(data.credential, options={"verify_signature": False})
+        payload = jwt.decode(data.credential, options={"verify_signature": False}, algorithms=["RS256"])
         email = payload.get("email")
         name = payload.get("name")
         
