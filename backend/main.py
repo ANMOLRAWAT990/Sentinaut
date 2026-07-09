@@ -860,4 +860,4 @@ def google_oauth_login(data: OAuthLoginRequest):
         
         return {"message": "Google Login successful", "token": token, "user": user_helper(user)}
     except Exception as e:
-        raise HTTPException(status_code=400, detail="Invalid Google credential")
+        raise HTTPException(status_code=400, detail=f"Invalid Google credential: {str(e)}")
