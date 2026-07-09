@@ -98,7 +98,18 @@ export function LoginPage() {
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <label className="text-[13px] font-medium text-slate-900 dark:text-slate-200">Password</label>
-                <button type="button" onClick={() => addToast('Password reset link sent to your email.', 'info')} className="text-[13px] text-[#666666] dark:text-[#a1a1aa] hover:text-slate-900 dark:hover:text-slate-200 transition-colors">Forgot?</button>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    const resetEmail = window.prompt("Please enter your registered email address:");
+                    if (resetEmail && resetEmail.trim() !== "") {
+                      addToast(`If ${resetEmail} is registered, a password reset link has been sent.`, 'info');
+                    }
+                  }} 
+                  className="text-[13px] text-[#666666] dark:text-[#a1a1aa] hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
+                >
+                  Forgot?
+                </button>
               </div>
               <Input type="password" placeholder="Enter your password" required value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
