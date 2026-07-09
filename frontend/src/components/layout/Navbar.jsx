@@ -17,8 +17,9 @@ export function Navbar() {
 
   useEffect(() => {
     if (user) {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       if (user.role === 'owner') {
-        fetch(`http://localhost:8000/api/properties?owner_email=${user.email}`)
+        fetch(`${API_URL}/api/properties?owner_email=${user.email}`)
           .then(r => r.json())
           .then(data => {
              setProperties(data);
@@ -28,7 +29,7 @@ export function Navbar() {
       
       const fetchNotifs = () => {
          const propQuery = activeProperty || user.property || 'Unassigned';
-         fetch(`http://localhost:8000/api/notifications?property=${propQuery}`)
+         fetch(`${API_URL}/api/notifications?property=${propQuery}`)
           .then(r => {
             if (!r.ok) throw new Error("Network response was not ok");
             return r.json();
@@ -65,7 +66,8 @@ export function Navbar() {
   };
 
   const markRead = async (id) => {
-    await fetch(`http://localhost:8000/api/notifications/${id}/read`, { method: 'PUT' });
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    await fetch(`${API_URL}/api/notifications/${id}/read`, { method: 'PUT' });
     setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
   };
 
