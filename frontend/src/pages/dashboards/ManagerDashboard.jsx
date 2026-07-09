@@ -19,6 +19,7 @@ export function ManagerDashboard() {
   
   const [selectedAction, setSelectedAction] = useState(null);
   const [newNote, setNewNote] = useState('');
+  const [deleteReviewId, setDeleteReviewId] = useState(null);
 
   const handleActionClick = (action) => setSelectedAction(action);
   
@@ -174,20 +175,26 @@ export function ManagerDashboard() {
     }
   };
 
-  const handleDeleteReview = async (id) => {
+  const handleDeleteReview = (id) => {
     if (String(id).startsWith('mock-')) {
       setReviews(reviews.filter(r => r.id !== id));
       return;
     }
-    if (!window.confirm("Are you sure you want to completely delete this review?")) return;
+    setDeleteReviewId(id);
+  };
+
+  const confirmDeleteReview = async () => {
+    if (!deleteReviewId) return;
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      const res = await fetch(`${API_URL}/api/reviews/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/api/reviews/${deleteReviewId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error("Failed to delete");
-      setReviews(reviews.filter(r => r.id !== id));
+      setReviews(reviews.filter(r => r.id !== deleteReviewId));
       addToast("Review deleted permanently.", "success");
     } catch (err) {
       addToast("Failed to delete review.", "error");
+    } finally {
+      setDeleteReviewId(null);
     }
   };
 
@@ -395,6 +402,17 @@ export function ManagerDashboard() {
             </div>
           </div>
         )}
+      </Modal>
+
+      <Modal 
+        isOpen={!!deleteReviewId} 
+        onClose={() => setDeleteReviewId(null)}
+        title="Delete Review?"
+        destructive
+        confirmText="Delete Permanently"
+        onConfirm={confirmDeleteReview}
+      >
+        <p className="text-sm">Are you sure you want to completely delete this review? This action cannot be undone.</p>
       </Modal>
     </div>
   );

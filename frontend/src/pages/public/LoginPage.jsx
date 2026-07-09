@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { AuthCarousel } from '../../components/ui/AuthCarousel';
+import { Modal } from '../../components/ui/Modal';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/ui/Toast';
 import { ArrowRight } from 'lucide-react';
@@ -15,6 +16,8 @@ export function LoginPage() {
   const [role, setRole] = useState('owner');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -100,12 +103,7 @@ export function LoginPage() {
                 <label className="text-[13px] font-medium text-slate-900 dark:text-slate-200">Password</label>
                 <button 
                   type="button" 
-                  onClick={() => {
-                    const resetEmail = window.prompt("Please enter your registered email address:");
-                    if (resetEmail && resetEmail.trim() !== "") {
-                      addToast(`If ${resetEmail} is registered, a password reset link has been sent.`, 'info');
-                    }
-                  }} 
+                  onClick={() => setIsForgotModalOpen(true)} 
                   className="text-[13px] text-[#666666] dark:text-[#a1a1aa] hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
                 >
                   Forgot?
@@ -151,7 +149,38 @@ export function LoginPage() {
             New here? <Link to="/signup" className="text-slate-900 dark:text-white font-medium hover:opacity-70 transition-opacity">Request Access</Link>
           </div>
         </div>
-      </div>
+
+      <Modal isOpen={isForgotModalOpen} onClose={() => setIsForgotModalOpen(false)} title="Reset Password">
+        <div className="space-y-4">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Enter your registered email address below. We'll send you a link to securely reset your password.
+          </p>
+          <Input 
+            label="Email Address" 
+            type="email" 
+            placeholder="name@example.com" 
+            value={resetEmail} 
+            onChange={(e) => setResetEmail(e.target.value)} 
+          />
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="secondary" onClick={() => setIsForgotModalOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={() => {
+                if (resetEmail && resetEmail.trim() !== "") {
+                  addToast(`If ${resetEmail} is registered, a password reset link has been sent.`, 'info');
+                  setIsForgotModalOpen(false);
+                  setResetEmail('');
+                } else {
+                  addToast('Please enter a valid email address.', 'error');
+                }
+              }}
+            >
+              Send Link
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </div>
       <AuthCarousel />
     </div>
   );
