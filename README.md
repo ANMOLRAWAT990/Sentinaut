@@ -61,6 +61,17 @@ Two-layer classification pipeline:
 
 ---
 
+## Authentication & Security
+
+SentiNaut implements a full-stack, production-ready authentication architecture:
+- **JWT-Based Protection:** All backend endpoints are secured using JSON Web Tokens (JWT). Unauthenticated requests are rejected with a 401 Unauthorized response.
+- **Role-Based Access Control (RBAC):** Users are assigned specific roles (Owner, Manager, Staff) that strictly govern their data visibility and allowed actions across the frontend and backend.
+- **Google OAuth Integration:** Users can seamlessly and securely authenticate using their Google Workspace accounts.
+- **Brute-Force Protection:** The backend implements IP-based rate limiting to prevent credential stuffing and unauthorized access attempts (429 Rate Limit Exceeded).
+- **Secure Password Hashing:** All native credentials are cryptographically hashed using `bcrypt` before database storage.
+
+---
+
 ## Database
 
 ### Why MongoDB?
