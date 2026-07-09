@@ -60,6 +60,7 @@ class UserResponse(BaseModel):
 class UserUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
+    password: Optional[str] = Field(None, min_length=6)
     dark_mode: Optional[bool] = None
     is_active: Optional[bool] = None
 

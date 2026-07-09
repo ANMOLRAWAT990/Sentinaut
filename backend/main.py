@@ -40,6 +40,17 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
+class RoleChecker:
+    def __init__(self, allowed_roles: list):
+        self.allowed_roles = allowed_roles
+
+    def __call__(self, payload: dict = Depends(verify_token)):
+        if payload.get("role") not in self.allowed_roles:
+            raise HTTPException(status_code=403, detail="Operation not permitted")
+            
+allow_owner = RoleChecker(["owner"])
+allow_manager_or_owner = RoleChecker(["owner", "manager"])
+
 
 # Configure CORS so the React frontend can communicate with it
 app.add_middleware(
@@ -677,7 +688,7 @@ def get_checkouts(property: Optional[str] = None):
 
 # --- Soft Delete API ---
 @app.delete("/api/properties/{id}", status_code=204)
-def delete_property(id: str):
+def delete_property(id: str, _ = Depends(allow_owner)):
     try:
         filter_query = {"_id": ObjectId(id)}
     except InvalidId:
@@ -705,7 +716,7 @@ def patch_property(id: str, prop_update: PropertyUpdate):
     raise HTTPException(status_code=404, detail="Property not found")
 
 @app.delete("/api/users/{id}", status_code=204)
-def delete_user(id: str):
+def delete_user(id: str, _ = Depends(allow_owner)):
     try:
         filter_query = {"_id": ObjectId(id)}
     except InvalidId:
@@ -723,6 +734,8 @@ def patch_user(id: str, user_update: UserUpdate):
         filter_query = {"id": id}
         
     update_data = {k: v for k, v in user_update.model_dump().items() if v is not None}
+    if "password" in update_data:
+        update_data["password"] = bcrypt.hashpw(update_data["password"].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields provided for update.")
         

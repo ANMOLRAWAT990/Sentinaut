@@ -12,6 +12,7 @@ export function SettingsPage() {
   
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
+  const [password, setPassword] = useState('');
   const [darkMode, setDarkMode] = useState(user?.dark_mode || false);
   const [loading, setLoading] = useState(false);
   const { activeProperty } = useAuth();
@@ -76,13 +77,17 @@ export function SettingsPage() {
     
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const payload = { name, email, dark_mode: darkMode };
+      if (password) payload.password = password;
+
       const res = await fetch(`${API_URL}/api/users/${user.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, dark_mode: darkMode })
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
-        login({ ...user, dark_mode: darkMode, name, email });
+        login({ ...user, dark_mode: darkMode, name, email }, localStorage.getItem('sentiNautToken'));
+        setPassword('');
         addToast('Profile updated successfully', 'success');
       } else {
         const errorData = await res.json();
@@ -137,6 +142,13 @@ export function SettingsPage() {
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
               required 
+            />
+            <Input 
+              label="Update Password" 
+              type="password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              placeholder="Leave blank to keep current password"
             />
             
             <div className="flex items-center justify-between pt-2">
