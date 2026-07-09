@@ -518,9 +518,7 @@ def get_competitor_summary(property: str):
 
 @app.post("/api/competitors/refresh")
 def refresh_competitors(property: str):
-    if not config.OUTSCRAPER_API_KEY:
-        raise HTTPException(status_code=501, detail="Outscraper API is not configured.")
-        
+    # Skip Outscraper check for the assignment so the AI runs on mock data
     mock_data = {"competitor_rating": 4.1, "our_rating": 4.5}
     try:
         summary = ai.summarize_competitors(mock_data)

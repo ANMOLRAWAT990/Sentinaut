@@ -99,7 +99,7 @@ Return EXACTLY this JSON schema:
 
 COMPETITOR_PROMPT = """You are a hotel market analyst. Compare our hotel's performance with competitors based on this data.
 Data: {data}
-Write a short, strategic paragraph summarizing our position and identifying one key opportunity. Output only the paragraph."""
+Write a very brief, 1-sentence strategic summary of our position. Be extremely concise (under 20 words) to save tokens. Output only the sentence."""
 
 TRANSLATE_PROMPT = """Translate the following review to English. If it is already in English, return it unchanged. Output ONLY the translation.
 Review: {review}"""
