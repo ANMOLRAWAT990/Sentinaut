@@ -9,14 +9,19 @@ export function AuthProvider({ children }) {
     const savedUser = localStorage.getItem('sentiNautUser');
     return savedUser ? JSON.parse(savedUser) : null;
   });
+  const [token, setToken] = useState(() => localStorage.getItem('sentiNautToken'));
   const [activeProperty, setActiveProperty] = useState(() => {
     const savedProp = localStorage.getItem('sentiNautActiveProp');
     return savedProp ? savedProp : user?.property || '';
   });
 
-  const login = (userData) => {
+  const login = (userData, jwtToken) => {
     setUser(userData);
     localStorage.setItem('sentiNautUser', JSON.stringify(userData));
+    if (jwtToken) {
+      setToken(jwtToken);
+      localStorage.setItem('sentiNautToken', jwtToken);
+    }
     setActiveProperty(userData.property || '');
     localStorage.setItem('sentiNautActiveProp', userData.property || '');
     if (userData?.dark_mode !== undefined) {
@@ -26,8 +31,10 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     setUser(null);
+    setToken(null);
     setActiveProperty('');
     localStorage.removeItem('sentiNautUser');
+    localStorage.removeItem('sentiNautToken');
     localStorage.removeItem('sentiNautActiveProp');
   };
 
@@ -37,7 +44,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, activeProperty, setActiveProperty: switchProperty }}>
+    <AuthContext.Provider value={{ user, token, login, logout, activeProperty, setActiveProperty: switchProperty }}>
       {children}
     </AuthContext.Provider>
   );

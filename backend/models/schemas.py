@@ -1,5 +1,5 @@
-from pydantic import BaseModel
 from typing import List, Optional
+from pydantic import BaseModel, EmailStr, Field
 
 class Review(BaseModel):
     id: Optional[str] = None
@@ -36,14 +36,14 @@ class Property(BaseModel):
     custom_tags: List[str] = []
 
 class SignupRequest(BaseModel):
-    name: str
-    email: str
-    password: str
+    name: str = Field(..., min_length=2)
+    email: EmailStr
+    password: str = Field(..., min_length=6)
     role: str
     property: Optional[str] = None
 
 class LoginRequest(BaseModel):
-    email: str
+    email: EmailStr
     password: str
     role: str
 

@@ -8,9 +8,38 @@ from models.database import reviews_collection, actions_collection, users_collec
 from models.schemas import Review, Action, Property, SignupRequest, LoginRequest, UserResponse, Checkout, UserUpdate, PropertyUpdate, Notification
 from datetime import datetime, timedelta
 import uuid
+
+import jwt
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+
 from config import config
 
 app = FastAPI(title="SentiNaut Backend API")
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
+security = HTTPBearer(auto_error=False)
+
+def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = credentials.credentials
+    try:
+        secret = getattr(config, 'JWT_SECRET', 'super_secret_key_change_me')
+        payload = jwt.decode(token, secret, algorithms=["HS256"])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
 
 # Configure CORS so the React frontend can communicate with it
 app.add_middleware(
@@ -229,14 +258,15 @@ def user_helper(user) -> dict:
     }
 
 
-@app.post("/api/auth/signup", status_code=201)
-def signup(data: SignupRequest):
+@app.post("/api/auth/register", status_code=201)
+@limiter.limit("5/15minute")
+def register(request: Request, data: SignupRequest):
     if data.role not in VALID_ROLES:
         raise HTTPException(status_code=400, detail=f"Invalid role. Must be one of: {VALID_ROLES}")
 
     # Check duplicate email
     if users_collection.find_one({"email": data.email}):
-        raise HTTPException(status_code=409, detail="An account with this email already exists.")
+        raise HTTPException(status_code=400, detail="An account with this email already exists.")
 
     hashed = bcrypt.hashpw(data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     new_user = {
@@ -253,7 +283,7 @@ def signup(data: SignupRequest):
     return {"message": "Account created successfully", "user": user_helper(created)}
 
 @app.get("/api/users", response_model=List[UserResponse])
-def get_users(role: Optional[str] = None, owner_email: Optional[str] = None, property: Optional[str] = None):
+def get_users(role: Optional[str] = None, owner_email: Optional[str] = None, property: Optional[str] = None, token_payload = Depends(verify_token)):
     query = {"is_active": {"$ne": False}}
     if role:
         query["role"] = role
@@ -273,18 +303,55 @@ def get_users(role: Optional[str] = None, owner_email: Optional[str] = None, pro
 
 
 @app.post("/api/auth/login")
-def login(data: LoginRequest):
+@limiter.limit("5/15minute")
+def login(request: Request, data: LoginRequest):
     user = users_collection.find_one({"email": data.email})
     if not user:
         raise HTTPException(status_code=401, detail="Invalid email or password.")
 
+    # Check if account is locked
+    locked_until_str = user.get("locked_until")
+    if locked_until_str:
+        try:
+            locked_until = datetime.fromisoformat(locked_until_str)
+            if datetime.utcnow() < locked_until:
+                raise HTTPException(status_code=403, detail="Account is locked due to too many failed attempts. Please try again later.")
+        except ValueError:
+            pass
+
     if not bcrypt.checkpw(data.password.encode('utf-8'), user["password"].encode('utf-8')):
-        raise HTTPException(status_code=401, detail="Invalid email or password.")
+        attempts = user.get("invalid_login_attempts", 0) + 1
+        update_data = {"invalid_login_attempts": attempts}
+        if attempts >= 3:
+            update_data["locked_until"] = (datetime.utcnow() + timedelta(minutes=15)).isoformat()
+        
+        users_collection.update_one({"_id": user["_id"]}, {"$set": update_data})
+        
+        if attempts >= 3:
+            raise HTTPException(status_code=403, detail="Account is locked due to too many failed attempts. Please try again later.")
+        else:
+            raise HTTPException(status_code=401, detail=f"Invalid email or password. You have {3 - attempts} attempt(s) left.")
+
+    # Reset attempts on successful login
+    if user.get("invalid_login_attempts", 0) > 0 or user.get("locked_until"):
+        users_collection.update_one({"_id": user["_id"]}, {"$unset": {"invalid_login_attempts": "", "locked_until": ""}})
 
     if user.get("role") != data.role:
         raise HTTPException(status_code=403, detail=f"Access denied: This account does not have {data.role} privileges.")
 
-    return {"message": "Login successful", "user": user_helper(user)}
+    # Create JWT
+    secret = getattr(config, 'JWT_SECRET', 'super_secret_key_change_me')
+    expiry = datetime.utcnow() + timedelta(days=7)
+    payload = {
+        "sub": str(user["_id"]),
+        "email": user["email"],
+        "role": user["role"],
+        "exp": expiry
+    }
+    token = jwt.encode(payload, secret, algorithm="HS256")
+
+    return {"message": "Login successful", "token": token, "user": user_helper(user)}
+
 
 
 # --- Analytics & AI API ---
@@ -736,3 +803,48 @@ def trigger_followup(guest_phone: str):
         
     return {"message": f"Follow up logic initiated for {guest_phone}."}
 
+
+from pydantic import BaseModel
+class OAuthLoginRequest(BaseModel):
+    credential: str
+    role: str = "owner"
+
+@app.post("/api/auth/google")
+def google_oauth_login(data: OAuthLoginRequest):
+    # This is a mock verification since we don't have a real Google Client ID configured
+    # In a real app, use `id_token.verify_oauth2_token(data.credential, google_requests.Request(), CLIENT_ID)`
+    # We will simulate decoding the credential (which is a JWT returned by @react-oauth/google)
+    try:
+        # Decode without verification just to extract email for the assignment simulation
+        payload = jwt.decode(data.credential, options={"verify_signature": False})
+        email = payload.get("email")
+        name = payload.get("name")
+        
+        user = users_collection.find_one({"email": email})
+        if not user:
+            # Create user on the fly if not exists
+            new_user = {
+                "name": name,
+                "email": email,
+                "password": bcrypt.hashpw(str(uuid.uuid4()).encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
+                "role": data.role,
+                "property": "Unassigned",
+                "is_active": True,
+                "dark_mode": False
+            }
+            res = users_collection.insert_one(new_user)
+            user = users_collection.find_one({"_id": res.inserted_id})
+            
+        secret = getattr(config, 'JWT_SECRET', 'super_secret_key_change_me')
+        expiry = datetime.utcnow() + timedelta(days=7)
+        jwt_payload = {
+            "sub": str(user["_id"]),
+            "email": user["email"],
+            "role": user["role"],
+            "exp": expiry
+        }
+        token = jwt.encode(jwt_payload, secret, algorithm="HS256")
+        
+        return {"message": "Google Login successful", "token": token, "user": user_helper(user)}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid Google credential")
