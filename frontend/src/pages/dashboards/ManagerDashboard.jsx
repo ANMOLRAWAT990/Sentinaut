@@ -144,9 +144,9 @@ export function ManagerDashboard() {
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
     Promise.all([
-      fetch(`${API_URL}/api/reviews?property=${user.property}`).then(res => res.json()),
-      fetch(`${API_URL}/api/actions?property=${user.property}`).then(res => res.json()),
-      fetch(`${API_URL}/api/users?role=staff&property=${user.property}`).then(res => res.json())
+      fetch(`${API_URL}/api/reviews?property=${encodeURIComponent(user.property)}`).then(res => res.json()),
+      fetch(`${API_URL}/api/actions?property=${encodeURIComponent(user.property)}`).then(res => res.json()),
+      fetch(`${API_URL}/api/users?role=staff&property=${encodeURIComponent(user.property)}`).then(res => res.json())
     ]).then(([reviewsData, actionsData, staffData]) => {
       const fetchedReviews = reviewsData.reverse().map(r => ({
         id: r.id, text: r.text, sentiment: r.sentiment, approved: r.status === "Done", fullData: r

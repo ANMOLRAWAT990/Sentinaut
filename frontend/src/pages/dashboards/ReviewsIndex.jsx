@@ -36,7 +36,7 @@ export function ReviewsIndex() {
     setLoading(true);
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      const propQuery = activeProperty ? `?property=${activeProperty}` : '';
+      const propQuery = activeProperty ? `?property=${encodeURIComponent(activeProperty)}` : '';
       const res = await fetch(`${API_URL}/api/reviews${propQuery}`);
       if(res.ok) {
         const data = await res.json();

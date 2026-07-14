@@ -15,10 +15,11 @@ export function GuestsIndex() {
     if (!user) return;
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     const propQuery = activeProperty || user.property || 'Unassigned';
+    const encodedProp = encodeURIComponent(propQuery);
     
     Promise.all([
-      fetch(`${API_URL}/api/checkouts?property=${propQuery}`).then(res => res.json()),
-      fetch(`${API_URL}/api/reviews?property=${propQuery}`).then(res => res.json())
+      fetch(`${API_URL}/api/checkouts?property=${encodedProp}`).then(res => res.json()),
+      fetch(`${API_URL}/api/reviews?property=${encodedProp}`).then(res => res.json())
     ]).then(([checkouts, reviews]) => {
        const guestMap = {};
        checkouts.forEach(c => {
@@ -38,7 +39,7 @@ export function GuestsIndex() {
     addToast("Triggering automated WhatsApp follow-up...", "default");
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      const res = await fetch(`${API_URL}/api/followup?guest_phone=${phone}`, { method: 'POST' });
+      const res = await fetch(`${API_URL}/api/followup?guest_phone=${encodeURIComponent(phone)}`, { method: 'POST' });
       const data = await res.json();
       addToast(data.message, "success");
     } catch (err) {

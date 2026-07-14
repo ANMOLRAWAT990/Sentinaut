@@ -56,7 +56,7 @@ export function StaffDashboard() {
     document.title = "Staff Console · SentiNaut";
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     if (user?.property) {
-      fetch(`${API_URL}/api/reviews?property=${user.property}`)
+      fetch(`${API_URL}/api/reviews?property=${encodeURIComponent(user.property)}`)
         .then(res => res.json())
         .then(data => {
         // We'll just map this to the batch results structure to populate the left table initially if we wanted to

@@ -38,12 +38,13 @@ export function OwnerDashboard() {
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     
     const fetchData = () => {
-      const propQuery = activeProperty ? `&property=${activeProperty}` : '';
+      const encodedEmail = encodeURIComponent(user.email);
+      const propQuery = activeProperty ? `&property=${encodeURIComponent(activeProperty)}` : '';
       Promise.all([
-        fetch(`${API_URL}/api/properties?owner_email=${user.email}`).then(res => res.json()),
-        fetch(`${API_URL}/api/users?role=manager&owner_email=${user.email}`).then(res => res.json()),
-        fetch(`${API_URL}/api/analytics?owner_email=${user.email}${propQuery}`).then(res => res.json()),
-        fetch(`${API_URL}/api/competitors/summary?property=${activeProperty || 'Unassigned'}`).then(res => res.json()).catch(() => ({}))
+        fetch(`${API_URL}/api/properties?owner_email=${encodedEmail}`).then(res => res.json()),
+        fetch(`${API_URL}/api/users?role=manager&owner_email=${encodedEmail}`).then(res => res.json()),
+        fetch(`${API_URL}/api/analytics?owner_email=${encodedEmail}${propQuery}`).then(res => res.json()),
+        fetch(`${API_URL}/api/competitors/summary?property=${encodeURIComponent(activeProperty || 'Unassigned')}`).then(res => res.json()).catch(() => ({}))
       ]).then(([propsData, managersData, analyticsRes, compRes]) => {
         if (Array.isArray(propsData)) setProperties(propsData);
         if (Array.isArray(managersData)) setManagers(managersData);
@@ -124,7 +125,7 @@ export function OwnerDashboard() {
     addToast("Fetching latest OTA scores and generating AI benchmark...", "info");
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      const res = await fetch(`${API_URL}/api/competitors/refresh?property=${activeProperty || 'Unassigned'}`, {method: 'POST'});
+      const res = await fetch(`${API_URL}/api/competitors/refresh?property=${encodeURIComponent(activeProperty || 'Unassigned')}`, {method: 'POST'});
       if (res.ok) {
         const data = await res.json();
         setCompetitorSummary(data.summary);

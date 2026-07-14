@@ -16,7 +16,7 @@ export function SuggestionsIndex() {
     setLoading(true);
     try {
       const propName = activeProperty || user?.property || 'Unassigned';
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/insights?property=${propName}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/insights?property=${encodeURIComponent(propName)}`);
       if(res.ok) setInsights(await res.json());
     } catch(e) {}
     setLoading(false);
@@ -34,7 +34,7 @@ export function SuggestionsIndex() {
     addToast('Generating insights... this takes a moment', 'info');
     try {
       const propName = activeProperty || user?.property || 'Unassigned';
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/insights/generate?property=${propName}`, {method: 'POST'});
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/insights/generate?property=${encodeURIComponent(propName)}`, {method: 'POST'});
       if(res.ok) {
         setInsights(await res.json());
         addToast('Insights generated', 'success');
