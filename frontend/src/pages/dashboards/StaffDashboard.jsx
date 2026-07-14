@@ -54,8 +54,9 @@ export function StaffDashboard() {
   // Initial data load to preserve the "table" feeling
   React.useEffect(() => {
     document.title = "Staff Console · SentiNaut";
+    const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     if (user?.property) {
-      fetch(`http://localhost:8000/api/reviews?property=${user.property}`)
+      fetch(`${API_URL}/api/reviews?property=${user.property}`)
         .then(res => res.json())
         .then(data => {
         // We'll just map this to the batch results structure to populate the left table initially if we wanted to
@@ -71,8 +72,9 @@ export function StaffDashboard() {
     setError(false);
     
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
       if (mode === 'single') {
-        const res = await fetch('http://localhost:8000/api/reviews/analyze', {
+        const res = await fetch(`${API_URL}/api/reviews/analyze`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text: reviewText, property: user?.property || 'Unassigned' })
@@ -84,7 +86,7 @@ export function StaffDashboard() {
       } else {
         const rawReviews = reviewText.split(/\n\s*\n/).filter(r => r.trim().length > 0);
         
-        const res = await fetch('http://localhost:8000/api/reviews/analyze', {
+        const res = await fetch(`${API_URL}/api/reviews/analyze`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ batch: rawReviews, property: user?.property || 'Unassigned' })

@@ -17,7 +17,7 @@ export function Navbar() {
 
   useEffect(() => {
     if (user) {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
       if (user.role === 'owner') {
         fetch(`${API_URL}/api/properties?owner_email=${user.email}`)
           .then(r => r.json())
@@ -66,7 +66,7 @@ export function Navbar() {
   };
 
   const markRead = async (id) => {
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     await fetch(`${API_URL}/api/notifications/${id}/read`, { method: 'PUT' });
     setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
   };

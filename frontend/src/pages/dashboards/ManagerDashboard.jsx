@@ -166,7 +166,7 @@ export function ManagerDashboard() {
     setReviews(reviews.map(r => r.id === id ? { ...r, approved: !r.approved } : r));
     if (String(id).startsWith('mock-')) return; 
     try {
-      const res = await fetch(`http://localhost:8000/api/reviews/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/reviews/${id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...reviewToUpdate.fullData, status: !reviewToUpdate.approved ? "Done" : "Pending" })
       });
@@ -207,7 +207,7 @@ export function ManagerDashboard() {
     setActions(actions.map(a => a.id === id ? { ...a, status: newStatus } : a));
     if (String(id).startsWith('mock-')) return; 
     try {
-      const res = await fetch(`http://localhost:8000/api/actions/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/actions/${id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...actionToUpdate, status: newStatus })
       });

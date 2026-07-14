@@ -123,7 +123,7 @@ export function OwnerDashboard() {
     setIsRefreshingComps(true);
     addToast("Fetching latest OTA scores and generating AI benchmark...", "info");
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
       const res = await fetch(`${API_URL}/api/competitors/refresh?property=${activeProperty || 'Unassigned'}`, {method: 'POST'});
       if (res.ok) {
         const data = await res.json();
