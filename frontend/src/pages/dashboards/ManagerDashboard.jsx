@@ -124,6 +124,8 @@ export function ManagerDashboard() {
       });
       
       if (res.ok) {
+        const data = await res.json();
+        setStaffList([...staffList, data.user]);
         addToast(`Staff account created! They can login with password: password123`, 'success');
       } else {
         const data = await res.json();
