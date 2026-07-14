@@ -23,7 +23,12 @@ export function Navbar() {
           .then(r => r.json())
           .then(data => {
              setProperties(data);
-             if(!activeProperty && data.length > 0) setActiveProperty(data[0].name);
+             if (data.length > 0) {
+               const propExists = data.some(p => p.name === activeProperty);
+               if (!activeProperty || !propExists) {
+                 setActiveProperty(data[0].name);
+               }
+             }
           }).catch(err => console.error(err));
       }
       
