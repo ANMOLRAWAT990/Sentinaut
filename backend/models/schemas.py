@@ -90,3 +90,7 @@ class Notification(BaseModel):
     type: str = "Info"
     is_read: bool = False
     created_at: Optional[str] = None
+
+class ChatRequest(BaseModel):
+    message: str
+    role: str

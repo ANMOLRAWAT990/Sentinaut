@@ -5,7 +5,7 @@ from bson.objectid import ObjectId
 from bson.errors import InvalidId
 import bcrypt
 from models.database import reviews_collection, actions_collection, users_collection, properties_collection, checkouts_collection, invites_collection, notifications_collection, insights_collection, competitors_collection
-from models.schemas import Review, Action, Property, SignupRequest, LoginRequest, UserResponse, Checkout, UserUpdate, PropertyUpdate, Notification
+from models.schemas import Review, Action, Property, SignupRequest, LoginRequest, UserResponse, Checkout, UserUpdate, PropertyUpdate, Notification, ChatRequest
 from datetime import datetime, timedelta
 import uuid
 
@@ -369,6 +369,14 @@ def login(request: Request, data: LoginRequest):
 from services.ai_service import AIService
 
 ai = AIService()
+
+@app.post("/api/chat")
+def chat_with_bot(payload: ChatRequest):
+    try:
+        reply = ai.chat(message=payload.message, role=payload.role)
+        return {"reply": reply}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/reviews/analyze")
 def analyze_reviews(payload: dict):

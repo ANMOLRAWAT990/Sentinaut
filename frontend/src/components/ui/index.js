@@ -10,3 +10,4 @@ export { Badge } from './Badge';
 export { Card, CardHeader, CardTitle, CardContent } from './Card';
 export { EmptyState } from './EmptyState';
 export { Hero } from './Hero';
+export { ChatBot } from './ChatBot';

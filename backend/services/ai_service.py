@@ -104,6 +104,23 @@ Write a very brief, 1-sentence strategic summary of our position. Be extremely c
 TRANSLATE_PROMPT = """Translate the following review to English. If it is already in English, return it unchanged. Output ONLY the translation.
 Review: {review}"""
 
+CHATBOT_PROMPT = """You are SentiBot, the official AI assistant for SentiNaut (a hotel reputation management platform).
+You are currently talking to a user with the role: {role}.
+Context:
+- 'guest' or 'outside': Not logged in. Briefly explain SentiNaut's benefits.
+- 'owner': Provide high-level strategic business and reputation advice.
+- 'manager': Provide operational, staff management, and review handling strategies.
+- 'staff': Offer customer service tips and help with logging feedback.
+
+CRITICAL RULES:
+1. You MUST ONLY answer questions related to SentiNaut, hotels, hospitality, reviews, or customer service.
+2. If the user asks about coding, math, general trivia, politics, or anything unrelated to the hospitality industry, you MUST politely refuse to answer and remind them you are a dedicated SentiNaut assistant.
+3. Keep your answers concise, professional, and directly related to the user's role.
+
+The user says: {message}
+
+Provide a helpful, concise, and professional response following the rules above."""
+
 class AIService:
     def __init__(self, provider: BaseAIProvider = None):
         self.provider = provider or GeminiProvider()
@@ -132,4 +149,8 @@ class AIService:
         
     def translate_text(self, text: str) -> str:
         prompt = TRANSLATE_PROMPT.format(review=text)
+        return self.provider.generate_text(prompt).strip()
+
+    def chat(self, message: str, role: str) -> str:
+        prompt = CHATBOT_PROMPT.format(message=message, role=role)
         return self.provider.generate_text(prompt).strip()

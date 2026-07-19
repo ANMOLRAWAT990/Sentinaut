@@ -5,6 +5,7 @@ import { ToastProvider } from './components/ui/Toast';
 import { PublicLayout } from './components/layout/PublicLayout';
 import { AppLayout } from './components/layout/AppLayout';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
+import { ChatBot } from './components/ui';
 
 import { LandingPage } from './pages/public/LandingPage';
 import { AboutPage } from './pages/public/AboutPage';
@@ -44,6 +45,7 @@ export default function App() {
             {/* Fallback Route */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          <ChatBot />
         </BrowserRouter>
       </AuthProvider>
     </ToastProvider>
