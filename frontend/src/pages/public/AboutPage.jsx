@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function AboutPage() {
   const [toast, setToast] = useState(null);
+  const navigate = useNavigate();
+  const { user } = useAuth();
   
   const showToast = (message) => {
     setToast(message);
@@ -153,7 +157,7 @@ export function AboutPage() {
               <div className="pb-8 border-b border-slate-200 dark:border-slate-800">
                 <p className="text-sm font-mono text-slate-400 mb-2">01</p>
                 <p className="text-slate-900 dark:text-slate-200 text-xl font-serif mb-2">Deterministic Sentiment</p>
-                <p>98.4% accuracy using Google Gemini inference for all guest interactions.</p>
+                <p>Precise sentiment extraction using Google Gemini inference for all guest interactions.</p>
               </div>
               <div className="pb-8 border-b border-slate-200 dark:border-slate-800">
                 <p className="text-sm font-mono text-slate-400 mb-2">02</p>
@@ -179,11 +183,11 @@ export function AboutPage() {
           <p className="text-lg text-slate-600 dark:text-slate-400 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
             SentiNaut natively interfaces with your existing hospitality stack, ensuring zero operational downtime.
           </p>
-          <div className="flex flex-wrap justify-center gap-8 sm:gap-16 opacity-70">
-            <span className="text-xl font-serif tracking-widest text-slate-900 dark:text-white">TripAdvisor API</span>
-            <span className="text-xl font-serif tracking-widest text-slate-900 dark:text-white">Booking.com</span>
-            <span className="text-xl font-serif tracking-widest text-slate-900 dark:text-white">WhatsApp</span>
-            <span className="text-xl font-serif tracking-widest text-slate-900 dark:text-white">Opera PMS</span>
+          <div className="flex flex-wrap justify-center gap-12 opacity-70 grayscale">
+            <a href="https://developer-tripadvisor.com" target="_blank" rel="noopener noreferrer" className="text-xl font-serif tracking-widest text-slate-900 dark:text-white hover:text-primary-600 transition-colors">TripAdvisor API</a>
+            <a href="https://developers.booking.com" target="_blank" rel="noopener noreferrer" className="text-xl font-serif tracking-widest text-slate-900 dark:text-white hover:text-primary-600 transition-colors">Booking.com</a>
+            <a href="https://business.whatsapp.com" target="_blank" rel="noopener noreferrer" className="text-xl font-serif tracking-widest text-slate-900 dark:text-white hover:text-primary-600 transition-colors">WhatsApp</a>
+            <a href="https://www.oracle.com/hospitality/opera" target="_blank" rel="noopener noreferrer" className="text-xl font-serif tracking-widest text-slate-900 dark:text-white hover:text-primary-600 transition-colors">Opera PMS</a>
           </div>
         </div>
       </section>
@@ -200,7 +204,7 @@ export function AboutPage() {
               <h3 className="font-serif text-2xl text-slate-900 dark:text-white mb-2">Boutique</h3>
               <p className="text-sm text-slate-500 mb-8 font-light">Up to 1,000 reviews/mo</p>
               <p className="text-5xl font-serif text-slate-900 dark:text-white mb-8">₹24,999<span className="text-lg font-light text-slate-500">/mo</span></p>
-              <button onClick={() => showToast("Redirecting to Razorpay Checkout...")} className="px-6 py-3 border border-slate-900 dark:border-white text-slate-900 dark:text-white text-sm uppercase tracking-widest hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">Select</button>
+              <button onClick={() => navigate(user ? '/dashboard' : '/signup')} className="px-6 py-3 border border-slate-900 dark:border-white text-slate-900 dark:text-white text-sm uppercase tracking-widest hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">Select</button>
             </div>
             
             <div className="p-12 sm:p-16 text-center bg-slate-900 dark:bg-white text-white dark:text-slate-900 relative">
@@ -208,14 +212,14 @@ export function AboutPage() {
               <h3 className="font-serif text-2xl mb-2 mt-4">Resort</h3>
               <p className="text-sm opacity-70 mb-8 font-light">Unlimited reviews & managers</p>
               <p className="text-5xl font-serif mb-8">₹49,999<span className="text-lg font-light opacity-70">/mo</span></p>
-              <button onClick={() => showToast("Redirecting to Razorpay Checkout...")} className="px-6 py-3 border border-white dark:border-slate-900 text-white dark:text-slate-900 text-sm uppercase tracking-widest hover:bg-white hover:text-black dark:hover:bg-slate-900 dark:hover:text-white transition-colors">Select</button>
+              <button onClick={() => navigate(user ? '/dashboard' : '/signup')} className="px-6 py-3 border border-white dark:border-slate-900 text-white dark:text-slate-900 text-sm uppercase tracking-widest hover:bg-white hover:text-black dark:hover:bg-slate-900 dark:hover:text-white transition-colors">Select</button>
             </div>
 
             <div className="p-12 sm:p-16 text-center hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
               <h3 className="font-serif text-2xl text-slate-900 dark:text-white mb-2">Enterprise</h3>
               <p className="text-sm text-slate-500 mb-8 font-light">Custom SLA deployment</p>
               <p className="text-5xl font-serif text-slate-900 dark:text-white mb-8">POA</p>
-              <button onClick={() => showToast("Opening contact form. Our sales team will reach out soon.")} className="px-6 py-3 border border-slate-900 dark:border-white text-slate-900 dark:text-white text-sm uppercase tracking-widest hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">Contact</button>
+              <button onClick={() => navigate('/signup')} className="px-6 py-3 border border-slate-900 dark:border-white text-slate-900 dark:text-white text-sm uppercase tracking-widest hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">Contact</button>
             </div>
           </div>
         </div>

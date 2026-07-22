@@ -1,8 +1,10 @@
 import React, { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 
 export function LandingPage() {
   const [toast, setToast] = useState(null);
+  const navigate = useNavigate();
   const showToast = (message) => {
     setToast(message);
     setTimeout(() => setToast(null), 3000);
@@ -68,10 +70,10 @@ export function LandingPage() {
       <section className="relative z-20 border-y border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
         <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-slate-200 dark:divide-slate-800">
           {[
-            { label: 'Data Processing Limit', value: '100k+ / day' },
-            { label: 'Inference Accuracy', value: '98.4%' },
-            { label: 'P99 Latency', value: '240ms' },
-            { label: 'Active Deployments', value: '500+' }
+            { label: 'Real-time Insights', value: 'Instant' },
+            { label: 'Platform Reliability', value: 'Always-On' },
+            { label: 'Data Security', value: 'Encrypted' },
+            { label: 'Actionable Workflows', value: 'Automated' }
           ].map((stat, i) => (
             <motion.div 
               key={i} 
@@ -104,10 +106,10 @@ export function LandingPage() {
           >
             {[...Array(4)].map((_, i) => (
               <React.Fragment key={i}>
-                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">TAJ PALACE</span>
-                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">THE OBEROI</span>
-                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">ITC MAURYA</span>
-                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">LEELA PALACE</span>
+                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">GRAND ROYALE</span>
+                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">THE OASIS</span>
+                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">ALPINE RETREAT</span>
+                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">COASTAL HAVEN</span>
               </React.Fragment>
             ))}
           </motion.div>
@@ -221,7 +223,7 @@ export function LandingPage() {
             SentiNaut natively ingests data from TripAdvisor, Booking.com, WhatsApp Business API, and your internal property management systems seamlessly.
           </p>
           <div className="flex flex-wrap justify-center gap-6">
-            <button onClick={() => showToast("Opening Integrations Catalog...")} className="px-8 py-4 bg-white text-black text-sm uppercase tracking-widest font-semibold hover:bg-slate-200 hover:scale-105 transition-all inline-block duration-300 shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)]">View Integrations</button>
+            <button onClick={() => navigate('/about')} className="px-8 py-4 bg-white text-black text-sm uppercase tracking-widest font-semibold hover:bg-slate-200 hover:scale-105 transition-all inline-block duration-300 shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)]">View Integrations</button>
           </div>
         </motion.div>
       </section>

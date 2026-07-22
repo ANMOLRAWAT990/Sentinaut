@@ -4,8 +4,8 @@ from typing import List, Optional
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 import bcrypt
-from models.database import reviews_collection, actions_collection, users_collection, properties_collection, checkouts_collection, invites_collection, notifications_collection, insights_collection, competitors_collection
-from models.schemas import Review, Action, Property, SignupRequest, LoginRequest, UserResponse, Checkout, UserUpdate, PropertyUpdate, Notification, ChatRequest
+from models.database import reviews_collection, actions_collection, users_collection, properties_collection, checkouts_collection, invites_collection, notifications_collection, insights_collection, competitors_collection, password_resets_collection, newsletter_subscribers_collection
+from models.schemas import Review, Action, Property, SignupRequest, LoginRequest, UserResponse, Checkout, UserUpdate, PropertyUpdate, Notification, ChatRequest, ForgotPasswordRequest, ResetPasswordRequest, PaymentVerifyRequest, NewsletterRequest
 from datetime import datetime, timedelta
 import uuid
 
@@ -17,6 +17,8 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
 from config import config
+from services.email_service import email_service
+from services.payment_service import payment_service
 
 app = FastAPI(title="SentiNaut Backend API")
 
@@ -79,7 +81,7 @@ def review_helper(review) -> dict:
 # 1. GET /api/reviews - list all reviews
 @app.get("/api/reviews", response_model=List[Review])
 def get_reviews(property: Optional[str] = None):
-    query = {}
+    query = {"is_competitor": {"$ne": True}}
     if property:
         query["property"] = property
     reviews = []
@@ -92,6 +94,7 @@ def get_reviews(property: Optional[str] = None):
 def search_reviews(q: str = Query(..., description="Search query")):
     query = {"$regex": q, "$options": "i"}
     db_query = {
+        "is_competitor": {"$ne": True},
         "$or": [
             {"guestName": query},
             {"text": query},
@@ -388,6 +391,27 @@ def analyze_reviews(payload: dict):
     prop_name = payload.get("property", "Unassigned")
     prop = properties_collection.find_one({"name": prop_name})
     custom_tags = prop.get("custom_tags", []) if prop else []
+    
+    current_month = datetime.utcnow().strftime("%Y-%m")
+    
+    if prop:
+        usage = prop.get("ai_usage_month", 0)
+        reset_month = prop.get("usage_reset_month", "")
+        plan = prop.get("plan", "trial")
+        
+        if reset_month != current_month:
+            usage = 0
+            
+        if plan == "trial" and usage + len(texts) > 50:
+            raise HTTPException(status_code=403, detail="Trial limit reached. Please upgrade to process more reviews.")
+            
+        properties_collection.update_one(
+            {"name": prop_name},
+            {"$set": {"ai_usage_month": usage + len(texts), "usage_reset_month": current_month}}
+        )
+
+    is_competitor = payload.get("is_competitor", False)
+    competitor_name = payload.get("competitor_name", None)
 
     saved_reviews = []
     actions = []
@@ -421,7 +445,9 @@ def analyze_reviews(payload: dict):
                 "tags": tags,
                 "status": "Pending",
                 "property": prop_name,
-                "created_at": datetime.utcnow().isoformat()
+                "created_at": datetime.utcnow().isoformat(),
+                "is_competitor": is_competitor,
+                "competitor_name": competitor_name
             }
             db_res = reviews_collection.insert_one(review)
             review["_id"] = db_res.inserted_id
@@ -501,7 +527,7 @@ def get_insights(property: str):
 
 @app.post("/api/insights/generate")
 def generate_insights(property: str):
-    all_reviews = list(reviews_collection.find({"property": property}))
+    all_reviews = list(reviews_collection.find({"property": property, "is_competitor": {"$ne": True}}))
     positive = sum(1 for r in all_reviews if r.get("sentiment") == "Positive")
     total = len(all_reviews)
     pos_pct = round((positive / total * 100) if total > 0 else 0)
@@ -520,30 +546,52 @@ def generate_insights(property: str):
 @app.get("/api/competitors/summary")
 def get_competitor_summary(property: str):
     comp = competitors_collection.find_one({"property": property}, sort=[("created_at", -1)])
+    scores = get_real_competitor_scores(property)
     if not comp:
-        return {"summary": "No competitor data available yet. Please wait for the scheduled refresh."}
-    return {"summary": comp["summary"]}
+        return {"summary": "No competitor summary generated yet. Click Refresh.", "scores": scores}
+    return {"summary": comp["summary"], "scores": scores}
+
+def get_real_competitor_scores(property: str):
+    own_reviews = list(reviews_collection.find({"property": property, "is_competitor": {"$ne": True}}))
+    own_total = len(own_reviews)
+    own_score = round((sum(1 for r in own_reviews if r.get("sentiment") == "Positive") / own_total * 10) if own_total > 0 else 0, 1)
+    
+    scores = {"own": {"name": property, "rating": own_score}}
+    comp_reviews = list(reviews_collection.find({"property": property, "is_competitor": True}))
+    competitors = {}
+    for r in comp_reviews:
+        c_name = r.get("competitor_name", "Unknown Competitor")
+        if c_name not in competitors:
+            competitors[c_name] = {"total": 0, "positive": 0}
+        competitors[c_name]["total"] += 1
+        if r.get("sentiment") == "Positive":
+            competitors[c_name]["positive"] += 1
+            
+    for idx, (c_name, stats) in enumerate(competitors.items()):
+        c_score = round((stats["positive"] / stats["total"] * 10) if stats["total"] > 0 else 0, 1)
+        scores[f"comp{idx}"] = {"name": c_name, "rating": c_score}
+    return scores
 
 @app.post("/api/competitors/refresh")
 def refresh_competitors(property: str):
-    # Skip Outscraper check for the assignment so the AI runs on mock data
-    mock_data = {"competitor_rating": 4.1, "our_rating": 4.5}
+    scores = get_real_competitor_scores(property)
+    
     try:
-        summary = ai.summarize_competitors(mock_data)
+        summary = ai.summarize_competitors(scores)
         doc = {
             "property": property,
             "summary": summary,
             "created_at": datetime.utcnow().isoformat()
         }
         competitors_collection.insert_one(doc)
-        return {"summary": summary}
+        return {"summary": summary, "scores": scores}
     except Exception as e:
         raise HTTPException(status_code=503, detail="AI service unavailable.")
 
 
 @app.get("/api/analytics")
 def get_analytics(owner_email: Optional[str] = None, property: Optional[str] = None):
-    query = {}
+    query = {"is_competitor": {"$ne": True}}
     if property:
         query["property"] = property
     elif owner_email:
@@ -691,8 +739,32 @@ def get_checkouts(property: Optional[str] = None):
         checkouts.append(checkout_helper(c))
     return checkouts
 
+@app.post("/api/payments/create-order")
+def create_payment_order(amount: int = Query(..., description="Amount in INR"), property: str = Query(...)):
+    order = payment_service.create_order(amount * 100, "INR") # Razorpay uses paise
+    return {"order_id": order["id"], "amount": amount, "currency": "INR", "key_id": config.RAZORPAY_KEY_ID}
 
-# --- Soft Delete API ---
+@app.post("/api/payments/verify")
+def verify_payment(req: PaymentVerifyRequest):
+    is_valid = payment_service.verify_signature(req.razorpay_payment_id, req.razorpay_order_id, req.razorpay_signature)
+    if is_valid:
+        properties_collection.update_one(
+            {"name": req.property},
+            {"$set": {"plan": req.plan}}
+        )
+        return {"message": "Payment verified and plan updated."}
+    else:
+        raise HTTPException(status_code=400, detail="Invalid payment signature.")
+
+@app.post("/api/admin/reset-usage")
+def reset_demo_usage(property: str):
+    properties_collection.update_one(
+        {"name": property},
+        {"$set": {"ai_usage_month": 0, "usage_reset_month": datetime.utcnow().strftime("%Y-%m")}}
+    )
+    return {"message": "Demo usage reset."}
+
+# --- Property Routes ---
 @app.delete("/api/properties/{id}", status_code=204)
 def delete_property(id: str, _ = Depends(allow_owner)):
     try:
@@ -765,11 +837,52 @@ def invite_user(email: str, role: str, property: str = "Unassigned"):
     }
     invites_collection.insert_one(invite)
     
-    # Magic Links require SMTP
-    if not all([config.SMTP_HOST, config.SMTP_PORT, config.SMTP_USER, config.SMTP_PASSWORD]):
-        raise HTTPException(status_code=501, detail="SMTP service is not configured. Cannot send magic links.")
+    # Send actual email
+    invite_url = f"{config.FRONTEND_URL}/register?token={token}&email={email}"
+    html_body = f"<p>You have been invited to join SentiNaut as a {role} for {property}.</p><p><a href='{invite_url}'>Click here to register</a></p>"
+    
+    success = email_service.send_email(email, "SentiNaut Invitation", html_body)
+    if not success:
+        return {"message": "Invite generated, but failed to send email. Check SMTP settings.", "token": token}
         
-    return {"message": "Invite generated and sent via email (mocked).", "token": token}
+    return {"message": "Invite generated and sent via email.", "token": token}
+
+@app.post("/api/auth/forgot-password")
+def forgot_password(req: ForgotPasswordRequest):
+    user = users_collection.find_one({"email": req.email})
+    if not user:
+        # Don't reveal if email exists or not
+        return {"message": "If that email exists, a password reset link has been sent."}
+    
+    token = str(uuid.uuid4())
+    expiry = (datetime.utcnow() + timedelta(hours=1)).isoformat()
+    password_resets_collection.insert_one({
+        "email": req.email,
+        "token": token,
+        "expires_at": expiry
+    })
+    
+    reset_url = f"{config.FRONTEND_URL}/reset-password/{token}"
+    html_body = f"<p>You requested a password reset. Click the link below to reset it (valid for 1 hour).</p><p><a href='{reset_url}'>Reset Password</a></p>"
+    
+    email_service.send_email(req.email, "SentiNaut Password Reset", html_body)
+    return {"message": "If that email exists, a password reset link has been sent."}
+
+@app.post("/api/auth/reset-password")
+def reset_password(req: ResetPasswordRequest):
+    reset_doc = password_resets_collection.find_one({"token": req.token})
+    if not reset_doc:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token.")
+    
+    if datetime.fromisoformat(reset_doc["expires_at"]) < datetime.utcnow():
+        raise HTTPException(status_code=400, detail="Reset token expired.")
+        
+    hashed = bcrypt.hashpw(req.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    users_collection.update_one({"email": reset_doc["email"]}, {"$set": {"password": hashed}})
+    
+    # Consume token
+    password_resets_collection.delete_one({"_id": reset_doc["_id"]})
+    return {"message": "Password updated successfully."}
 
 
 # --- Notifications API ---
@@ -867,3 +980,11 @@ def google_oauth_login(data: OAuthLoginRequest):
         return {"message": "Google Login successful", "token": token, "user": user_helper(user)}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid Google credential: {str(e)}")
+
+@app.post('/api/newsletter')
+def subscribe_newsletter(req: NewsletterRequest):
+    if newsletter_subscribers_collection.find_one({'email': req.email}):
+        return {'message': 'You are already subscribed!'}
+    newsletter_subscribers_collection.insert_one({'email': req.email, 'subscribed_at': datetime.utcnow().isoformat()})
+    return {'message': 'Successfully subscribed to the newsletter!'}
+

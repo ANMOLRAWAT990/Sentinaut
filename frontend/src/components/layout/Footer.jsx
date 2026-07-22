@@ -1,8 +1,38 @@
 import React, { useState } from 'react';
+import { useToast } from '../ui/Toast';
 import { Modal } from '../ui/Modal';
 
 export function Footer() {
   const [activeModal, setActiveModal] = useState(null);
+  const [email, setEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const { addToast } = useToast();
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    if (!email) return;
+    setIsSubscribing(true);
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/newsletter`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        addToast(data.message, 'success');
+        setEmail('');
+      } else {
+        addToast(data.message || 'Subscription failed', 'error');
+      }
+    } catch (err) {
+      addToast('Network error while subscribing', 'error');
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
+
   return (
     <footer className="w-full border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 pt-16 pb-8 mt-auto">
       <div className="mx-auto max-w-7xl px-6 lg:px-16">
@@ -40,9 +70,23 @@ export function Footer() {
           <div className="col-span-1 md:col-span-2 lg:col-span-1">
             <h4 className="font-semibold text-slate-900 dark:text-white mb-4">Subscribe to our newsletter</h4>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Get the latest news on AI in hospitality.</p>
-            <form className="flex gap-2">
-              <input type="email" placeholder="Enter your email" className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm rounded-md px-3 py-2 w-full focus:outline-none focus:border-blue-500" required />
-              <button type="submit" className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-medium px-4 py-2 rounded-md hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors">Subscribe</button>
+            <form className="flex gap-2" onSubmit={handleSubscribe}>
+              <input 
+                type="email" 
+                placeholder="Enter your email" 
+                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm rounded-md px-3 py-2 w-full focus:outline-none focus:border-blue-500" 
+                required 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isSubscribing}
+              />
+              <button 
+                type="submit" 
+                className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-medium px-4 py-2 rounded-md hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors disabled:opacity-50"
+                disabled={isSubscribing}
+              >
+                {isSubscribing ? '...' : 'Subscribe'}
+              </button>
             </form>
           </div>
         </div>

@@ -53,4 +53,12 @@ class Config:
     def FRONTEND_URL(self):
         return os.getenv("FRONTEND_URL", "http://localhost:5173")
 
+    @property
+    def RAZORPAY_KEY_ID(self):
+        return os.getenv("RAZORPAY_KEY_ID", "")
+
+    @property
+    def RAZORPAY_KEY_SECRET(self):
+        return os.getenv("RAZORPAY_KEY_SECRET", "")
+
 config = Config()

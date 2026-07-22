@@ -13,6 +13,8 @@ class Review(BaseModel):
     replied: bool = False
     translated_text: Optional[str] = None
     created_at: Optional[str] = None
+    is_competitor: bool = False
+    competitor_name: Optional[str] = None
 
 class Action(BaseModel):
     id: Optional[str] = None
@@ -34,6 +36,9 @@ class Property(BaseModel):
     owner_email: Optional[str] = None
     is_active: bool = True
     custom_tags: List[str] = []
+    plan: str = "trial"
+    ai_usage_month: int = 0
+    usage_reset_month: str = ""
 
 class SignupRequest(BaseModel):
     name: str = Field(..., min_length=2)
@@ -83,6 +88,13 @@ class Checkout(BaseModel):
     property: str
     timestamp: Optional[str] = None
 
+class PaymentVerifyRequest(BaseModel):
+    property: str
+    plan: str
+    razorpay_payment_id: str
+    razorpay_order_id: str
+    razorpay_signature: str
+
 class Notification(BaseModel):
     id: Optional[str] = None
     property: str
@@ -94,3 +106,13 @@ class Notification(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     role: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    password: str = Field(..., min_length=6)
+
+class NewsletterRequest(BaseModel):
+    email: EmailStr

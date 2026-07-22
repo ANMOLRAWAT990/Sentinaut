@@ -18,6 +18,7 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  const [isSendingReset, setIsSendingReset] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -165,11 +166,26 @@ export function LoginPage() {
           <div className="flex justify-end gap-3 pt-4">
             <Button variant="secondary" onClick={() => setIsForgotModalOpen(false)}>Cancel</Button>
             <Button 
-              onClick={() => {
+              isLoading={isSendingReset}
+              onClick={async () => {
                 if (resetEmail && resetEmail.trim() !== "") {
-                  addToast(`If ${resetEmail} is registered, a password reset link has been sent.`, 'info');
-                  setIsForgotModalOpen(false);
-                  setResetEmail('');
+                  setIsSendingReset(true);
+                  try {
+                    const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+                    const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ email: resetEmail.trim() })
+                    });
+                    const data = await res.json();
+                    addToast(data.message || `If ${resetEmail} is registered, a password reset link has been sent.`, 'info');
+                    setIsForgotModalOpen(false);
+                    setResetEmail('');
+                  } catch (err) {
+                    addToast('Network error while requesting password reset.', 'error');
+                  } finally {
+                    setIsSendingReset(false);
+                  }
                 } else {
                   addToast('Please enter a valid email address.', 'error');
                 }

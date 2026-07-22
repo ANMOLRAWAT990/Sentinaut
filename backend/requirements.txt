@@ -10,3 +10,4 @@ slowapi==0.1.9
 email-validator==2.1.1
 google-generativeai
 tenacity
+razorpay==1.4.1

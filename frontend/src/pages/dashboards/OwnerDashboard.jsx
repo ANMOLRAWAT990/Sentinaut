@@ -23,14 +23,16 @@ export function OwnerDashboard() {
   const [managerEmail, setManagerEmail] = useState('');
   const [selectedProperty, setSelectedProperty] = useState('');
 
-  // Feature 1: Competitor Mock State
-  const [competitorScores] = useState({
-    own: 8.6,
-    compA: 8.2,
-    compB: 7.9
+  // Feature 1: Competitor Benchmark State
+  const [competitorScores, setCompetitorScores] = useState({
+    own: { name: 'Your Property', rating: 0 }
   });
   const [competitorSummary, setCompetitorSummary] = useState("Loading competitor benchmarking data...");
   const [isRefreshingComps, setIsRefreshingComps] = useState(false);
+  const [isAddCompetitorModalOpen, setIsAddCompetitorModalOpen] = useState(false);
+  const [competitorName, setCompetitorName] = useState('');
+  const [competitorReviewsText, setCompetitorReviewsText] = useState('');
+  const [isAddingCompetitor, setIsAddingCompetitor] = useState(false);
 
   useEffect(() => {
     document.title = "Executive Dashboard · SentiNaut";
@@ -49,7 +51,10 @@ export function OwnerDashboard() {
         if (Array.isArray(propsData)) setProperties(propsData);
         if (Array.isArray(managersData)) setManagers(managersData);
         if (analyticsRes) setAnalyticsData(analyticsRes);
-        if (compRes?.summary) setCompetitorSummary(compRes.summary);
+        if (compRes?.summary) {
+          setCompetitorSummary(compRes.summary);
+          if (compRes.scores) setCompetitorScores(compRes.scores);
+        }
       }).catch(err => console.error("Failed to load owner data:", err));
     };
 
@@ -129,6 +134,7 @@ export function OwnerDashboard() {
       if (res.ok) {
         const data = await res.json();
         setCompetitorSummary(data.summary);
+        if (data.scores) setCompetitorScores(data.scores);
         addToast("Competitor benchmark updated.", "success");
       } else {
         const data = await res.json();
@@ -140,6 +146,101 @@ export function OwnerDashboard() {
       setIsRefreshingComps(false);
     }
   };
+
+  const handleAddCompetitorData = async (e) => {
+    e.preventDefault();
+    if (!competitorName.trim() || !competitorReviewsText.trim()) {
+      addToast('Please provide both name and review text.', 'error');
+      return;
+    }
+    
+    setIsAddingCompetitor(true);
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const reviewsArray = competitorReviewsText.split('\n\n').filter(r => r.trim().length > 10);
+      
+      const res = await fetch(`${API_URL}/api/reviews/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          property: activeProperty || 'Unassigned',
+          batch: reviewsArray,
+          is_competitor: true,
+          competitor_name: competitorName.trim()
+        })
+      });
+      
+      if (res.ok) {
+        addToast(`Successfully processed ${reviewsArray.length} competitor reviews.`, 'success');
+        setIsAddCompetitorModalOpen(false);
+        setCompetitorName('');
+        setCompetitorReviewsText('');
+        refreshCompetitors(); // refresh summary & scores automatically
+      } else {
+        addToast('Failed to process competitor data.', 'error');
+      }
+    } catch (err) {
+      addToast('Network error while processing competitor data.', 'error');
+    } finally {
+      setIsAddingCompetitor(false);
+    }
+  };
+
+  const handleUpgrade = async () => {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+    try {
+      const orderRes = await fetch(`${API_URL}/api/payments/create-order?amount=4999&property=${encodeURIComponent(activeProperty || 'Unassigned')}`, { method: 'POST' });
+      const order = await orderRes.json();
+      
+      const options = {
+        key: order.key_id || "rzp_test_placeholder",
+        amount: order.amount * 100,
+        currency: order.currency,
+        name: "SentiNaut",
+        description: "Boutique Plan Upgrade",
+        order_id: order.order_id,
+        handler: async function (response) {
+          const verifyRes = await fetch(`${API_URL}/api/payments/verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              property: activeProperty || 'Unassigned',
+              plan: 'boutique',
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature
+            })
+          });
+          if (verifyRes.ok) {
+            addToast("Successfully upgraded to Boutique plan!", "success");
+            window.location.reload();
+          } else {
+            addToast("Payment verification failed.", "error");
+          }
+        },
+        prefill: {
+          name: user?.name,
+          email: user?.email,
+        },
+        theme: {
+          color: "#0f172a"
+        }
+      };
+      
+      if (window.Razorpay) {
+        const rzp1 = new window.Razorpay(options);
+        rzp1.open();
+      } else {
+        addToast("Payment gateway could not be loaded. Check your connection.", "error");
+      }
+    } catch (err) {
+      addToast("Failed to initialize payment.", "error");
+    }
+  };
+
+  const activePropertyObj = properties.find(p => p.name === activeProperty) || properties[0] || {};
+  const currentPlan = activePropertyObj.plan || 'trial';
+  const aiUsage = activePropertyObj.ai_usage_month || 0;
 
   return (
     <div className="space-y-6">
@@ -249,38 +350,45 @@ export function OwnerDashboard() {
         <Card>
           <CardHeader className="flex flex-row justify-between items-center pb-2">
             <CardTitle>Competitor Benchmark</CardTitle>
-            <Button size="sm" variant="outline" onClick={refreshCompetitors} isLoading={isRefreshingComps}>Refresh</Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => setIsAddCompetitorModalOpen(true)}>Add Data</Button>
+              <Button size="sm" variant="outline" onClick={refreshCompetitors} isLoading={isRefreshingComps}>Refresh</Button>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className={`space-y-5 transition-opacity ${isRefreshingComps ? 'opacity-50' : 'opacity-100'}`}>
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-slate-900 dark:text-slate-200">{activeProperty || 'Your Property'}</span>
-                  <span className="text-primary-600 font-bold">{competitorScores.own}/10</span>
+            {currentPlan === 'trial' ? (
+              <div className="flex flex-col items-center justify-center py-8 px-4 text-center space-y-4">
+                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                 </div>
-                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-                  <div className="bg-primary-600 h-2 rounded-full" style={{ width: `${(competitorScores.own / 10) * 100}%` }}></div>
+                <div>
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-lg">Competitor Benchmarking is Locked</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mt-1">Unlock AI-driven competitor analysis and unlimited review processing.</p>
                 </div>
+                <Button onClick={handleUpgrade} className="mt-2">Upgrade to Boutique</Button>
               </div>
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-slate-600 dark:text-slate-400">Competitor A</span>
-                  <span className="font-medium text-slate-900 dark:text-slate-200">{competitorScores.compA}/10</span>
-                </div>
-                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-                  <div className="bg-slate-400 h-2 rounded-full" style={{ width: `${(competitorScores.compA / 10) * 100}%` }}></div>
-                </div>
+            ) : (
+              <div className={`space-y-5 transition-opacity ${isRefreshingComps ? 'opacity-50' : 'opacity-100'}`}>
+                {Object.entries(competitorScores).map(([key, data]) => {
+                  const colorClass = key === 'own' ? 'bg-primary-600' : 'bg-slate-400';
+                  return (
+                    <div key={key}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className={key === 'own' ? 'font-medium text-slate-900 dark:text-slate-200' : 'text-slate-600 dark:text-slate-400'}>
+                          {data.name}
+                        </span>
+                        <span className={key === 'own' ? 'text-primary-600 font-bold' : 'font-medium text-slate-900 dark:text-slate-200'}>
+                          {data.rating}/10
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
+                        <div className={`${colorClass} h-2 rounded-full`} style={{ width: `${(data.rating / 10) * 100}%` }}></div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-slate-600 dark:text-slate-400">Competitor B</span>
-                  <span className="font-medium text-slate-900 dark:text-slate-200">{competitorScores.compB}/10</span>
-                </div>
-                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-                  <div className="bg-slate-400 h-2 rounded-full" style={{ width: `${(competitorScores.compB / 10) * 100}%` }}></div>
-                </div>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -396,6 +504,35 @@ export function OwnerDashboard() {
           <div className="flex justify-end gap-3 pt-4">
             <Button variant="secondary" onClick={() => setIsManagerModalOpen(false)}>Cancel</Button>
             <Button type="submit">Send Invite</Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal isOpen={isAddCompetitorModalOpen} onClose={() => setIsAddCompetitorModalOpen(false)} title="Add Competitor Data">
+        <form onSubmit={handleAddCompetitorData} className="space-y-4">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Manually add reviews for a competitor to benchmark against your property. Separate each review with a blank line.
+          </p>
+          <Input 
+            label="Competitor Name" 
+            placeholder="e.g. The Rival Resort" 
+            required 
+            value={competitorName} 
+            onChange={(e) => setCompetitorName(e.target.value)} 
+          />
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium text-slate-900 dark:text-slate-200">Competitor Reviews</label>
+            <textarea 
+              value={competitorReviewsText}
+              onChange={(e) => setCompetitorReviewsText(e.target.value)}
+              placeholder="Paste raw reviews here...&#10;&#10;Review 1 text...&#10;&#10;Review 2 text..."
+              className="w-full h-40 p-3 rounded-xl border border-black/10 dark:border-white/10 bg-transparent text-sm resize-none focus:outline-none focus:border-primary-500 transition-colors"
+              required
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="secondary" onClick={() => setIsAddCompetitorModalOpen(false)}>Cancel</Button>
+            <Button type="submit" isLoading={isAddingCompetitor}>Analyze Competitor Data</Button>
           </div>
         </form>
       </Modal>
