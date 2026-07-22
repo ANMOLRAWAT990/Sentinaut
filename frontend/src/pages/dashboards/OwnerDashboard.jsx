@@ -187,9 +187,10 @@ export function OwnerDashboard() {
   };
 
   const handleUpgrade = async () => {
+    const targetProp = activeProperty || (properties.length > 0 ? properties[0].name : 'Unassigned');
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     try {
-      const orderRes = await fetch(`${API_URL}/api/payments/create-order?amount=4999&property=${encodeURIComponent(activeProperty || 'Unassigned')}`, { method: 'POST' });
+      const orderRes = await fetch(`${API_URL}/api/payments/create-order?amount=4999&property=${encodeURIComponent(targetProp)}`, { method: 'POST' });
       const order = await orderRes.json();
       
       const options = {
@@ -204,7 +205,7 @@ export function OwnerDashboard() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              property: activeProperty || 'Unassigned',
+              property: targetProp,
               plan: 'boutique',
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
