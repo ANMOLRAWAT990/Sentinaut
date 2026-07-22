@@ -28,7 +28,7 @@ export function ReviewsIndex() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    document.title = "Reviews · SentiNaut";
+    document.title = "SentiNaut";
     fetchReviews();
   }, [activeProperty]);
 

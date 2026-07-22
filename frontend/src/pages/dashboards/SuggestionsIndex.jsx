@@ -23,7 +23,7 @@ export function SuggestionsIndex() {
   };
 
   React.useEffect(() => {
-    document.title = "Suggestions · SentiNaut";
+    document.title = "SentiNaut";
     if (user?.role === 'manager' || user?.role === 'owner') {
       fetchInsights();
     }

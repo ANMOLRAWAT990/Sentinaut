@@ -22,7 +22,7 @@ export function SettingsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   React.useEffect(() => {
-    document.title = "Settings · SentiNaut";
+    document.title = "SentiNaut";
     if (!user || user.role !== 'owner') return;
       const propQuery = activeProperty || user?.property || 'Unassigned';
       fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/properties?owner_email=${user.email}`)

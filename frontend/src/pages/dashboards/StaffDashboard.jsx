@@ -53,7 +53,7 @@ export function StaffDashboard() {
 
   // Initial data load to preserve the "table" feeling
   React.useEffect(() => {
-    document.title = "Staff Console · SentiNaut";
+    document.title = "SentiNaut";
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     if (user?.property) {
       fetch(`${API_URL}/api/reviews?property=${encodeURIComponent(user.property)}`)

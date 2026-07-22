@@ -11,7 +11,7 @@ export function GuestsIndex() {
   const { addToast } = useToast();
 
   useEffect(() => {
-    document.title = "Guests · SentiNaut";
+    document.title = "SentiNaut";
     if (!user) return;
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     const propQuery = activeProperty || user.property || 'Unassigned';
