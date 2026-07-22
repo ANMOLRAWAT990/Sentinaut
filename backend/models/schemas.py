@@ -116,3 +116,8 @@ class ResetPasswordRequest(BaseModel):
 
 class NewsletterRequest(BaseModel):
     email: EmailStr
+
+class ContactRequest(BaseModel):
+    name: str
+    email: EmailStr
+    message: str

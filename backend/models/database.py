@@ -22,3 +22,4 @@ insights_collection = db.insights
 competitors_collection = db.competitors
 password_resets_collection = db.password_resets
 newsletter_subscribers_collection = db.newsletter_subscribers
+contact_messages_collection = db.contact_messages

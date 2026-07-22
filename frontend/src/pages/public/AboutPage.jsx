@@ -5,12 +5,46 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export function AboutPage() {
   const [toast, setToast] = useState(null);
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactMessage, setContactMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   
   const showToast = (message) => {
     setToast(message);
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: contactName,
+          email: contactEmail,
+          message: contactMessage
+        })
+      });
+      if (res.ok) {
+        showToast('Message sent! We will be in touch soon.');
+        setContactName('');
+        setContactEmail('');
+        setContactMessage('');
+      } else {
+        const data = await res.json();
+        showToast(data.detail || 'Failed to send message.');
+      }
+    } catch (err) {
+      showToast('An error occurred while sending the message.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -222,17 +256,19 @@ export function AboutPage() {
         <div className="px-6 sm:px-8 lg:px-16 py-24 sm:py-32 max-w-5xl mx-auto flex flex-col items-center">
           <h2 className="text-3xl md:text-5xl font-serif text-slate-900 dark:text-white mb-6">Let's Connect</h2>
           <p className="text-slate-500 font-light mb-12 text-center max-w-xl">Whether you're interested in deploying SentiNaut or just want to discuss hospitality engineering, I'd love to hear from you.</p>
-          <form className="w-full max-w-md space-y-8">
+          <form className="w-full max-w-md space-y-8" onSubmit={handleContactSubmit}>
             <div>
-              <input type="text" placeholder="Full Name" className="w-full px-0 py-3 border-b border-slate-300 dark:border-slate-700 bg-transparent text-slate-900 dark:text-white focus:border-slate-900 dark:focus:border-white focus:outline-none transition-colors rounded-none placeholder:text-slate-400 font-light" required/>
+              <input type="text" placeholder="Full Name" value={contactName} onChange={(e) => setContactName(e.target.value)} className="w-full px-0 py-3 border-b border-slate-300 dark:border-slate-700 bg-transparent text-slate-900 dark:text-white focus:border-slate-900 dark:focus:border-white focus:outline-none transition-colors rounded-none placeholder:text-slate-400 font-light" required disabled={isSubmitting}/>
             </div>
             <div>
-              <input type="email" placeholder="Email Address" className="w-full px-0 py-3 border-b border-slate-300 dark:border-slate-700 bg-transparent text-slate-900 dark:text-white focus:border-slate-900 dark:focus:border-white focus:outline-none transition-colors rounded-none placeholder:text-slate-400 font-light" required/>
+              <input type="email" placeholder="Email Address" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} className="w-full px-0 py-3 border-b border-slate-300 dark:border-slate-700 bg-transparent text-slate-900 dark:text-white focus:border-slate-900 dark:focus:border-white focus:outline-none transition-colors rounded-none placeholder:text-slate-400 font-light" required disabled={isSubmitting}/>
             </div>
             <div>
-              <textarea placeholder="Message" rows="3" className="w-full px-0 py-3 border-b border-slate-300 dark:border-slate-700 bg-transparent text-slate-900 dark:text-white focus:border-slate-900 dark:focus:border-white focus:outline-none transition-colors rounded-none placeholder:text-slate-400 font-light resize-none" required></textarea>
+              <textarea placeholder="Message" rows="3" value={contactMessage} onChange={(e) => setContactMessage(e.target.value)} className="w-full px-0 py-3 border-b border-slate-300 dark:border-slate-700 bg-transparent text-slate-900 dark:text-white focus:border-slate-900 dark:focus:border-white focus:outline-none transition-colors rounded-none placeholder:text-slate-400 font-light resize-none" required disabled={isSubmitting}></textarea>
             </div>
-            <button type="submit" className="w-full py-4 border border-slate-900 dark:border-white text-slate-900 dark:text-white font-medium uppercase tracking-widest text-sm hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">Send Transmission</button>
+            <button type="submit" disabled={isSubmitting} className="w-full py-4 border border-slate-900 dark:border-white text-slate-900 dark:text-white font-medium uppercase tracking-widest text-sm hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors disabled:opacity-50">
+              {isSubmitting ? 'Sending...' : 'Send Transmission'}
+            </button>
           </form>
         </div>
       </section>

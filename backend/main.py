@@ -4,8 +4,8 @@ from typing import List, Optional
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 import bcrypt
-from models.database import reviews_collection, actions_collection, users_collection, properties_collection, checkouts_collection, invites_collection, notifications_collection, insights_collection, competitors_collection, password_resets_collection, newsletter_subscribers_collection
-from models.schemas import Review, Action, Property, SignupRequest, LoginRequest, UserResponse, Checkout, UserUpdate, PropertyUpdate, Notification, ChatRequest, ForgotPasswordRequest, ResetPasswordRequest, PaymentVerifyRequest, NewsletterRequest
+from models.database import reviews_collection, actions_collection, users_collection, properties_collection, checkouts_collection, invites_collection, notifications_collection, insights_collection, competitors_collection, password_resets_collection, newsletter_subscribers_collection, contact_messages_collection
+from models.schemas import Review, Action, Property, SignupRequest, LoginRequest, UserResponse, Checkout, UserUpdate, PropertyUpdate, Notification, ChatRequest, ForgotPasswordRequest, ResetPasswordRequest, PaymentVerifyRequest, NewsletterRequest, ContactRequest
 from datetime import datetime, timedelta
 import uuid
 
@@ -1031,4 +1031,26 @@ def subscribe_newsletter(req: NewsletterRequest):
         return {'message': 'You are already subscribed!'}
     newsletter_subscribers_collection.insert_one({'email': req.email, 'subscribed_at': datetime.utcnow().isoformat()})
     return {'message': 'Successfully subscribed to the newsletter!'}
+
+@app.post("/api/contact")
+@limiter.limit("3/hour")
+def submit_contact_form(request: Request, req: ContactRequest, background_tasks: BackgroundTasks):
+    message_doc = {
+        "name": req.name,
+        "email": req.email,
+        "message": req.message,
+        "created_at": datetime.utcnow().isoformat()
+    }
+    contact_messages_collection.insert_one(message_doc)
+
+    # Email to admin
+    html_body = f"""
+    <h3>New Contact Inquiry</h3>
+    <p><strong>Name:</strong> {req.name}</p>
+    <p><strong>Email:</strong> {req.email}</p>
+    <p><strong>Message:</strong><br/>{req.message}</p>
+    """
+    background_tasks.add_task(email_service.send_email, config.SMTP_USER, "New SentiNaut Contact Inquiry", html_body)
+
+    return {"message": "Message sent successfully. We will be in touch soon!"}
 
