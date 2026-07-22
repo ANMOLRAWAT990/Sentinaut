@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
@@ -9,6 +10,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 export function OwnerDashboard() {
   const { user, activeProperty } = useAuth();
+  const navigate = useNavigate();
   const [dateRange, setDateRange] = useState('7days');
   const [analyticsData, setAnalyticsData] = useState(null);
   const { addToast } = useToast();
@@ -186,60 +188,6 @@ export function OwnerDashboard() {
     }
   };
 
-  const handleUpgrade = async () => {
-    const targetProp = activeProperty || (properties.length > 0 ? properties[0].name : 'Unassigned');
-    const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-    try {
-      const orderRes = await fetch(`${API_URL}/api/payments/create-order?amount=4999&property=${encodeURIComponent(targetProp)}`, { method: 'POST' });
-      const order = await orderRes.json();
-      
-      const options = {
-        key: order.key_id || "rzp_test_placeholder",
-        amount: order.amount * 100,
-        currency: order.currency,
-        name: "SentiNaut",
-        description: "Boutique Plan Upgrade",
-        order_id: order.order_id,
-        handler: async function (response) {
-          const verifyRes = await fetch(`${API_URL}/api/payments/verify`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              property: targetProp,
-              plan: 'boutique',
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_signature: response.razorpay_signature
-            })
-          });
-          if (verifyRes.ok) {
-            addToast("Successfully upgraded to Boutique plan!", "success");
-            window.location.reload();
-          } else {
-            const errData = await verifyRes.json();
-            addToast(`Payment verification failed: ${errData.detail || 'Unknown error'}`, "error");
-          }
-        },
-        prefill: {
-          name: user?.name,
-          email: user?.email,
-        },
-        theme: {
-          color: "#0f172a"
-        }
-      };
-      
-      if (window.Razorpay) {
-        const rzp1 = new window.Razorpay(options);
-        rzp1.open();
-      } else {
-        addToast("Payment gateway could not be loaded. Check your connection.", "error");
-      }
-    } catch (err) {
-      addToast("Failed to initialize payment.", "error");
-    }
-  };
-
   const activePropertyObj = properties.find(p => p.name === activeProperty) || properties[0] || {};
   const currentPlan = activePropertyObj.plan || 'trial';
   const aiUsage = activePropertyObj.ai_usage_month || 0;
@@ -367,7 +315,7 @@ export function OwnerDashboard() {
                   <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-lg">Competitor Benchmarking is Locked</h3>
                   <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mt-1">Unlock AI-driven competitor analysis and unlimited review processing.</p>
                 </div>
-                <Button onClick={handleUpgrade} className="mt-2">Upgrade to Boutique</Button>
+                <Button onClick={() => navigate('/pricing')} className="mt-2">View Pricing Plans</Button>
               </div>
             ) : (
               <div className={`space-y-5 transition-opacity ${isRefreshingComps ? 'opacity-50' : 'opacity-100'}`}>
