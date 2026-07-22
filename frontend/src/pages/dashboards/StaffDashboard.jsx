@@ -122,11 +122,19 @@ export function StaffDashboard() {
       return;
     }
     
+    // Clean phone number (remove spaces, +, -, etc)
+    const cleanedPhone = checkoutPhone.replace(/\D/g, '');
+    
     // Generate WhatsApp wa.me link
     const message = encodeURIComponent(`Hi ${checkoutName}, thank you for staying with us! We hope you had a great time. We'd love it if you could leave a review here: https://g.page/r/your-google-link/review`);
-    const waUrl = `https://wa.me/${checkoutPhone}?text=${message}`;
+    const waUrl = `https://wa.me/${cleanedPhone}?text=${message}`;
     
-    window.open(waUrl, '_blank');
+    const link = document.createElement('a');
+    link.href = waUrl;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     addToast('WhatsApp opened with review template!', 'success');
     
     setCheckoutName('');

@@ -216,7 +216,8 @@ export function OwnerDashboard() {
             addToast("Successfully upgraded to Boutique plan!", "success");
             window.location.reload();
           } else {
-            addToast("Payment verification failed.", "error");
+            const errData = await verifyRes.json();
+            addToast(`Payment verification failed: ${errData.detail || 'Unknown error'}`, "error");
           }
         },
         prefill: {

@@ -9,6 +9,7 @@ import { ChatBot } from './components/ui';
 
 import { LandingPage } from './pages/public/LandingPage';
 import { AboutPage } from './pages/public/AboutPage';
+import PricingPage from './pages/public/PricingPage';
 import { LoginPage } from './pages/public/LoginPage';
 import { SignupPage } from './pages/public/SignupPage';
 import ResetPasswordPage from './pages/public/ResetPasswordPage';
@@ -50,6 +51,9 @@ export default function App() {
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
             </Route>
+        
+        {/* Unrestricted Public Routes */}
+        <Route path="/pricing" element={<PricingPage />} />
 
             {/* Protected Dashboard Routes */}
             <Route path="/dashboard" element={<ProtectedRoute />}>

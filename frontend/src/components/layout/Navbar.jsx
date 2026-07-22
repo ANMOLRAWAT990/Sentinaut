@@ -169,10 +169,16 @@ export function Navbar() {
               )}
             </div>
             
+            {user.role === 'owner' && (
+              <Link to="/pricing" className="text-sm font-medium text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400">Plans & Billing</Link>
+            )}
             <button onClick={handleLogout} className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">Sign out</button>
           </>
         ) : (
-          <Link to="/login" className={linkClass('/login')}>Authenticate</Link>
+          <>
+            <Link to="/pricing" className={linkClass('/pricing')}>Pricing</Link>
+            <Link to="/login" className={linkClass('/login')}>Authenticate</Link>
+          </>
         )}
         <div className="w-px h-4 bg-slate-200 dark:bg-slate-800"></div>
         <ThemeToggle />

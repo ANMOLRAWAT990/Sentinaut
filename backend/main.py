@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request, Depends, Query
+from fastapi import FastAPI, HTTPException, Request, Depends, Query, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 from bson.objectid import ObjectId
@@ -293,6 +293,17 @@ def register(request: Request, data: SignupRequest):
         "dark_mode": False
     }
     result = users_collection.insert_one(new_user)
+    
+    if data.role != "owner":
+        notifications_collection.insert_one({
+            "title": "New Team Member",
+            "message": f"{data.name} just joined as {data.role} for {data.property}.",
+            "type": "alert",
+            "property": data.property,
+            "is_read": False,
+            "timestamp": datetime.utcnow().isoformat()
+        })
+        
     created = users_collection.find_one({"_id": result.inserted_id})
     return {"message": "Account created successfully", "user": user_helper(created)}
 
@@ -726,6 +737,17 @@ def create_checkout(checkout: Checkout):
         checkout.timestamp = datetime.utcnow().isoformat()
     checkout_dict = checkout.model_dump(exclude={"id"})
     new_checkout = checkouts_collection.insert_one(checkout_dict)
+    
+    # Generate notification for owner/manager
+    notifications_collection.insert_one({
+        "title": "New Checkout",
+        "message": f"Guest {checkout.guestName} was just checked out.",
+        "type": "checkout",
+        "property": checkout.property,
+        "is_read": False,
+        "timestamp": datetime.utcnow().isoformat()
+    })
+    
     created_checkout = checkouts_collection.find_one({"_id": new_checkout.inserted_id})
     return checkout_helper(created_checkout)
 
@@ -825,7 +847,7 @@ def patch_user(id: str, user_update: UserUpdate):
 
 # --- Magic Links / Invites ---
 @app.post("/api/auth/invite", status_code=201)
-def invite_user(email: str, role: str, property: str = "Unassigned"):
+def invite_user(email: str, role: str, background_tasks: BackgroundTasks, property: str = "Unassigned"):
     token = str(uuid.uuid4())
     expiry = (datetime.utcnow() + timedelta(hours=24)).isoformat()
     invite = {
@@ -841,14 +863,11 @@ def invite_user(email: str, role: str, property: str = "Unassigned"):
     invite_url = f"{config.FRONTEND_URL}/register?token={token}&email={email}"
     html_body = f"<p>You have been invited to join SentiNaut as a {role} for {property}.</p><p><a href='{invite_url}'>Click here to register</a></p>"
     
-    success = email_service.send_email(email, "SentiNaut Invitation", html_body)
-    if not success:
-        return {"message": "Invite generated, but failed to send email. Check SMTP settings.", "token": token}
-        
+    background_tasks.add_task(email_service.send_email, email, "SentiNaut Invitation", html_body)
     return {"message": "Invite generated and sent via email.", "token": token}
 
 @app.post("/api/auth/forgot-password")
-def forgot_password(req: ForgotPasswordRequest):
+def forgot_password(req: ForgotPasswordRequest, background_tasks: BackgroundTasks):
     user = users_collection.find_one({"email": req.email})
     if not user:
         # Don't reveal if email exists or not
@@ -865,7 +884,7 @@ def forgot_password(req: ForgotPasswordRequest):
     reset_url = f"{config.FRONTEND_URL}/reset-password/{token}"
     html_body = f"<p>You requested a password reset. Click the link below to reset it (valid for 1 hour).</p><p><a href='{reset_url}'>Reset Password</a></p>"
     
-    email_service.send_email(req.email, "SentiNaut Password Reset", html_body)
+    background_tasks.add_task(email_service.send_email, req.email, "SentiNaut Password Reset", html_body)
     return {"message": "If that email exists, a password reset link has been sent."}
 
 @app.post("/api/auth/reset-password")
