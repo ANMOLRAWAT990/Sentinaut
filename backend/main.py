@@ -282,6 +282,14 @@ def register(request: Request, data: SignupRequest):
     if users_collection.find_one({"email": data.email}):
         raise HTTPException(status_code=400, detail="An account with this email already exists.")
 
+    if data.role == "manager":
+        prop = properties_collection.find_one({"name": data.property})
+        plan = prop.get("plan", "trial") if prop else "trial"
+        if plan == "boutique":
+            existing_managers = users_collection.count_documents({"property": data.property, "role": "manager"})
+            if existing_managers >= 10:
+                raise HTTPException(status_code=403, detail="Manager limit reached for Boutique plan (max 10).")
+
     hashed = bcrypt.hashpw(data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     new_user = {
         "name": data.name,
@@ -404,18 +412,23 @@ def analyze_reviews(payload: dict):
     custom_tags = prop.get("custom_tags", []) if prop else []
     
     current_month = datetime.utcnow().strftime("%Y-%m")
-    
+    plan = "trial"
+
     if prop:
         usage = prop.get("ai_usage_month", 0)
         reset_month = prop.get("usage_reset_month", "")
         plan = prop.get("plan", "trial")
-        
+
         if reset_month != current_month:
             usage = 0
-            
+
         if plan == "trial" and usage + len(texts) > 50:
             raise HTTPException(status_code=403, detail="Trial limit reached. Please upgrade to process more reviews.")
-            
+        elif plan == "boutique" and usage + len(texts) > 1000:
+            raise HTTPException(status_code=403, detail="Boutique limit reached (1000 reviews/mo). Please upgrade to Resort.")
+        elif plan in ["resort", "enterprise"] and usage + len(texts) > 10000:
+            raise HTTPException(status_code=403, detail="Fair usage limit reached (10000 reviews/mo).")
+
         properties_collection.update_one(
             {"name": prop_name},
             {"$set": {"ai_usage_month": usage + len(texts), "usage_reset_month": current_month}}
@@ -423,6 +436,9 @@ def analyze_reviews(payload: dict):
 
     is_competitor = payload.get("is_competitor", False)
     competitor_name = payload.get("competitor_name", None)
+
+    if is_competitor and plan in ["trial", "boutique"]:
+        raise HTTPException(status_code=403, detail="Competitor benchmarking is only available on Resort and Enterprise plans.")
 
     saved_reviews = []
     actions = []
@@ -848,6 +864,15 @@ def patch_user(id: str, user_update: UserUpdate):
 # --- Magic Links / Invites ---
 @app.post("/api/auth/invite", status_code=201)
 def invite_user(email: str, role: str, background_tasks: BackgroundTasks, property: str = "Unassigned"):
+    prop = properties_collection.find_one({"name": property})
+    plan = prop.get("plan", "trial") if prop else "trial"
+
+    if role == "manager" and plan == "boutique":
+        existing_managers = users_collection.count_documents({"property": property, "role": "manager"})
+        pending_invites = invites_collection.count_documents({"property": property, "role": "manager"})
+        if existing_managers + pending_invites >= 10:
+            raise HTTPException(status_code=403, detail="Manager limit reached for Boutique plan (max 10).")
+
     token = str(uuid.uuid4())
     expiry = (datetime.utcnow() + timedelta(hours=24)).isoformat()
     invite = {
