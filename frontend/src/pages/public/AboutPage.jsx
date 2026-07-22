@@ -184,9 +184,9 @@ export function AboutPage() {
             SentiNaut natively interfaces with your existing hospitality stack, ensuring zero operational downtime.
           </p>
           <div className="flex flex-wrap justify-center gap-12 opacity-70 grayscale">
-            <a href="https://developer-tripadvisor.com" target="_blank" rel="noopener noreferrer" className="text-xl font-serif tracking-widest text-slate-900 dark:text-white hover:text-primary-600 transition-colors">TripAdvisor API</a>
-            <a href="https://developers.booking.com" target="_blank" rel="noopener noreferrer" className="text-xl font-serif tracking-widest text-slate-900 dark:text-white hover:text-primary-600 transition-colors">Booking.com</a>
-            <a href="https://business.whatsapp.com" target="_blank" rel="noopener noreferrer" className="text-xl font-serif tracking-widest text-slate-900 dark:text-white hover:text-primary-600 transition-colors">WhatsApp</a>
+            <a href="https://www.tripadvisor.com" target="_blank" rel="noopener noreferrer" className="text-xl font-serif tracking-widest text-slate-900 dark:text-white hover:text-primary-600 transition-colors">TripAdvisor</a>
+            <a href="https://www.booking.com" target="_blank" rel="noopener noreferrer" className="text-xl font-serif tracking-widest text-slate-900 dark:text-white hover:text-primary-600 transition-colors">Booking.com</a>
+            <a href="https://www.whatsapp.com" target="_blank" rel="noopener noreferrer" className="text-xl font-serif tracking-widest text-slate-900 dark:text-white hover:text-primary-600 transition-colors">WhatsApp</a>
             <a href="https://www.oracle.com/hospitality/opera" target="_blank" rel="noopener noreferrer" className="text-xl font-serif tracking-widest text-slate-900 dark:text-white hover:text-primary-600 transition-colors">Opera PMS</a>
           </div>
         </div>
