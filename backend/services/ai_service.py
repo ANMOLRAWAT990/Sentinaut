@@ -4,6 +4,7 @@ from google.generativeai.types import GenerationConfig
 from tenacity import retry, stop_after_attempt, wait_exponential
 import json
 import logging
+import requests
 from config import config
 
 logger = logging.getLogger(__name__)
@@ -153,4 +154,19 @@ class AIService:
 
     def chat(self, message: str, role: str) -> str:
         prompt = CHATBOT_PROMPT.format(message=message, role=role)
-        return self.provider.generate_text(prompt).strip()
+        chat_api_key = getattr(config, 'GEMINI_CHAT_API_KEY', None)
+        if chat_api_key:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={chat_api_key}"
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}]
+            }
+            try:
+                response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'})
+                response.raise_for_status()
+                data = response.json()
+                return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+            except Exception as e:
+                logger.error(f"Chat API Error: {e}")
+                raise e
+        else:
+            return self.provider.generate_text(prompt).strip()

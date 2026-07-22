@@ -14,6 +14,10 @@ class Config:
         return os.getenv("GEMINI_API_KEY")
 
     @property
+    def GEMINI_CHAT_API_KEY(self):
+        return os.getenv("GEMINI_CHAT_API_KEY")
+
+    @property
     def TWILIO_ACCOUNT_SID(self):
         return os.getenv("TWILIO_ACCOUNT_SID")
 

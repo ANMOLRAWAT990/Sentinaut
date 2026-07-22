@@ -233,7 +233,10 @@ def property_helper(prop) -> dict:
         "status": prop.get("status", "Active"),
         "owner_email": prop.get("owner_email"),
         "is_active": prop.get("is_active", True),
-        "custom_tags": prop.get("custom_tags", [])
+        "custom_tags": prop.get("custom_tags", []),
+        "plan": prop.get("plan", "trial"),
+        "ai_usage_month": prop.get("ai_usage_month", 0),
+        "usage_reset_month": prop.get("usage_reset_month", "")
     }
 
 @app.get("/api/properties", response_model=List[Property])
