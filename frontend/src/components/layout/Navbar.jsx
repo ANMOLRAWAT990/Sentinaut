@@ -116,8 +116,10 @@ export function Navbar() {
           )}
         </div>
         {!user && (
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-6 ml-4">
             <Link to="/about" className={linkClass('/about')}>About Us</Link>
+            <a href="/#features" className="text-sm font-medium transition-colors text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">Features</a>
+            <Link to="/pricing" className={linkClass('/pricing')}>Pricing</Link>
           </div>
         )}
       </div>
@@ -175,12 +177,12 @@ export function Navbar() {
             <button onClick={handleLogout} className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">Sign out</button>
           </>
         ) : (
-          <>
-            <Link to="/pricing" className={linkClass('/pricing')}>Pricing</Link>
-            <Link to="/login" className={linkClass('/login')}>Authenticate</Link>
-          </>
+          <div className="flex items-center gap-4">
+            <Link to="/login" className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">Log in</Link>
+            <Link to="/signup" className="text-sm font-medium bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm shadow-primary-600/20">Get Started</Link>
+          </div>
         )}
-        <div className="w-px h-4 bg-slate-200 dark:bg-slate-800"></div>
+        <div className="hidden sm:block w-px h-4 bg-slate-200 dark:bg-slate-800"></div>
         <ThemeToggle />
       </div>
     </nav>
