@@ -118,7 +118,7 @@ export function Navbar() {
         {!user && (
           <div className="hidden md:flex items-center gap-6 ml-4">
             <Link to="/about" className={linkClass('/about')}>About Us</Link>
-            <a href="/#features" className="text-sm font-medium transition-colors text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">Features</a>
+            <Link to="/features" className={linkClass('/features')}>Features</Link>
             <Link to="/pricing" className={linkClass('/pricing')}>Pricing</Link>
           </div>
         )}

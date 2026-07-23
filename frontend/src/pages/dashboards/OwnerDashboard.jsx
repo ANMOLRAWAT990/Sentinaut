@@ -244,31 +244,35 @@ export function OwnerDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-slate-200 tracking-tighter">{analyticsData?.healthScore || '0.0'}</span>
-              <span className={`text-sm font-medium ${analyticsData?.periodOverPeriod >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+            <p className="text-xs uppercase tracking-widest font-semibold text-slate-500 dark:text-slate-400 mb-2">Overall Health Score</p>
+            <div className="flex flex-col items-start gap-1">
+              <span className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-slate-200 tracking-tighter leading-none">{analyticsData?.healthScore || '0.0'}</span>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${analyticsData?.periodOverPeriod >= 0 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
                 {analyticsData?.periodOverPeriod > 0 ? '+' : ''}{analyticsData?.periodOverPeriod || 0}% PoP
               </span>
             </div>
-            <p className="text-xs uppercase tracking-widest font-semibold text-slate-400 dark:text-slate-500 mt-2">Overall Health Score</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-slate-200 tracking-tighter">{analyticsData?.totalReviews || 0}</span>
-              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">SLA: {analyticsData?.managerSLA || '0h'}</span>
+            <p className="text-xs uppercase tracking-widest font-semibold text-slate-500 dark:text-slate-400 mb-2">Total Reviews Analyzed</p>
+            <div className="flex flex-col items-start gap-1">
+              <span className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-slate-200 tracking-tighter leading-none">{analyticsData?.totalReviews || 0}</span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                SLA: {analyticsData?.managerSLA || '0h'}
+              </span>
             </div>
-            <p className="text-xs uppercase tracking-widest font-semibold text-slate-400 dark:text-slate-500 mt-2">Total Reviews Analyzed</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-slate-200 tracking-tighter">{analyticsData?.positiveSentimentPct || 0}%</span>
-              <span className="text-sm font-medium text-primary-600 dark:text-primary-400">Conv: {analyticsData?.conversionRate || '0%'}</span>
+            <p className="text-xs uppercase tracking-widest font-semibold text-slate-500 dark:text-slate-400 mb-2">Positive Sentiment</p>
+            <div className="flex flex-col items-start gap-1">
+              <span className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-slate-200 tracking-tighter leading-none">{analyticsData?.positiveSentimentPct || 0}%</span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400">
+                Conv: {analyticsData?.conversionRate || '0%'}
+              </span>
             </div>
-            <p className="text-xs uppercase tracking-widest font-semibold text-slate-400 dark:text-slate-500 mt-2">Positive Sentiment</p>
           </CardContent>
         </Card>
       </div>

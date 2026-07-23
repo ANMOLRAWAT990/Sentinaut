@@ -182,35 +182,6 @@ export function AboutPage() {
         </div>
       </section>
 
-      {/* Product Sections */}
-      <section id="features" className="bg-white dark:bg-slate-950">
-        <div className="px-6 sm:px-8 lg:px-16 py-24 sm:py-32 max-w-7xl mx-auto flex flex-col md:flex-row gap-16 items-center">
-          <div className="w-full md:w-1/2">
-            <h2 className="text-3xl md:text-5xl font-serif text-slate-900 dark:text-white mb-10 leading-tight">Platform Features</h2>
-            <div className="space-y-8 text-slate-600 dark:text-slate-400 font-light text-lg">
-              <div className="pb-8 border-b border-slate-200 dark:border-slate-800">
-                <p className="text-sm font-mono text-slate-400 mb-2">01</p>
-                <p className="text-slate-900 dark:text-slate-200 text-xl font-serif mb-2">Deterministic Sentiment</p>
-                <p>Precise sentiment extraction using Google Gemini inference for all guest interactions.</p>
-              </div>
-              <div className="pb-8 border-b border-slate-200 dark:border-slate-800">
-                <p className="text-sm font-mono text-slate-400 mb-2">02</p>
-                <p className="text-slate-900 dark:text-slate-200 text-xl font-serif mb-2">Automated Execution</p>
-                <p>Converts generic complaints into actionable, tracked staff duties.</p>
-              </div>
-              <div>
-                <p className="text-sm font-mono text-slate-400 mb-2">03</p>
-                <p className="text-slate-900 dark:text-slate-200 text-xl font-serif mb-2">Strict RBAC</p>
-                <p>Securely segment data between field staff, unit managers, and group owners.</p>
-              </div>
-            </div>
-          </div>
-          <div className="w-full md:w-1/2 h-[600px] overflow-hidden">
-             <img src="/images/login_resort.png" alt="Platform Features" className="w-full h-full object-cover hover:scale-105 transition-transform duration-[3000ms]" />
-          </div>
-        </div>
-      </section>
-
       <section id="integrations" className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
         <div className="px-6 sm:px-8 lg:px-16 py-24 sm:py-32 max-w-5xl mx-auto text-center">
           <h2 className="text-3xl md:text-5xl font-serif text-slate-900 dark:text-white mb-8">System Integrations</h2>

@@ -9,6 +9,7 @@ import { ChatBot } from './components/ui';
 
 import { LandingPage } from './pages/public/LandingPage';
 import { AboutPage } from './pages/public/AboutPage';
+import { FeaturesPage } from './pages/public/FeaturesPage';
 import PricingPage from './pages/public/PricingPage';
 import { LoginPage } from './pages/public/LoginPage';
 import { SignupPage } from './pages/public/SignupPage';
@@ -47,6 +48,7 @@ export default function App() {
             <Route element={<PublicLayout />}>
               <Route path="/" element={<LandingPage />} />
               <Route path="/about" element={<AboutPage />} />
+              <Route path="/features" element={<FeaturesPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
