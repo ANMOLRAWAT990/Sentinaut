@@ -9,6 +9,7 @@ export function SuggestionsIndex() {
   const { user, activeProperty } = useAuth();
   const { addToast } = useToast();
   const [insights, setInsights] = React.useState({ summary: "", anomalies: [], tasks: [] });
+  const [actions, setActions] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
   const [isGenerating, setIsGenerating] = React.useState(false);
 
@@ -22,11 +23,20 @@ export function SuggestionsIndex() {
     setLoading(false);
   };
 
+  const fetchActions = async () => {
+    try {
+      const propName = activeProperty || user?.property || 'Unassigned';
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/actions?property=${encodeURIComponent(propName)}`);
+      if(res.ok) setActions(await res.json());
+    } catch(e) {}
+  };
+
   React.useEffect(() => {
     document.title = "SentiNaut";
     if (user?.role === 'manager' || user?.role === 'owner') {
       fetchInsights();
     }
+    fetchActions();
   }, [user, activeProperty]);
 
   const generateInsights = async () => {
@@ -43,34 +53,56 @@ export function SuggestionsIndex() {
     finally { setIsGenerating(false); }
   };
 
+  const handleMarkExecuted = async (action) => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/actions/${action.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...action, status: 'Done' })
+      });
+      if (res.ok) {
+        addToast('Task marked as executed!', 'success');
+        fetchActions();
+      } else {
+        addToast('Failed to mark task', 'error');
+      }
+    } catch(e) {
+      addToast('Error marking task', 'error');
+    }
+  };
+
   const handleComingSoon = () => addToast('This functionality is currently locked in your environment.', 'info');
 
-  const renderStaffView = () => (
+  const renderStaffView = () => {
+    const pendingActions = actions.filter(a => a.status !== 'Done');
+    return (
     <div className="space-y-6">
       <div className="border border-black/10 dark:border-white/10 rounded-xl p-6 bg-black/[0.02] dark:bg-white/[0.02]">
         <h3 className="text-[14px] font-semibold text-slate-900 dark:text-slate-200">Operational Directive</h3>
         <p className="text-[13px] text-[#666666] dark:text-[#a1a1aa] mt-1">Execute the following tasks dispatched by the anomaly engine.</p>
       </div>
       <div className="space-y-2">
-        {[
-          { task: 'Inspect HVAC filter block in Room 302', priority: 'High', due: 'Immediate' },
-          { task: 'Restock auxiliary towels in primary pool sector', priority: 'Medium', due: 'Next Shift' }
-        ].map((t, i) => (
+        {pendingActions.length === 0 ? (
+          <EmptyState 
+            title="All Clear"
+            description="No pending operational tasks at the moment."
+          />
+        ) : pendingActions.map((t, i) => (
           <div key={i} className={`bg-white dark:bg-slate-900 border border-black/10 dark:border-white/10 ${t.priority === 'High' ? 'border-l-4 border-l-red-500' : t.priority === 'Medium' ? 'border-l-4 border-l-yellow-500' : ''} rounded-lg p-4 flex items-center justify-between group hover:border-black/20 dark:hover:border-white/20 transition-colors`}>
             <div>
               <p className="text-[14px] font-medium text-slate-900 dark:text-slate-200">{t.task}</p>
               <div className="flex gap-3 mt-1 text-[11px] font-mono text-slate-400">
                 <span>{t.priority} Priority</span>
                 <span>•</span>
-                <span>Due: {t.due}</span>
+                <span>Created: {new Date(t.created_at).toLocaleDateString()}</span>
               </div>
             </div>
-            <Button variant="secondary" size="sm" onClick={handleComingSoon} className="h-8 text-[12px]">Mark Executed</Button>
+            <Button variant="secondary" size="sm" onClick={() => handleMarkExecuted(t)} className="h-8 text-[12px]">Mark Executed</Button>
           </div>
         ))}
       </div>
     </div>
-  );
+  )};
 
   const renderManagerView = () => (
     <div className="space-y-6">

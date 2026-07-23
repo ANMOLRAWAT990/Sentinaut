@@ -57,11 +57,11 @@ export function ChatBot() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-emerald-600 dark:text-emerald-400 rounded-full shadow-[0_0_20px_rgba(5,150,105,0.2)] dark:shadow-[0_0_20px_rgba(5,150,105,0.4)] transition-all z-50 flex items-center justify-center hover:scale-105 active:scale-95 group"
+          className="fixed bottom-6 right-6 p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.2)] dark:shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all z-50 flex items-center justify-center hover:scale-105 active:scale-95 group"
         >
           <div className="relative">
             <Bot className="w-6 h-6" />
-            <Sparkles className="w-3 h-3 absolute -top-1 -right-1 text-emerald-500 dark:text-emerald-300 animate-pulse" />
+            <Sparkles className="w-3 h-3 absolute -top-1 -right-1 text-blue-500 dark:text-blue-300 animate-pulse" />
           </div>
         </button>
       )}
@@ -70,12 +70,12 @@ export function ChatBot() {
         <div className="fixed bottom-6 right-6 w-80 sm:w-96 h-[500px] max-h-[85vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl flex flex-col overflow-hidden z-50 transition-all transform scale-100 origin-bottom-right">
           <div className="bg-white dark:bg-slate-950 px-4 py-3 flex justify-between items-center text-slate-900 dark:text-white shadow-sm z-20 relative border-b border-slate-200 dark:border-slate-800">
             <div className="flex items-center gap-2">
-              <div className="relative bg-emerald-500/10 dark:bg-emerald-500/20 p-1.5 rounded-lg border border-emerald-500/20 dark:border-emerald-500/30">
-                <Bot className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <Sparkles className="w-2 h-2 absolute -top-0.5 -right-0.5 text-emerald-500 dark:text-emerald-300" />
+              <div className="relative bg-blue-500/10 dark:bg-blue-500/20 p-1.5 rounded-lg border border-blue-500/20 dark:border-blue-500/30">
+                <Bot className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <Sparkles className="w-2 h-2 absolute -top-0.5 -right-0.5 text-blue-500 dark:text-blue-300" />
               </div>
               <span className="font-bold text-sm tracking-wide">SentiBot</span>
-              <span className="text-[10px] bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-600 px-2 py-0.5 rounded-full uppercase tracking-wider font-medium text-emerald-600 dark:text-emerald-300">{role}</span>
+              <span className="text-[10px] bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-600 px-2 py-0.5 rounded-full uppercase tracking-wider font-medium text-blue-600 dark:text-blue-300">{role}</span>
             </div>
             <button onClick={() => setIsOpen(false)} className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">
               <X className="w-5 h-5" />
@@ -96,7 +96,7 @@ export function ChatBot() {
             <div className="relative h-full p-4 overflow-y-auto z-10 space-y-4">
               {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm ${msg.sender === 'user' ? 'bg-emerald-600 dark:bg-emerald-900/60 dark:border dark:border-emerald-800/50 text-white rounded-br-none shadow-sm' : msg.isError ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:border dark:border-red-900/50 dark:text-red-400 rounded-bl-none' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-bl-none shadow-sm'}`}>
+                <div className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm ${msg.sender === 'user' ? 'bg-blue-600 dark:bg-blue-900/60 dark:border dark:border-blue-800/50 text-white rounded-br-none shadow-sm' : msg.isError ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:border dark:border-red-900/50 dark:text-red-400 rounded-bl-none' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-bl-none shadow-sm'}`}>
                   {msg.sender === 'bot' ? (
                     <div className="prose prose-sm dark:prose-invert prose-p:leading-snug prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-headings:text-sm prose-headings:my-1">
                       <ReactMarkdown>{msg.text}</ReactMarkdown>
@@ -110,7 +110,7 @@ export function ChatBot() {
             {isLoading && (
               <div className="flex justify-start">
                 <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm">
-                  <Loader2 className="w-4 h-4 text-emerald-600 animate-spin" />
+                  <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
                 </div>
               </div>
             )}
@@ -125,13 +125,13 @@ export function ChatBot() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask SentiBot..."
-                className="w-full bg-slate-100 dark:bg-slate-800 text-sm text-slate-900 dark:text-white rounded-full pl-4 pr-12 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 border-none placeholder-slate-400"
+                className="w-full bg-slate-100 dark:bg-slate-800 text-sm text-slate-900 dark:text-white rounded-full pl-4 pr-12 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/50 border-none placeholder-slate-400"
                 disabled={isLoading}
               />
               <button
                 type="submit"
                 disabled={!input.trim() || isLoading}
-                className="absolute right-1.5 p-1.5 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="absolute right-1.5 p-1.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Send className="w-4 h-4" />
               </button>

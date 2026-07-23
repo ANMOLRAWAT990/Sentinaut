@@ -106,10 +106,10 @@ export function LandingPage() {
           >
             {[...Array(4)].map((_, i) => (
               <React.Fragment key={i}>
-                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">GRAND ROYALE</span>
-                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">THE OASIS</span>
-                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">ALPINE RETREAT</span>
-                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-emerald-500 transition-colors duration-300">COASTAL HAVEN</span>
+                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-blue-500 transition-colors duration-300">GRAND ROYALE</span>
+                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-blue-500 transition-colors duration-300">THE OASIS</span>
+                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-blue-500 transition-colors duration-300">ALPINE RETREAT</span>
+                <span className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-white tracking-widest cursor-pointer hover:text-blue-500 transition-colors duration-300">COASTAL HAVEN</span>
               </React.Fragment>
             ))}
           </motion.div>
