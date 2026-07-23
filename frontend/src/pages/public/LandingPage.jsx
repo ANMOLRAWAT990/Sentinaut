@@ -207,25 +207,26 @@ export function LandingPage() {
       </section>
 
       {/* Integrations Section */}
-      <section className="py-24 sm:py-32 w-full text-center bg-slate-950 relative overflow-hidden group">
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" 
-             style={{ background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.03) 0%, transparent 60%)' }}></div>
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.1 }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
-          className="max-w-4xl mx-auto px-6 relative z-10"
-        >
-          <h2 className="text-3xl sm:text-5xl font-serif tracking-tight text-white mb-8">Connect Your Ecosystem</h2>
-          <p className="text-lg text-white/60 mb-12 font-light leading-relaxed">
-            SentiNaut natively ingests data from TripAdvisor, Booking.com, WhatsApp Business API, and your internal property management systems seamlessly.
-          </p>
-          <div className="flex flex-wrap justify-center gap-6">
-            <button onClick={() => navigate('/about')} className="px-8 py-4 bg-white text-black text-sm uppercase tracking-widest font-semibold hover:bg-slate-200 hover:scale-105 transition-all inline-block duration-300 shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)]">View Integrations</button>
-          </div>
-        </motion.div>
+      <section id="integrations" className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+        <div className="px-6 sm:px-8 lg:px-16 py-24 sm:py-32 max-w-5xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.1 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+          >
+            <h2 className="text-3xl md:text-5xl font-serif text-slate-900 dark:text-white mb-8">System Integrations</h2>
+            <p className="text-lg text-slate-600 dark:text-slate-400 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
+              SentiNaut natively interfaces with your existing hospitality stack, ensuring zero operational downtime.
+            </p>
+            <div className="flex flex-wrap justify-center gap-12 opacity-70 grayscale">
+              <a href="https://www.tripadvisor.com" target="_blank" rel="noopener noreferrer" className="text-xl font-serif tracking-widest text-slate-900 dark:text-white hover:text-primary-600 transition-colors">TripAdvisor</a>
+              <a href="https://www.booking.com" target="_blank" rel="noopener noreferrer" className="text-xl font-serif tracking-widest text-slate-900 dark:text-white hover:text-primary-600 transition-colors">Booking.com</a>
+              <a href="https://www.whatsapp.com" target="_blank" rel="noopener noreferrer" className="text-xl font-serif tracking-widest text-slate-900 dark:text-white hover:text-primary-600 transition-colors">WhatsApp</a>
+              <a href="https://www.oracle.com/hospitality/opera" target="_blank" rel="noopener noreferrer" className="text-xl font-serif tracking-widest text-slate-900 dark:text-white hover:text-primary-600 transition-colors">Opera PMS</a>
+            </div>
+          </motion.div>
+        </div>
       </section>
 
 

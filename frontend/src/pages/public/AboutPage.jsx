@@ -182,20 +182,7 @@ export function AboutPage() {
         </div>
       </section>
 
-      <section id="integrations" className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
-        <div className="px-6 sm:px-8 lg:px-16 py-24 sm:py-32 max-w-5xl mx-auto text-center">
-          <h2 className="text-3xl md:text-5xl font-serif text-slate-900 dark:text-white mb-8">System Integrations</h2>
-          <p className="text-lg text-slate-600 dark:text-slate-400 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
-            SentiNaut natively interfaces with your existing hospitality stack, ensuring zero operational downtime.
-          </p>
-          <div className="flex flex-wrap justify-center gap-12 opacity-70 grayscale">
-            <a href="https://www.tripadvisor.com" target="_blank" rel="noopener noreferrer" className="text-xl font-serif tracking-widest text-slate-900 dark:text-white hover:text-primary-600 transition-colors">TripAdvisor</a>
-            <a href="https://www.booking.com" target="_blank" rel="noopener noreferrer" className="text-xl font-serif tracking-widest text-slate-900 dark:text-white hover:text-primary-600 transition-colors">Booking.com</a>
-            <a href="https://www.whatsapp.com" target="_blank" rel="noopener noreferrer" className="text-xl font-serif tracking-widest text-slate-900 dark:text-white hover:text-primary-600 transition-colors">WhatsApp</a>
-            <a href="https://www.oracle.com/hospitality/opera" target="_blank" rel="noopener noreferrer" className="text-xl font-serif tracking-widest text-slate-900 dark:text-white hover:text-primary-600 transition-colors">Opera PMS</a>
-          </div>
-        </div>
-      </section>
+
 
 
 
