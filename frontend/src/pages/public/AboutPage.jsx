@@ -101,11 +101,11 @@ export function AboutPage() {
           >
             <h3 className="text-xl sm:text-2xl font-serif text-slate-900 dark:text-white mb-6">The Legacy Fault</h3>
             <div className="space-y-4 text-sm text-slate-600 dark:text-slate-400 font-light leading-relaxed">
-              <p>Market legacy solutions rely on manual review parsing, resulting in high latency between guest experience and operational correction.</p>
+              <p>The Old Way: Most hotels rely on staff reading reviews manually, which is slow and prone to human error.</p>
               <ul className="list-disc pl-4 space-y-2 marker:text-slate-400">
-                <li>Stochastic sentiment interpretation by rushed staff.</li>
-                <li>Actionable insights trapped in unstructured text blobs.</li>
-                <li>Siloed data access between field staff and ownership.</li>
+                <li>Rushed staff misinterpreting guest feedback.</li>
+                <li>Important complaints buried in long paragraphs of text.</li>
+                <li>Poor communication between the ground staff and hotel owners.</li>
               </ul>
             </div>
           </motion.div>
@@ -119,10 +119,10 @@ export function AboutPage() {
           >
             <h3 className="text-xl sm:text-2xl font-serif text-slate-900 dark:text-white mb-6">The Resolution</h3>
             <div className="space-y-4 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              <p>An automated pipeline leveraging deterministic routing and LLM inference for high-fidelity data categorization.</p>
+              <p>The SentiNaut Solution: An automated AI system that reads your data and categorizes it instantly.</p>
               <ul className="list-disc pl-4 space-y-2 marker:text-slate-400">
-                <li>Automated thematic tagging via Gemini Flash inference.</li>
-                <li>Discrete task generation linked directly to review vectors.</li>
+                <li>Automatic review tagging using Google's Gemini AI.</li>
+                <li>Automatically creating staff tasks directly from guest complaints.</li>
                 <li>Strict Role-Based Access Control enforcing data discipline.</li>
               </ul>
             </div>

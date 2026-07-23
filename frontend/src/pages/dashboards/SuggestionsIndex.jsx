@@ -78,8 +78,8 @@ export function SuggestionsIndex() {
     return (
     <div className="space-y-6">
       <div className="border border-black/10 dark:border-white/10 rounded-xl p-6 bg-black/[0.02] dark:bg-white/[0.02]">
-        <h3 className="text-[14px] font-semibold text-slate-900 dark:text-slate-200">Operational Directive</h3>
-        <p className="text-[13px] text-[#666666] dark:text-[#a1a1aa] mt-1">Execute the following tasks dispatched by the anomaly engine.</p>
+        <h3 className="text-[14px] font-semibold text-slate-900 dark:text-slate-200">Your Tasks</h3>
+        <p className="text-[13px] text-[#666666] dark:text-[#a1a1aa] mt-1">Please complete the following tasks generated from recent guest feedback.</p>
       </div>
       <div className="space-y-2">
         {pendingActions.length === 0 ? (

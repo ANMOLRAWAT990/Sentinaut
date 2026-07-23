@@ -61,7 +61,7 @@ export function LandingPage() {
             <span className="italic text-white/90">Exceptional</span> Properties.
           </h1>
           <p className="text-base sm:text-lg text-white/70 max-w-xl leading-relaxed font-light">
-            An elegant intersection of artificial intelligence and hospitality. We transform unstructured guest feedback into immediate operational clarity.
+            Smart AI for modern hospitality. We automatically turn messy guest reviews into clear, actionable tasks for your staff.
           </p>
         </motion.div>
       </div>
@@ -92,7 +92,7 @@ export function LandingPage() {
 
       {/* Trusted By Section - Infinite Marquee */}
       <section className="py-24 w-full text-center overflow-hidden relative bg-white dark:bg-slate-950">
-        <p className="text-xs font-mono tracking-[0.3em] text-slate-400 uppercase mb-16">Selected Deployments</p>
+        <p className="text-xs font-mono tracking-[0.3em] text-slate-400 uppercase mb-16">Trusted by Top Properties</p>
         
         {/* Gradient fades for the edges of the marquee */}
         <div className="absolute inset-y-0 left-0 w-24 sm:w-48 bg-gradient-to-r from-white dark:from-slate-950 to-transparent z-10 pointer-events-none"></div>
@@ -127,17 +127,17 @@ export function LandingPage() {
             className="w-full md:w-1/2"
           >
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif tracking-tight text-slate-900 dark:text-white mb-8 leading-tight">
-              A symphony of <br/> <span className="italic text-slate-500">discrete</span> operations.
+              Seamless <br/> <span className="italic text-slate-500">Background</span> Operations.
             </h2>
             <div className="space-y-8">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Deterministic Sentiment</h3>
-                <p className="text-slate-600 dark:text-slate-400 font-light leading-relaxed">High-confidence inputs are resolved via precise rules, while ambiguous payloads are escalated to our inference engine for contextual extraction.</p>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Smart Sentiment Analysis</h3>
+                <p className="text-slate-600 dark:text-slate-400 font-light leading-relaxed">We instantly detect if a review is positive or negative. For complex reviews, our advanced AI reads between the lines to extract the real meaning.</p>
               </div>
               <div className="h-px w-12 bg-slate-200 dark:bg-slate-800"></div>
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Automated Execution</h3>
-                <p className="text-slate-600 dark:text-slate-400 font-light leading-relaxed">Recurring thematic failures automatically instantiate actionable tickets in the management queue, ensuring nothing is lost in translation.</p>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Automated Task Creation</h3>
+                <p className="text-slate-600 dark:text-slate-400 font-light leading-relaxed">When guests repeatedly complain about an issue, our system automatically creates a task ticket for your staff so nothing is missed.</p>
               </div>
             </div>
           </motion.div>

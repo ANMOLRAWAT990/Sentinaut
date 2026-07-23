@@ -82,8 +82,8 @@ const PricingPage = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-y md:border-x border-slate-200 dark:border-slate-800 divide-y md:divide-y-0 md:divide-x divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-950">
             <div className="p-12 sm:p-16 text-center hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors flex flex-col h-full">
-              <h3 className="font-serif text-2xl text-slate-900 dark:text-white mb-2">Boutique</h3>
-              <p className="text-sm text-slate-500 mb-8 font-light flex-grow">Perfect for single locations testing SentiNaut.</p>
+              <h3 className="font-serif text-2xl text-slate-900 dark:text-white mb-2">Single Property</h3>
+              <p className="text-sm text-slate-500 mb-8 font-light flex-grow">Perfect for single hotels just getting started with AI.</p>
               <p className="text-5xl font-serif text-slate-900 dark:text-white mb-8">₹24,999<span className="text-lg font-light text-slate-500">/mo</span></p>
               <ul className="text-sm text-slate-600 dark:text-slate-400 mb-8 space-y-3 text-left">
                 <li className="flex gap-2">✓ Up to 1,000 AI reviews/mo</li>
@@ -96,7 +96,7 @@ const PricingPage = () => {
             
             <div className="p-12 sm:p-16 text-center bg-slate-900 dark:bg-white text-white dark:text-slate-900 relative flex flex-col h-full">
               <div className="absolute top-6 left-1/2 -translate-x-1/2 text-[10px] font-mono tracking-widest uppercase opacity-70">Popular</div>
-              <h3 className="font-serif text-2xl mb-2 mt-4">Resort</h3>
+              <h3 className="font-serif text-2xl mb-2 mt-4">Multi-Property</h3>
               <p className="text-sm opacity-70 mb-8 font-light flex-grow">For multi-manager hotels tracking competitors.</p>
               <p className="text-5xl font-serif mb-8">₹49,999<span className="text-lg font-light opacity-70">/mo</span></p>
               <ul className="text-sm opacity-90 mb-8 space-y-3 text-left">
