@@ -17,6 +17,10 @@ export function ManagerDashboard() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [staffList, setStaffList] = useState([]);
   
+  const [editingStaff, setEditingStaff] = useState(null);
+  const [isEditStaffModalOpen, setIsEditStaffModalOpen] = useState(false);
+  const [deleteStaffId, setDeleteStaffId] = useState(null);
+
   const [selectedAction, setSelectedAction] = useState(null);
   const [newNote, setNewNote] = useState('');
   const [deleteReviewId, setDeleteReviewId] = useState(null);
@@ -136,6 +140,45 @@ export function ManagerDashboard() {
     }
     
     setInviteEmail('');
+  };
+
+  const handleUpdateStaff = async (e) => {
+    e.preventDefault();
+    setIsEditStaffModalOpen(false);
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/users/${editingStaff.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editingStaff.name, email: editingStaff.email, property: editingStaff.property })
+      });
+      if (res.ok) {
+        const updatedStaff = await res.json();
+        setStaffList(staffList.map(s => s.id === updatedStaff.id ? updatedStaff : s));
+        addToast(`Staff member updated successfully.`, 'success');
+      } else {
+        addToast('Failed to update staff member.', 'error');
+      }
+    } catch (err) {
+      addToast('Network error while updating staff.', 'error');
+    }
+  };
+
+  const handleDeleteStaff = async () => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/users/${deleteStaffId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setStaffList(staffList.filter(s => s.id !== deleteStaffId));
+        addToast('Staff member deleted.', 'success');
+      } else {
+        addToast('Failed to delete staff.', 'error');
+      }
+    } catch (err) {
+      addToast('Network error while deleting staff.', 'error');
+    } finally {
+      setDeleteStaffId(null);
+    }
   };
 
   React.useEffect(() => {
@@ -348,6 +391,10 @@ export function ManagerDashboard() {
                   <p className="text-xs text-slate-500 dark:text-[#a1a1aa]">{staff.property || 'Unassigned'}</p>
                 </div>
               </div>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" className="h-8 px-2 text-slate-500 hover:text-slate-900" onClick={() => { setEditingStaff({...staff}); setIsEditStaffModalOpen(true); }}>Edit</Button>
+                <Button variant="ghost" size="sm" className="h-8 px-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => setDeleteStaffId(staff.id)}>Delete</Button>
+              </div>
             </div>
           ))}
           <button 
@@ -415,6 +462,34 @@ export function ManagerDashboard() {
         onConfirm={confirmDeleteReview}
       >
         <p className="text-sm">Are you sure you want to completely delete this review? This action cannot be undone.</p>
+      </Modal>
+
+      <Modal isOpen={isEditStaffModalOpen} onClose={() => setIsEditStaffModalOpen(false)} title="Edit Staff Member">
+        {editingStaff && (
+          <form onSubmit={handleUpdateStaff} className="space-y-4">
+            <Input 
+              label="Staff Name" 
+              required 
+              value={editingStaff.name} 
+              onChange={(e) => setEditingStaff({...editingStaff, name: e.target.value})} 
+            />
+            <Input 
+              label="Email Address" 
+              type="email" 
+              required 
+              value={editingStaff.email} 
+              onChange={(e) => setEditingStaff({...editingStaff, email: e.target.value})} 
+            />
+            <div className="flex justify-end gap-3 pt-4">
+              <Button variant="secondary" onClick={() => setIsEditStaffModalOpen(false)}>Cancel</Button>
+              <Button type="submit">Save Changes</Button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      <Modal isOpen={!!deleteStaffId} onClose={() => setDeleteStaffId(null)} title="Delete Staff Member" destructive confirmText="Delete Staff Member" onConfirm={handleDeleteStaff}>
+        <p className="text-sm text-slate-700">Are you sure you want to delete this staff member? This action cannot be undone and they will lose access immediately.</p>
       </Modal>
     </div>
   );

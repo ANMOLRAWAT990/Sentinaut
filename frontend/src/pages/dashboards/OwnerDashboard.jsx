@@ -25,6 +25,14 @@ export function OwnerDashboard() {
   const [managerEmail, setManagerEmail] = useState('');
   const [selectedProperty, setSelectedProperty] = useState('');
 
+  const [editingProperty, setEditingProperty] = useState(null);
+  const [isEditPropertyModalOpen, setIsEditPropertyModalOpen] = useState(false);
+  const [deletePropertyId, setDeletePropertyId] = useState(null);
+
+  const [editingManager, setEditingManager] = useState(null);
+  const [isEditManagerModalOpen, setIsEditManagerModalOpen] = useState(false);
+  const [deleteManagerId, setDeleteManagerId] = useState(null);
+
   // Feature 1: Competitor Benchmark State
   const [competitorScores, setCompetitorScores] = useState({
     own: { name: 'Your Property', rating: 0 }
@@ -93,6 +101,45 @@ export function OwnerDashboard() {
     setPropertyLocation('');
   };
 
+  const handleUpdateProperty = async (e) => {
+    e.preventDefault();
+    setIsEditPropertyModalOpen(false);
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/properties/${editingProperty.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: propertyName, location: propertyLocation })
+      });
+      if (res.ok) {
+        const updatedProp = await res.json();
+        setProperties(properties.map(p => p.id === updatedProp.id ? updatedProp : p));
+        addToast(`${propertyName} has been updated successfully.`, 'success');
+      } else {
+        addToast('Failed to update property.', 'error');
+      }
+    } catch (err) {
+      addToast('Network error while updating property.', 'error');
+    }
+  };
+
+  const handleDeleteProperty = async () => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/properties/${deletePropertyId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setProperties(properties.filter(p => p.id !== deletePropertyId));
+        addToast('Property deleted.', 'success');
+      } else {
+        addToast('Failed to delete property.', 'error');
+      }
+    } catch (err) {
+      addToast('Network error while deleting property.', 'error');
+    } finally {
+      setDeletePropertyId(null);
+    }
+  };
+
   const handleInviteManager = async (e) => {
     e.preventDefault();
     setIsManagerModalOpen(false);
@@ -125,6 +172,45 @@ export function OwnerDashboard() {
     
     setManagerEmail('');
     setSelectedProperty('');
+  };
+
+  const handleUpdateManager = async (e) => {
+    e.preventDefault();
+    setIsEditManagerModalOpen(false);
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/users/${editingManager.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editingManager.name, email: editingManager.email, property: editingManager.property })
+      });
+      if (res.ok) {
+        const updatedUser = await res.json();
+        setManagers(managers.map(m => m.id === updatedUser.id ? updatedUser : m));
+        addToast(`Manager updated successfully.`, 'success');
+      } else {
+        addToast('Failed to update manager.', 'error');
+      }
+    } catch (err) {
+      addToast('Network error while updating manager.', 'error');
+    }
+  };
+
+  const handleDeleteManager = async () => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/users/${deleteManagerId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setManagers(managers.filter(m => m.id !== deleteManagerId));
+        addToast('Manager deleted.', 'success');
+      } else {
+        addToast('Failed to delete manager.', 'error');
+      }
+    } catch (err) {
+      addToast('Network error while deleting manager.', 'error');
+    } finally {
+      setDeleteManagerId(null);
+    }
   };
 
   const refreshCompetitors = async () => {
@@ -362,6 +448,10 @@ export function OwnerDashboard() {
                     <p className="text-xs text-slate-500 dark:text-slate-400">{p.location}</p>
                   </div>
                   <span className="text-xs font-medium px-2 py-1 bg-green-100 text-green-700 rounded-full">{p.status}</span>
+                  <div className="flex gap-2 ml-2">
+                    <Button variant="ghost" size="sm" className="h-8 px-2 text-slate-500 hover:text-slate-900" onClick={() => { setEditingProperty(p); setPropertyName(p.name); setPropertyLocation(p.location); setIsEditPropertyModalOpen(true); }}>Edit</Button>
+                    <Button variant="ghost" size="sm" className="h-8 px-2 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => setDeletePropertyId(p.id)}>Delete</Button>
+                  </div>
                 </div>
               ))}
               <button 
@@ -389,7 +479,13 @@ export function OwnerDashboard() {
                       <p className="text-xs text-slate-500 dark:text-slate-400">{m.email}</p>
                     </div>
                   </div>
-                  <span className="text-xs text-slate-500">{m.property}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-slate-500">{m.property}</span>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" className="h-8 px-2 text-slate-500 hover:text-slate-900" onClick={() => { setEditingManager({...m}); setIsEditManagerModalOpen(true); }}>Edit</Button>
+                      <Button variant="ghost" size="sm" className="h-8 px-2 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => setDeleteManagerId(m.id)}>Delete</Button>
+                    </div>
+                  </div>
                 </div>
               ))}
               <button 
@@ -489,6 +585,72 @@ export function OwnerDashboard() {
             <Button type="submit" isLoading={isAddingCompetitor}>Analyze Competitor Data</Button>
           </div>
         </form>
+      </Modal>
+
+      <Modal isOpen={isEditPropertyModalOpen} onClose={() => setIsEditPropertyModalOpen(false)} title="Edit Property">
+        <form onSubmit={handleUpdateProperty} className="space-y-4">
+          <Input 
+            label="Property Name" 
+            required 
+            value={propertyName} 
+            onChange={(e) => setPropertyName(e.target.value)} 
+          />
+          <Input 
+            label="Location" 
+            required 
+            value={propertyLocation}
+            onChange={(e) => setPropertyLocation(e.target.value)}
+          />
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="secondary" onClick={() => setIsEditPropertyModalOpen(false)}>Cancel</Button>
+            <Button type="submit">Save Changes</Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal isOpen={!!deletePropertyId} onClose={() => setDeletePropertyId(null)} title="Delete Property" destructive confirmText="Delete Property" onConfirm={handleDeleteProperty}>
+        <p className="text-sm text-slate-700">Are you sure you want to delete this property? This action cannot be undone and will hide it from active management.</p>
+      </Modal>
+
+      <Modal isOpen={isEditManagerModalOpen} onClose={() => setIsEditManagerModalOpen(false)} title="Edit Manager">
+        {editingManager && (
+          <form onSubmit={handleUpdateManager} className="space-y-4">
+            <Input 
+              label="Manager Name" 
+              required 
+              value={editingManager.name} 
+              onChange={(e) => setEditingManager({...editingManager, name: e.target.value})} 
+            />
+            <Input 
+              label="Email Address" 
+              type="email" 
+              required 
+              value={editingManager.email} 
+              onChange={(e) => setEditingManager({...editingManager, email: e.target.value})} 
+            />
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-medium text-slate-900 dark:text-slate-200">Assign to Property</label>
+              <select 
+                value={editingManager.property}
+                onChange={(e) => setEditingManager({...editingManager, property: e.target.value})}
+                className="h-10 w-full rounded-md bg-transparent border border-black/10 dark:border-white/10 px-3 text-[14px] text-slate-900 dark:text-slate-200 focus:outline-none focus:border-black/30 dark:focus:border-white/30"
+              >
+                <option value="Unassigned">Unassigned</option>
+                {properties.map(p => (
+                  <option key={p.id} value={p.name}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex justify-end gap-3 pt-4">
+              <Button variant="secondary" onClick={() => setIsEditManagerModalOpen(false)}>Cancel</Button>
+              <Button type="submit">Save Changes</Button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      <Modal isOpen={!!deleteManagerId} onClose={() => setDeleteManagerId(null)} title="Delete Manager" destructive confirmText="Delete Manager" onConfirm={handleDeleteManager}>
+        <p className="text-sm text-slate-700">Are you sure you want to delete this manager? This action cannot be undone and they will lose access immediately.</p>
       </Modal>
     </div>
   );
