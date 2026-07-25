@@ -48,8 +48,23 @@ export function SignupPage() {
         setLoading(false);
         return;
       }
-      addToast('Account created successfully. Please sign in.', 'success');
-      navigate('/login');
+      
+      // Auto login after signup
+      const loginRes = await fetch(`${API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, role })
+      });
+      
+      if (loginRes.ok) {
+        const loginData = await loginRes.json();
+        login({ email: loginData.user.email, role: loginData.user.role, name: loginData.user.name, id: loginData.user.id, property: loginData.user.property }, loginData.token);
+        addToast('Account created and logged in automatically.', 'success');
+        navigate('/dashboard');
+      } else {
+        addToast('Account created successfully. Please sign in.', 'success');
+        navigate('/login');
+      }
     } catch (err) {
       setError('Network failure.');
       setLoading(false);
@@ -122,7 +137,6 @@ export function SignupPage() {
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
-                  useOneTap
                   theme={document.documentElement.classList.contains('dark') ? "filled_black" : "outline"}
                   text="signup_with"
                   shape="rectangular"

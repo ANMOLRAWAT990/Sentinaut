@@ -137,7 +137,6 @@ export function LoginPage() {
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
-                  useOneTap
                   theme={document.documentElement.classList.contains('dark') ? "filled_black" : "outline"}
                   text="continue_with"
                   shape="rectangular"
