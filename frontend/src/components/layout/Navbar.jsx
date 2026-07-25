@@ -149,13 +149,8 @@ export function Navbar() {
       <div className="flex items-center gap-2 sm:gap-6">
         {user ? (
           <>
-            {isOffline ? (
+            {isOffline && (
               <span className="text-xs font-medium text-red-500 bg-red-100 dark:bg-red-900/30 px-2 py-1 rounded">Offline</span>
-            ) : (
-              <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800" title="Connected to Live FastAPI Backend">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live API
-              </span>
             )}
             {user.role === 'owner' && properties.length > 0 && (
               <div className="flex items-center gap-2">
