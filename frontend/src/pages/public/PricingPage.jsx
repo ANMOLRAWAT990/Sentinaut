@@ -40,6 +40,29 @@ const PricingPage = () => {
       const orderRes = await fetch(`${API_URL}/api/payments/create-order?amount=${amount}&property=${encodeURIComponent(targetProp)}`, { method: 'POST' });
       const order = await orderRes.json();
       
+      if (!order.key_id || order.key_id === "rzp_test_placeholder" || order.order_id?.startsWith("order_mock")) {
+        addToast("Demo Mode: Simulating instant payment verification...", "info");
+        const verifyRes = await fetch(`${API_URL}/api/payments/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            property: targetProp,
+            plan: planTier,
+            razorpay_payment_id: "mock_pay_" + Date.now(),
+            razorpay_order_id: order.order_id || "order_mock_" + Date.now(),
+            razorpay_signature: "mock_sig_" + Date.now()
+          })
+        });
+        if (verifyRes.ok) {
+          addToast(`Successfully upgraded to ${planTier} plan!`, "success");
+          navigate('/dashboard');
+        } else {
+          const errData = await verifyRes.json();
+          addToast(`Upgrade failed: ${errData.detail || 'Unknown error'}`, "error");
+        }
+        return;
+      }
+      
       const options = {
         key: order.key_id || "rzp_test_placeholder",
         amount: order.amount * 100,

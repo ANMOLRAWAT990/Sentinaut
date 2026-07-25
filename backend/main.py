@@ -789,10 +789,12 @@ def create_payment_order(amount: int = Query(..., description="Amount in INR"), 
 def verify_payment(req: PaymentVerifyRequest):
     is_valid = payment_service.verify_signature(req.razorpay_payment_id, req.razorpay_order_id, req.razorpay_signature)
     if is_valid:
-        properties_collection.update_one(
+        res = properties_collection.update_many(
             {"name": req.property},
             {"$set": {"plan": req.plan}}
         )
+        if res.matched_count == 0 or req.property == 'Unassigned':
+            properties_collection.update_many({}, {"$set": {"plan": req.plan}})
         return {"message": "Payment verified and plan updated."}
     else:
         raise HTTPException(status_code=400, detail="Invalid payment signature.")

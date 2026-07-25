@@ -9,7 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export function OwnerDashboard() {
-  const { user, activeProperty } = useAuth();
+  const { user, activeProperty, setActiveProperty } = useAuth();
   const navigate = useNavigate();
   const [dateRange, setDateRange] = useState('7days');
   const [analyticsData, setAnalyticsData] = useState(null);
@@ -58,7 +58,12 @@ export function OwnerDashboard() {
         fetch(`${API_URL}/api/analytics?owner_email=${encodedEmail}${propQuery}`).then(res => res.json()),
         fetch(`${API_URL}/api/competitors/summary?property=${encodeURIComponent(activeProperty || 'Unassigned')}`).then(res => res.json()).catch(() => ({}))
       ]).then(([propsData, managersData, analyticsRes, compRes]) => {
-        if (Array.isArray(propsData)) setProperties(propsData);
+        if (Array.isArray(propsData)) {
+          setProperties(propsData);
+          if (!activeProperty && propsData.length > 0 && typeof setActiveProperty === 'function') {
+            setActiveProperty(propsData[0].name);
+          }
+        }
         if (Array.isArray(managersData)) setManagers(managersData);
         if (analyticsRes) setAnalyticsData(analyticsRes);
         if (compRes?.summary) {
@@ -89,6 +94,9 @@ export function OwnerDashboard() {
       if (res.ok) {
         const newProp = await res.json();
         setProperties([...properties, newProp]);
+        if (!activeProperty && typeof setActiveProperty === 'function') {
+          setActiveProperty(newProp.name);
+        }
         addToast(`${propertyName} has been registered successfully.`, 'success');
       } else {
         addToast('Failed to register property.', 'error');
@@ -275,7 +283,8 @@ export function OwnerDashboard() {
   };
 
   const activePropertyObj = properties.find(p => p.name === activeProperty) || properties[0] || {};
-  const currentPlan = activePropertyObj.plan || 'trial';
+  const anyUpgradedPlan = properties.find(p => p.plan && p.plan !== 'trial')?.plan;
+  const currentPlan = anyUpgradedPlan || activePropertyObj.plan || 'trial';
   const aiUsage = activePropertyObj.ai_usage_month || 0;
 
   return (
