@@ -55,7 +55,7 @@ class Config:
 
     @property
     def FRONTEND_URL(self):
-        return os.getenv("FRONTEND_URL", "http://localhost:5173")
+        return os.getenv("FRONTEND_URL", "https://sentinaut.vercel.app")
 
     @property
     def JWT_SECRET(self):

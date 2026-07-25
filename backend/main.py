@@ -55,9 +55,14 @@ allow_manager_or_owner = RoleChecker(["owner", "manager"])
 
 
 # Configure CORS so the React frontend can communicate with it
+env_origins = [url.strip().rstrip('/') for url in config.FRONTEND_URL.split(",") if url.strip()]
+default_origins = ["http://localhost:5173", "http://127.0.0.1:5173", "https://sentinaut.vercel.app"]
+allowed_origins = list(set(env_origins + default_origins))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[config.FRONTEND_URL, "http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
