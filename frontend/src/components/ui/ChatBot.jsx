@@ -57,7 +57,7 @@ export function ChatBot() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.2)] dark:shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all z-50 flex items-center justify-center hover:scale-105 active:scale-95 group"
+          className={`fixed ${user ? 'bottom-20 md:bottom-6' : 'bottom-6'} right-4 md:right-6 p-3.5 sm:p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.2)] dark:shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all z-50 flex items-center justify-center hover:scale-105 active:scale-95 group`}
         >
           <div className="relative">
             <Bot className="w-6 h-6" />
@@ -67,7 +67,7 @@ export function ChatBot() {
       )}
 
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-80 sm:w-96 h-[500px] max-h-[85vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl flex flex-col overflow-hidden z-50 transition-all transform scale-100 origin-bottom-right">
+        <div className={`fixed ${user ? 'bottom-20 md:bottom-6' : 'bottom-6'} right-3 left-3 sm:left-auto sm:right-6 sm:w-96 h-[480px] sm:h-[500px] max-h-[80vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl flex flex-col overflow-hidden z-50 transition-all transform scale-100 origin-bottom-right`}>
           <div className="bg-white dark:bg-slate-950 px-4 py-3 flex justify-between items-center text-slate-900 dark:text-white shadow-sm z-20 relative border-b border-slate-200 dark:border-slate-800">
             <div className="flex items-center gap-2">
               <div className="relative bg-blue-500/10 dark:bg-blue-500/20 p-1.5 rounded-lg border border-blue-500/20 dark:border-blue-500/30">

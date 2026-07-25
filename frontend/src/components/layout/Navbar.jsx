@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ThemeToggle } from '../ui';
 import { useAuth } from '../../context/AuthContext';
-import { Bell, MapPin, Menu, X } from 'lucide-react';
+import { Bell, MapPin, Menu, X, LogOut } from 'lucide-react';
 
 export function Navbar() {
   const { user, logout, activeProperty, setActiveProperty } = useAuth();
@@ -146,7 +146,7 @@ export function Navbar() {
           </div>
         )}
       </div>
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-2 sm:gap-6">
         {user ? (
           <>
             {isOffline ? (
@@ -186,7 +186,7 @@ export function Navbar() {
                 )}
               </button>
               {isNotifOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg overflow-hidden z-50">
+                <div className="absolute -right-12 sm:right-0 mt-2 w-72 sm:w-80 max-w-[85vw] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg overflow-hidden z-50 origin-top-right">
                   <div className="p-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950">
                     <span className="text-sm font-semibold text-slate-900 dark:text-white">Notifications</span>
                     <span className="text-xs text-slate-500 dark:text-slate-400">{unreadCount} unread</span>
@@ -208,9 +208,12 @@ export function Navbar() {
             </div>
             
             {user.role === 'owner' && (
-              <Link to="/pricing" className="text-sm font-medium text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400">Plans & Billing</Link>
+              <Link to="/pricing" className="hidden md:inline-block text-sm font-medium text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400">Plans & Billing</Link>
             )}
-            <button onClick={handleLogout} className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">Sign out</button>
+            <button onClick={handleLogout} className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white flex items-center gap-1" title="Sign out">
+              <span className="hidden sm:inline">Sign out</span>
+              <LogOut className="h-4 w-4 sm:hidden" />
+            </button>
           </>
         ) : (
           <div className="flex items-center gap-2 sm:gap-4">

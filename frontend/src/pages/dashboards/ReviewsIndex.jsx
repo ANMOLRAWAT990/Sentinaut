@@ -287,22 +287,20 @@ export function ReviewsIndex() {
                 <p className="text-slate-700 dark:text-slate-200 text-sm">
                   {translationMap[r.id] || r.text}
                 </p>
-                <div className="flex items-center gap-4 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  <span>Themes: {r.tags.length > 0 ? r.tags.join(", ") : "None"}</span>
-                  <span>|</span>
-                  <span>Status: {r.status}</span>
-                  <span>|</span>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider pt-2 border-t border-slate-100 dark:border-slate-800/60 mt-2">
+                  <span className="bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded text-[10px]">Themes: {r.tags.length > 0 ? r.tags.join(", ") : "None"}</span>
+                  <span className="bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded text-[10px]">Status: {r.status}</span>
                   <label className="flex items-center gap-1 cursor-pointer hover:text-slate-700 dark:hover:text-slate-300 focus-within:ring-2 focus-within:ring-blue-500 rounded px-1">
-                    <input type="checkbox" checked={r.replied || false} onChange={() => toggleReplied(r)} className="rounded border-slate-300 w-3 h-3 cursor-pointer focus:outline-none focus-visible:ring-0" /> Replied
+                    <input type="checkbox" checked={r.replied || false} onChange={() => toggleReplied(r)} className="rounded border-slate-300 w-3.5 h-3.5 cursor-pointer focus:outline-none focus-visible:ring-0 text-primary-600" /> Replied
                   </label>
-                  <span>|</span>
-                  <Button variant="ghost" size="sm" onClick={() => handleTranslate(r.id, r.text)} className="h-6 px-2 text-[11px] gap-1 text-blue-600 hover:text-blue-800 dark:text-blue-400">
-                    <Languages className="h-3 w-3"/> Translate
-                  </Button>
-                  <span>|</span>
-                  <Button variant="ghost" size="sm" onClick={() => handleDraftReply(r.id)} disabled={isDrafting[r.id]} isLoading={isDrafting[r.id]} className="h-6 px-2 text-[11px] gap-1 text-purple-600 hover:text-purple-800 dark:text-purple-400">
-                    <MessageSquare className="h-3 w-3"/> AI Draft Reply
-                  </Button>
+                  <div className="flex items-center gap-2 sm:ml-auto">
+                    <Button variant="ghost" size="sm" onClick={() => handleTranslate(r.id, r.text)} className="h-6 px-2 text-[11px] gap-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20 rounded">
+                      <Languages className="h-3 w-3"/> Translate
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDraftReply(r.id)} disabled={isDrafting[r.id]} isLoading={isDrafting[r.id]} className="h-6 px-2 text-[11px] gap-1 text-purple-600 hover:text-purple-800 dark:text-purple-400 bg-purple-50/50 dark:bg-purple-900/20 rounded">
+                      <MessageSquare className="h-3 w-3"/> AI Draft Reply
+                    </Button>
+                  </div>
                 </div>
                 <div className={`overflow-hidden transition-all duration-300 ease-in-out ${drafts[r.id] ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0'}`}>
                   {drafts[r.id] && (
