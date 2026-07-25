@@ -49,13 +49,11 @@ export default function App() {
               <Route path="/" element={<LandingPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/features" element={<FeaturesPage />} />
+              <Route path="/pricing" element={<PricingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
             </Route>
-        
-        {/* Unrestricted Public Routes */}
-        <Route path="/pricing" element={<PricingPage />} />
 
             {/* Protected Dashboard Routes */}
             <Route path="/dashboard" element={<ProtectedRoute />}>

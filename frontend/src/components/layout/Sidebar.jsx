@@ -39,24 +39,24 @@ export function Sidebar() {
     switch (user.role) {
       case 'owner':
         return [
-          { name: 'Overview', path: '/dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
-          { name: 'Analytics', path: '/dashboard/reviews', icon: <BarChart3 className="h-4 w-4" /> },
-          { name: 'Guest CRM', path: '/dashboard/guests', icon: <Users className="h-4 w-4" /> },
-          { name: 'Strategic Insights', path: '/dashboard/suggestions', icon: <Lightbulb className="h-4 w-4" /> },
+          { name: 'Overview', shortName: 'Overview', path: '/dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
+          { name: 'Analytics', shortName: 'Analytics', path: '/dashboard/reviews', icon: <BarChart3 className="h-4 w-4" /> },
+          { name: 'Guest CRM', shortName: 'Guests', path: '/dashboard/guests', icon: <Users className="h-4 w-4" /> },
+          { name: 'Strategic Insights', shortName: 'Insights', path: '/dashboard/suggestions', icon: <Lightbulb className="h-4 w-4" /> },
         ];
       case 'manager':
         return [
-          { name: 'Action Board', path: '/dashboard', icon: <ClipboardList className="h-4 w-4" /> },
-          { name: 'Review Queue', path: '/dashboard/reviews', icon: <MessageSquare className="h-4 w-4" /> },
-          { name: 'Guest CRM', path: '/dashboard/guests', icon: <Users className="h-4 w-4" /> },
-          { name: 'Operational Intel', path: '/dashboard/suggestions', icon: <Lightbulb className="h-4 w-4" /> },
+          { name: 'Action Board', shortName: 'Actions', path: '/dashboard', icon: <ClipboardList className="h-4 w-4" /> },
+          { name: 'Review Queue', shortName: 'Reviews', path: '/dashboard/reviews', icon: <MessageSquare className="h-4 w-4" /> },
+          { name: 'Guest CRM', shortName: 'Guests', path: '/dashboard/guests', icon: <Users className="h-4 w-4" /> },
+          { name: 'Operational Intel', shortName: 'Intel', path: '/dashboard/suggestions', icon: <Lightbulb className="h-4 w-4" /> },
         ];
       case 'staff':
       default:
         return [
-          { name: 'Review Input', path: '/dashboard', icon: <MessageSquare className="h-4 w-4" /> },
-          { name: 'My Tasks', path: '/dashboard/suggestions', icon: <ClipboardList className="h-4 w-4" /> },
-          { name: 'My Submissions', path: '/dashboard/reviews', icon: <Users className="h-4 w-4" /> },
+          { name: 'Review Input', shortName: 'Input', path: '/dashboard', icon: <MessageSquare className="h-4 w-4" /> },
+          { name: 'My Tasks', shortName: 'Tasks', path: '/dashboard/suggestions', icon: <ClipboardList className="h-4 w-4" /> },
+          { name: 'My Submissions', shortName: 'Submissions', path: '/dashboard/reviews', icon: <Users className="h-4 w-4" /> },
         ];
     }
   };
@@ -64,7 +64,8 @@ export function Sidebar() {
   const links = getLinksByRole();
 
   return (
-    <aside className="w-64 border-r border-black/10 dark:border-white/10 bg-white dark:bg-[#000000] hidden md:flex flex-col h-full shrink-0">
+    <>
+      <aside className="w-64 border-r border-black/10 dark:border-white/10 bg-white dark:bg-[#000000] hidden md:flex flex-col h-full shrink-0">
       <div className="flex-1 py-6 px-4">
         {/* Role badge */}
         <div className="mb-8 px-2 flex items-center justify-between">
@@ -98,9 +99,9 @@ export function Sidebar() {
       {/* Plan Chip */}
       <div className="mx-2 mb-2 px-3 py-2 rounded-xl bg-gradient-to-r from-primary-600/10 via-blue-600/10 to-indigo-600/10 dark:from-primary-900/20 dark:via-blue-900/20 dark:to-indigo-900/20 border border-primary-600/20 dark:border-primary-500/20 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-2 min-w-0">
-          <span className={`w-2 h-2 rounded-full shrink-0 ${currentPlan === 'resort' ? 'bg-purple-500 animate-pulse' : currentPlan === 'boutique' ? 'bg-blue-500 animate-pulse' : 'bg-amber-500'}`}></span>
+          <span className={`w-2 h-2 rounded-full shrink-0 ${['resort', 'multi'].includes(currentPlan) ? 'bg-purple-500 animate-pulse' : ['boutique', 'single'].includes(currentPlan) ? 'bg-blue-500 animate-pulse' : 'bg-amber-500'}`}></span>
           <span className="text-[11px] font-bold tracking-wider uppercase text-slate-800 dark:text-slate-200 truncate">
-            {currentPlan === 'resort' ? 'Resort Plan' : currentPlan === 'boutique' ? 'Boutique Plan' : 'Trial Plan'}
+            {['resort', 'multi'].includes(currentPlan) ? 'Multi-Property Plan' : ['boutique', 'single'].includes(currentPlan) ? 'Single Property Plan' : currentPlan === 'enterprise' ? 'Enterprise Plan' : 'Trial Plan'}
           </span>
         </div>
         {user?.role === 'owner' && currentPlan === 'trial' && (
@@ -129,6 +130,28 @@ export function Sidebar() {
           <Settings className="h-4 w-4 text-[#888] opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
       </div>
-    </aside>
+      </aside>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-950 border-t border-black/10 dark:border-white/10 flex justify-around items-center h-16 px-1 shadow-lg">
+        {[...links, { name: 'Settings', shortName: 'Settings', path: '/dashboard/settings', icon: <Settings className="h-4 w-4" /> }].map((link) => (
+          <NavLink
+            key={link.name}
+            to={link.path}
+            end={link.path === '/dashboard'}
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center gap-1 w-full h-full text-[10px] font-medium transition-colors ${
+                isActive
+                  ? 'text-primary-600 dark:text-primary-400 font-bold'
+                  : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
+              }`
+            }
+          >
+            {React.cloneElement(link.icon, { className: 'h-5 w-5' })}
+            <span className="truncate max-w-[60px]">{link.shortName || link.name}</span>
+          </NavLink>
+        ))}
+      </nav>
+    </>
   );
 }

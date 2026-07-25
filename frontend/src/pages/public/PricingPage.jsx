@@ -2,8 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/ui/Toast';
-import { Navbar } from '../../components/layout/Navbar';
-import { Footer } from '../../components/layout/Footer';
 
 const PricingPage = () => {
   const navigate = useNavigate();
@@ -106,10 +104,7 @@ const PricingPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 font-sans selection:bg-slate-200 dark:selection:bg-slate-800 transition-colors duration-300">
-      <Navbar />
-      
-      <main className="flex-grow pt-24 pb-32">
+      <div className="pt-24 pb-32">
         <div className="px-6 sm:px-8 lg:px-16 max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-serif text-slate-900 dark:text-white mb-6">Pricing Plans</h2>
@@ -171,10 +166,7 @@ const PricingPage = () => {
             </div>
           </div>
         </div>
-      </main>
-      
-      <Footer />
-    </div>
+      </div>
   );
 };
 
