@@ -121,16 +121,22 @@ export function ManagerDashboard() {
     
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      const res = await fetch(`${API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'Invited Staff', email: inviteEmail, password: 'password123', role: 'staff', property: user?.property || 'Unassigned' })
+      const targetProperty = user?.property || 'Unassigned';
+      const res = await fetch(`${API_URL}/api/auth/invite?email=${encodeURIComponent(inviteEmail)}&role=staff&property=${encodeURIComponent(targetProperty)}`, {
+        method: 'POST'
       });
       
       if (res.ok) {
         const data = await res.json();
-        setStaffList([...staffList, data.user]);
-        addToast(`Staff account created! They can login with password: password123`, 'success');
+        setStaffList([...staffList, {
+          id: data.token || `invite-${Date.now()}`,
+          name: 'Invited Staff (Pending)',
+          email: inviteEmail,
+          role: 'staff',
+          property: targetProperty,
+          status: 'Invited'
+        }]);
+        addToast(`Invitation link sent to ${inviteEmail}! They can register via the link sent to their email.`, 'success');
       } else {
         const data = await res.json();
         addToast(data.detail || 'Failed to create staff account.', 'error');
@@ -182,7 +188,7 @@ export function ManagerDashboard() {
   };
 
   React.useEffect(() => {
-    document.title = "SentiNaut";
+    document.title = "Command Center — SentiNaut";
     if (!user) return;
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -243,10 +249,11 @@ export function ManagerDashboard() {
     }
   };
 
-  const toggleAction = async (id) => {
+  const advanceAction = async (id) => {
     const actionToUpdate = actions.find(a => a.id === id);
     if (!actionToUpdate) return;
-    const newStatus = actionToUpdate.status === 'Pending' ? 'Done' : 'Pending';
+    const statusFlow = { 'Pending': 'In Progress', 'In Progress': 'Done', 'Done': 'Verified' };
+    const newStatus = statusFlow[actionToUpdate.status] || 'Done';
     setActions(actions.map(a => a.id === id ? { ...a, status: newStatus } : a));
     if (String(id).startsWith('mock-')) return; 
     try {
@@ -257,6 +264,25 @@ export function ManagerDashboard() {
       if (!res.ok) throw new Error("Failed to execute action");
     } catch(err) {
       addToast('Failed to update action status. Changes reverted.', 'error');
+      setActions(actions.map(a => a.id === id ? actionToUpdate : a));
+    }
+  };
+
+  const revertAction = async (id) => {
+    const actionToUpdate = actions.find(a => a.id === id);
+    if (!actionToUpdate) return;
+    const revertFlow = { 'In Progress': 'Pending', 'Done': 'In Progress', 'Verified': 'Done' };
+    const newStatus = revertFlow[actionToUpdate.status] || 'Pending';
+    setActions(actions.map(a => a.id === id ? { ...a, status: newStatus } : a));
+    if (String(id).startsWith('mock-')) return; 
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/actions/${id}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...actionToUpdate, status: newStatus })
+      });
+      if (!res.ok) throw new Error("Failed to revert action");
+    } catch(err) {
+      addToast('Failed to revert action status. Changes reverted.', 'error');
       setActions(actions.map(a => a.id === id ? actionToUpdate : a));
     }
   };
@@ -320,7 +346,7 @@ export function ManagerDashboard() {
               <div className="flex items-center justify-between pb-2 border-b border-black/10 dark:border-white/10">
                 <h3 className="text-[12px] font-semibold text-slate-900 dark:text-slate-200 tracking-tight">{column}</h3>
                 <span className="text-[11px] font-medium text-[#666666] dark:text-[#a1a1aa]">
-                  {actions.filter(a => !a.is_archived && (column === 'Done' ? a.status === 'Done' : column === 'Pending' ? a.status === 'Pending' : false)).length}
+                  {actions.filter(a => !a.is_archived && a.status === column).length}
                 </span>
               </div>
               <div className="space-y-3">
@@ -336,7 +362,7 @@ export function ManagerDashboard() {
                     </div>
                   ))
                 ) : (
-                  actions.filter(a => !a.is_archived && (column === 'Done' ? a.status === 'Done' : column === 'Pending' ? a.status === 'Pending' : false)).map(a => (
+                  actions.filter(a => !a.is_archived && a.status === column).map(a => (
                     <div key={a.id} className="bg-white dark:bg-slate-900 border border-black/10 dark:border-white/10 rounded-lg p-3 shadow-sm hover:border-black/20 dark:hover:border-white/20 transition-all flex flex-col min-h-[94px]">
                       <div className="flex justify-between items-start mb-2">
                         <select 
@@ -360,15 +386,23 @@ export function ManagerDashboard() {
                       <h4 className="text-[13px] font-medium text-slate-900 dark:text-slate-200 mb-2 leading-snug line-clamp-2 cursor-pointer hover:underline" onClick={() => handleActionClick(a)}>{a.task}</h4>
                       <div className="flex items-center justify-between mt-auto">
                         <span className="text-[11px] font-mono text-slate-400 cursor-pointer" onClick={() => handleActionClick(a)}>TSK-{String(a.id).slice(-4).toUpperCase()}</span>
-                        {column !== 'Done' && (
-                          <Button size="sm" variant="secondary" className="h-6 px-2 text-[11px]" onClick={() => toggleAction(a.id)}>Execute</Button>
-                        )}
-                        {column === 'Done' && (
-                          <div className="flex gap-1">
-                            <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={() => toggleAction(a.id)}>Revert</Button>
+                        <div className="flex gap-1">
+                          {column !== 'Pending' && (
+                            <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={() => revertAction(a.id)}>Revert</Button>
+                          )}
+                          {column === 'Pending' && (
+                            <Button size="sm" variant="secondary" className="h-6 px-2 text-[11px]" onClick={() => advanceAction(a.id)}>Start</Button>
+                          )}
+                          {column === 'In Progress' && (
+                            <Button size="sm" variant="secondary" className="h-6 px-2 text-[11px]" onClick={() => advanceAction(a.id)}>Complete</Button>
+                          )}
+                          {column === 'Done' && (
+                            <Button size="sm" variant="primary" className="h-6 px-2 text-[11px] bg-primary-600 hover:bg-primary-700" onClick={() => advanceAction(a.id)}>Verify</Button>
+                          )}
+                          {column === 'Verified' && (
                             <Button size="sm" variant="primary" className="h-6 px-2 text-[11px] bg-primary-600 hover:bg-primary-700" onClick={() => handleArchive(a.id)}>Archive</Button>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))

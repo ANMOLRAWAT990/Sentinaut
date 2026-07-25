@@ -58,6 +58,10 @@ class Config:
         return os.getenv("FRONTEND_URL", "http://localhost:5173")
 
     @property
+    def JWT_SECRET(self):
+        return os.getenv("JWT_SECRET", "sentinaut_secure_jwt_secret_default_key")
+
+    @property
     def RAZORPAY_KEY_ID(self):
         return os.getenv("RAZORPAY_KEY_ID", "")
 

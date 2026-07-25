@@ -6,6 +6,8 @@ import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
 import { useToast } from '../../components/ui/Toast';
 import { useAuth } from '../../context/AuthContext';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { EmptyState } from '../../components/ui/EmptyState';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export function OwnerDashboard() {
@@ -43,9 +45,10 @@ export function OwnerDashboard() {
   const [competitorName, setCompetitorName] = useState('');
   const [competitorReviewsText, setCompetitorReviewsText] = useState('');
   const [isAddingCompetitor, setIsAddingCompetitor] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
-    document.title = "SentiNaut";
+    document.title = "Dashboard — SentiNaut";
     if (!user) return;
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     
@@ -70,7 +73,8 @@ export function OwnerDashboard() {
           setCompetitorSummary(compRes.summary);
           if (compRes.scores) setCompetitorScores(compRes.scores);
         }
-      }).catch(err => console.error("Failed to load owner data:", err));
+      }).catch(err => console.error("Failed to load owner data:", err))
+        .finally(() => setInitialLoading(false));
     };
 
     fetchData();
@@ -154,22 +158,22 @@ export function OwnerDashboard() {
     
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      const res = await fetch(`${API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          name: 'Invited Manager', 
-          email: managerEmail, 
-          password: 'password123', 
-          role: 'manager',
-          property: selectedProperty || properties[0]?.name || 'Unassigned'
-        })
+      const targetProperty = selectedProperty || properties[0]?.name || 'Unassigned';
+      const res = await fetch(`${API_URL}/api/auth/invite?email=${encodeURIComponent(managerEmail)}&role=manager&property=${encodeURIComponent(targetProperty)}`, {
+        method: 'POST'
       });
       
       if (res.ok) {
         const data = await res.json();
-        setManagers([...managers, data.user]);
-        addToast(`Manager account created! They can login with password: password123`, 'success');
+        setManagers([...managers, {
+          id: data.token || `invite-${Date.now()}`,
+          name: 'Invited Manager (Pending)',
+          email: managerEmail,
+          property: targetProperty,
+          initials: 'IM',
+          status: 'Invited'
+        }]);
+        addToast(`Invitation link sent to ${managerEmail}! They can register via the link sent to their email.`, 'success');
       } else {
         const data = await res.json();
         addToast(data.detail || 'Failed to create manager account.', 'error');
@@ -328,7 +332,7 @@ export function OwnerDashboard() {
         <select 
           value={dateRange}
           onChange={(e) => setDateRange(e.target.value)}
-          className="border border-slate-200 dark:border-slate-800 rounded-md px-3 py-1.5 text-sm text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-primary-500"
+          className="border border-slate-200 dark:border-slate-800 rounded-md px-3 py-1.5 text-sm text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-primary-500 [&>option]:bg-white [&>option]:dark:bg-slate-900 [&>option]:text-slate-900 [&>option]:dark:text-slate-200"
         >
           <option value="7days">Last 7 Days</option>
           <option value="30days">Last 30 Days</option>
@@ -337,6 +341,18 @@ export function OwnerDashboard() {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {initialLoading ? (
+          Array(3).fill(0).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <Skeleton className="h-3 w-32 mb-4" />
+                <Skeleton className="h-12 w-24 mb-2" />
+                <Skeleton className="h-5 w-20 rounded-full" />
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <>
         <Card>
           <CardContent className="p-6">
             <p className="text-xs uppercase tracking-widest font-semibold text-slate-500 dark:text-slate-400 mb-2">Overall Health Score</p>
@@ -370,6 +386,8 @@ export function OwnerDashboard() {
             </div>
           </CardContent>
         </Card>
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -449,7 +467,12 @@ export function OwnerDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {properties.map(p => (
+              {properties.length === 0 && !initialLoading ? (
+                <EmptyState 
+                  title="No Properties Registered"
+                  description="Register your first resort or hotel property to start tracking reviews."
+                />
+              ) : properties.map(p => (
                 <div key={p.id} className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
                   <img src="/images/resort_thumb.png" alt="Resort" className="w-16 h-16 rounded object-cover" />
                   <div className="flex-1">
@@ -479,7 +502,12 @@ export function OwnerDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {managers.map(m => (
+              {managers.length === 0 && !initialLoading ? (
+                <EmptyState 
+                  title="No Managers Assigned"
+                  description="Invite your first General Manager to start managing operational workflows."
+                />
+              ) : managers.map(m => (
                 <div key={m.id} className="flex items-center justify-between bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">{m.initials}</div>

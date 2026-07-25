@@ -34,7 +34,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
         raise HTTPException(status_code=401, detail="Not authenticated")
     token = credentials.credentials
     try:
-        secret = getattr(config, 'JWT_SECRET', 'super_secret_key_change_me')
+        secret = config.JWT_SECRET
         payload = jwt.decode(token, secret, algorithms=["HS256"])
         return payload
     except jwt.ExpiredSignatureError:
@@ -57,8 +57,8 @@ allow_manager_or_owner = RoleChecker(["owner", "manager"])
 # Configure CORS so the React frontend can communicate with it
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for development
-    allow_credentials=False,
+    allow_origins=[config.FRONTEND_URL, "http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
@@ -376,7 +376,7 @@ def login(request: Request, data: LoginRequest):
         raise HTTPException(status_code=403, detail=f"Access denied: This account does not have {data.role} privileges.")
 
     # Create JWT
-    secret = getattr(config, 'JWT_SECRET', 'super_secret_key_change_me')
+    secret = config.JWT_SECRET
     expiry = datetime.utcnow() + timedelta(days=7)
     payload = {
         "sub": str(user["_id"]),
@@ -1016,7 +1016,7 @@ def google_oauth_login(data: OAuthLoginRequest):
             res = users_collection.insert_one(new_user)
             user = users_collection.find_one({"_id": res.inserted_id})
             
-        secret = getattr(config, 'JWT_SECRET', 'super_secret_key_change_me')
+        secret = config.JWT_SECRET
         expiry = datetime.utcnow() + timedelta(days=7)
         jwt_payload = {
             "sub": str(user["_id"]),
