@@ -28,7 +28,7 @@ export function ReviewsIndex() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    document.title = "SentiNaut";
+    document.title = "Reviews & Analytics — SentiNaut";
     fetchReviews();
   }, [activeProperty]);
 
@@ -170,7 +170,8 @@ export function ReviewsIndex() {
   const exportCSV = () => {
     const csvContent = "data:text/csv;charset=utf-8," 
       + "ID,GuestName,Platform,Sentiment,Status,Text\n"
-      + reviews.map(r => `${r.id},${r.guestName},${r.platform},${r.sentiment},${r.status},"${r.text.replace(/"/g, '""')}"`).join("\n");
+      + reviews.map(r => `${r.id},${r.guestName},${r.platform},${r.sentiment},${r.status},"${r.text.replace(/"/g, '""')}"`).join("\n")
+      + "\n\n# Exported from SentiNaut™ Autonomous Reputation Engine (https://sentinaut.ai)";
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -189,8 +190,10 @@ export function ReviewsIndex() {
   // Pagination & Filtering
   const filteredReviews = reviews.filter(r => filterSentiment === 'All' || r.sentiment === filterSentiment)
                                  .sort((a, b) => {
-                                   if (sortOrder === 'Newest') return a.id < b.id ? 1 : -1;
-                                   return a.id > b.id ? 1 : -1;
+                                   const dateA = new Date(a.created_at || 0);
+                                   const dateB = new Date(b.created_at || 0);
+                                   if (sortOrder === 'Newest') return dateB - dateA;
+                                   return dateA - dateB;
                                  });
   const indexOfLast = currentPage * reviewsPerPage;
   const indexOfFirst = indexOfLast - reviewsPerPage;

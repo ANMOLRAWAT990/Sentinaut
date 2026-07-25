@@ -19,7 +19,10 @@ export function StaffDashboard() {
   const [copiedRow, setCopiedRow] = useState(null);
   
   const [checkoutName, setCheckoutName] = useState('');
-  const [checkoutEmail, setCheckoutEmail] = useState('');
+  const [checkoutPhone, setCheckoutPhone] = useState('');
+  const [batchSentimentFilter, setBatchSentimentFilter] = useState('All Sentiments');
+  const [batchThemeFilter, setBatchThemeFilter] = useState('All Themes');
+  const [customReviewUrl, setCustomReviewUrl] = useState(() => localStorage.getItem('sentinaut_review_url') || '');
 
   const handleAddToTracker = async (taskText) => {
     try {
@@ -53,7 +56,7 @@ export function StaffDashboard() {
 
   // Initial data load to preserve the "table" feeling
   React.useEffect(() => {
-    document.title = "SentiNaut";
+    document.title = "Front Desk — SentiNaut";
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     if (user?.property) {
       fetch(`${API_URL}/api/reviews?property=${encodeURIComponent(user.property)}`)
@@ -126,7 +129,8 @@ export function StaffDashboard() {
     const cleanedPhone = checkoutPhone.replace(/\D/g, '');
     
     // Generate WhatsApp wa.me link
-    const message = encodeURIComponent(`Hi ${checkoutName}, thank you for staying with us! We hope you had a great time. We'd love it if you could leave a review here: https://g.page/r/your-google-link/review`);
+    const reviewLink = customReviewUrl || 'https://g.page/r/your-google-link/review';
+    const message = encodeURIComponent(`Hi ${checkoutName}, thank you for staying with us! We hope you had a great time. We'd love it if you could leave a review here: ${reviewLink}\n\n— Powered by SentiNaut™`);
     const waUrl = `https://wa.me/${cleanedPhone}?text=${message}`;
     
     const link = document.createElement('a');
@@ -270,15 +274,32 @@ export function StaffDashboard() {
           {/* LEFT TABLE */}
           <div className="w-full lg:w-2/3">
             <div className="flex gap-2 mb-4">
-              <select className="border border-[#e2e8f0] dark:border-slate-800 rounded-[8px] px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-950">
-                <option>All Sentiments</option>
+              <select 
+                value={batchSentimentFilter} 
+                onChange={(e) => setBatchSentimentFilter(e.target.value)}
+                className="border border-[#e2e8f0] dark:border-slate-800 rounded-[8px] px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-950"
+              >
+                <option value="All Sentiments">All Sentiments</option>
+                <option value="Positive">Positive</option>
+                <option value="Neutral">Neutral</option>
+                <option value="Negative">Negative</option>
               </select>
-              <select className="border border-[#e2e8f0] dark:border-slate-800 rounded-[8px] px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-950">
-                <option>All Themes</option>
+              <select 
+                value={batchThemeFilter} 
+                onChange={(e) => setBatchThemeFilter(e.target.value)}
+                className="border border-[#e2e8f0] dark:border-slate-800 rounded-[8px] px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-950"
+              >
+                <option value="All Themes">All Themes</option>
+                {Array.from(new Set(batchResults.reviews.map(r => r.theme))).filter(Boolean).map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
               </select>
             </div>
             <div className="space-y-3">
-              {batchResults.reviews.map(r => (
+              {batchResults.reviews
+                .filter(r => (batchSentimentFilter === 'All Sentiments' || r.sentiment === batchSentimentFilter) &&
+                             (batchThemeFilter === 'All Themes' || r.theme === batchThemeFilter))
+                .map(r => (
                 <div key={r.id} className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded-[8px] p-3 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                   <div className="flex-1">
                     <p className="text-sm text-slate-700 dark:text-slate-200 line-clamp-2 mb-2">{r.text}</p>
@@ -344,7 +365,6 @@ export function StaffDashboard() {
     </div>
   );
 
-  const [checkoutPhone, setCheckoutPhone] = useState('');
 
   return (
     <div className="space-y-6">
@@ -371,6 +391,20 @@ export function StaffDashboard() {
           <form onSubmit={handleCheckout} className="space-y-4 max-w-md">
             <Input label="Guest Name" placeholder="Anjali Desai" value={checkoutName} onChange={(e) => setCheckoutName(e.target.value)} required />
             <Input label="WhatsApp Number (with country code)" type="tel" placeholder="+91 98765 43210" value={checkoutPhone} onChange={(e) => setCheckoutPhone(e.target.value)} required />
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Google Review Link (Optional)</label>
+              <input 
+                type="url" 
+                placeholder="https://g.page/r/your-google-link/review" 
+                value={customReviewUrl} 
+                onChange={(e) => {
+                  setCustomReviewUrl(e.target.value);
+                  localStorage.setItem('sentinaut_review_url', e.target.value);
+                }}
+                className="w-full text-sm px-3 py-2 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+              <p className="text-[11px] text-slate-400 mt-1">This link is saved in your browser and sent automatically with WhatsApp review requests.</p>
+            </div>
             <Button type="submit" className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white">Send via WhatsApp</Button>
           </form>
         </CardContent>

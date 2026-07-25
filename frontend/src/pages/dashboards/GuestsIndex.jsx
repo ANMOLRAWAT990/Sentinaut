@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Card, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useToast } from '../../components/ui/Toast';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 export function GuestsIndex() {
   const { user, activeProperty } = useAuth();
@@ -11,7 +12,7 @@ export function GuestsIndex() {
   const { addToast } = useToast();
 
   useEffect(() => {
-    document.title = "SentiNaut";
+    document.title = "Guest CRM — SentiNaut";
     if (!user) return;
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     const propQuery = activeProperty || user.property || 'Unassigned';
@@ -47,7 +48,28 @@ export function GuestsIndex() {
     }
   };
 
-  if (loading) return <div className="p-8">Loading Guest CRM...</div>;
+  if (loading) return (
+    <div className="space-y-6">
+      <div className="mb-8">
+        <Skeleton className="h-8 w-48 mb-2" />
+        <Skeleton className="h-4 w-80" />
+      </div>
+      <div className="grid gap-4">
+        {Array(3).fill(0).map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div className="flex-1">
+                <Skeleton className="h-6 w-40 mb-2" />
+                <Skeleton className="h-4 w-48 mb-2" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+              <Skeleton className="h-9 w-48 rounded-md" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">

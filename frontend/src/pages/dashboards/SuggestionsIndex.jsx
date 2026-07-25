@@ -32,7 +32,7 @@ export function SuggestionsIndex() {
   };
 
   React.useEffect(() => {
-    document.title = "SentiNaut";
+    document.title = "Strategic Insights — SentiNaut";
     if (user?.role === 'manager' || user?.role === 'owner') {
       fetchInsights();
     }
@@ -156,40 +156,79 @@ export function SuggestionsIndex() {
 
   const renderOwnerView = () => (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">Strategic Thesis</h2>
-        <p className="text-[13px] text-[#666666] dark:text-[#a1a1aa] mt-1">Aggregated market positioning against competitor baselines.</p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">Strategic Insights</h2>
+          <p className="text-[13px] text-[#666666] dark:text-[#a1a1aa] mt-1">AI-generated strategic analysis based on your review data.</p>
+        </div>
+        <Button size="sm" variant="secondary" onClick={generateInsights} isLoading={isGenerating}>Generate AI Insights</Button>
       </div>
 
+      {/* Executive Summary */}
+      {insights.summary && insights.summary !== 'No insights available yet.' && (
+        <div className="bg-gradient-to-r from-primary-50/50 to-teal-50/50 dark:from-primary-900/10 dark:to-teal-900/10 border border-primary-100 dark:border-primary-800/30 rounded-xl p-5 shadow-sm">
+          <div className="text-[11px] font-semibold text-primary-600 dark:text-primary-400 uppercase tracking-wider mb-2">Executive Summary</div>
+          <p className="text-[14px] text-slate-800 dark:text-slate-200 leading-relaxed">{insights.summary}</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        <div className="lg:col-span-2 space-y-4">
-          <h3 className="text-[14px] font-semibold text-slate-900 dark:text-slate-200">Q3 Market Opportunity</h3>
-          <p className="text-[14px] text-[#444444] dark:text-[#cccccc] leading-relaxed max-w-2xl">
-            Based on a continuous ingestion of 1,248 data points across the immediate competitive set, a strict divergence exists in <strong>Family Entertainment</strong>.
-          </p>
-          <p className="text-[14px] text-[#444444] dark:text-[#cccccc] leading-relaxed max-w-2xl">
-            Competitor properties are sustaining a -14% sentiment penalty regarding on-site activities. Allocating CAPEX toward guided family infrastructure represents an asymmetric upside with an estimated +12% conversion impact.
-          </p>
-          <Button onClick={handleComingSoon} variant="secondary" className="mt-2 text-[13px]">Export Complete Thesis</Button>
+        {/* Anomalies & Tasks */}
+        <div className="lg:col-span-2">
+          <div className="bg-white dark:bg-slate-900 border border-black/10 dark:border-white/10 rounded-xl shadow-sm overflow-hidden">
+            <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 border-b border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.02] text-[11px] font-semibold text-[#666666] dark:text-[#a1a1aa] uppercase tracking-wider">
+              <div className="col-span-3">Severity</div>
+              <div className="col-span-9">Finding & Recommended Action</div>
+            </div>
+            <div className="divide-y divide-black/5 dark:divide-white/5">
+              {loading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-4 px-6 py-4 items-start">
+                    <div className="md:col-span-3"><Skeleton className="h-5 w-16" /></div>
+                    <div className="md:col-span-9 space-y-2 w-full">
+                      <Skeleton className="h-5 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </div>
+                  </div>
+                ))
+              ) : insights.anomalies.length > 0 ? insights.anomalies.map((s, i) => (
+                <div key={i} className="flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-4 px-6 py-4 items-start group hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors">
+                  <div className="md:col-span-3">
+                    <div className={`text-[13px] font-medium font-mono ${s.severity === 'High' ? 'text-red-500' : s.severity === 'Medium' ? 'text-yellow-500' : 'text-green-500'}`}>[{s.severity.toUpperCase()}]</div>
+                  </div>
+                  <div className="md:col-span-9 md:pr-8">
+                    <div className="text-[14px] font-medium text-slate-900 dark:text-slate-200 mb-1">{s.title}</div>
+                    {insights.tasks[i] && <div className="text-[13px] text-[#666666] dark:text-[#a1a1aa] leading-relaxed">Suggested: {insights.tasks[i].task}</div>}
+                  </div>
+                </div>
+              )) : (
+                <EmptyState 
+                  title="No Insights Generated Yet"
+                  description="Click 'Generate AI Insights' to analyze your review data and surface strategic findings."
+                />
+              )}
+            </div>
+          </div>
         </div>
 
+        {/* Stats Sidebar */}
         <div className="bg-black/[0.03] dark:bg-white/[0.03] rounded-xl p-6 border border-black/5 dark:border-white/5 space-y-6">
           <div>
-            <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Primary Accolade</div>
-            <div className="text-[16px] font-medium text-slate-900 dark:text-slate-200">Cleanliness Standard</div>
-            <div className="text-[12px] text-[#666666] dark:text-[#a1a1aa] mt-0.5">Present in 42% of positive vectors</div>
+            <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Anomalies Detected</div>
+            <div className="text-[16px] font-medium text-slate-900 dark:text-slate-200">{insights.anomalies.length}</div>
+            <div className="text-[12px] text-[#666666] dark:text-[#a1a1aa] mt-0.5">{insights.anomalies.filter(a => a.severity === 'High').length} High severity</div>
           </div>
           <div className="w-full h-px bg-black/10 dark:bg-white/10" />
           <div>
-            <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Primary Friction</div>
-            <div className="text-[16px] font-medium text-slate-900 dark:text-slate-200">Acoustic Bleed</div>
-            <div className="text-[12px] text-[#666666] dark:text-[#a1a1aa] mt-0.5">Present in 18% of negative vectors</div>
+            <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Action Items</div>
+            <div className="text-[16px] font-medium text-slate-900 dark:text-slate-200">{insights.tasks.length}</div>
+            <div className="text-[12px] text-[#666666] dark:text-[#a1a1aa] mt-0.5">AI-recommended tasks</div>
           </div>
           <div className="w-full h-px bg-black/10 dark:bg-white/10" />
           <div>
-            <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Task ROI Engine</div>
-            <div className="text-[16px] font-medium text-slate-900 dark:text-slate-200">84% Efficiency</div>
-            <div className="text-[12px] text-[#666666] dark:text-[#a1a1aa] mt-0.5">Resolution to rating yield ratio</div>
+            <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Pending Actions</div>
+            <div className="text-[16px] font-medium text-slate-900 dark:text-slate-200">{actions.filter(a => a.status !== 'Done').length}</div>
+            <div className="text-[12px] text-[#666666] dark:text-[#a1a1aa] mt-0.5">Across all operational tasks</div>
           </div>
         </div>
       </div>
