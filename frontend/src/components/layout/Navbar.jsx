@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ThemeToggle } from '../ui';
 import { useAuth } from '../../context/AuthContext';
-import { Bell, MapPin } from 'lucide-react';
+import { Bell, MapPin, Menu, X } from 'lucide-react';
 
 export function Navbar() {
   const { user, logout, activeProperty, setActiveProperty } = useAuth();
@@ -14,6 +14,7 @@ export function Navbar() {
   const [isOffline, setIsOffline] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const notifRef = useRef(null);
 
@@ -82,6 +83,10 @@ export function Navbar() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     logout();
@@ -208,14 +213,33 @@ export function Navbar() {
             <button onClick={handleLogout} className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">Sign out</button>
           </>
         ) : (
-          <div className="flex items-center gap-4">
-            <Link to="/login" className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">Log in</Link>
-            <Link to="/signup" className="text-sm font-medium bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm shadow-primary-600/20">Get Started</Link>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link to="/login" className="hidden sm:inline-block text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">Log in</Link>
+            <Link to="/signup" className="text-xs sm:text-sm font-medium bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors shadow-sm shadow-primary-600/20">Get Started</Link>
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden p-1.5 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors ml-1"
+              aria-label="Toggle navigation menu"
+            >
+              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         )}
         <div className="hidden sm:block w-px h-4 bg-slate-200 dark:bg-slate-800"></div>
         <ThemeToggle />
       </div>
+
+      {/* Mobile Navigation Menu for Public Users */}
+      {!user && isMobileMenuOpen && (
+        <div className="absolute top-14 left-0 right-0 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 p-4 shadow-xl md:hidden z-50 flex flex-col gap-3 animate-fadeIn">
+          <Link to="/about" className="text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-primary-600 dark:hover:text-primary-400 py-1.5 transition-colors">About Us</Link>
+          <Link to="/features" className="text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-primary-600 dark:hover:text-primary-400 py-1.5 transition-colors">Features</Link>
+          <Link to="/pricing" className="text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-primary-600 dark:hover:text-primary-400 py-1.5 transition-colors">Pricing</Link>
+          <div className="border-t border-slate-100 dark:border-slate-800/80 pt-3 flex flex-col gap-2 sm:hidden">
+            <Link to="/login" className="text-sm font-medium text-center text-slate-700 dark:text-slate-200 py-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">Log in</Link>
+          </div>
+        </div>
+      )}
 
       {/* Command Palette Modal (Ctrl+K) */}
       {isSearchOpen && (
