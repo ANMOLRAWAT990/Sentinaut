@@ -12,6 +12,8 @@ export function Navbar() {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [properties, setProperties] = useState([]);
   const [isOffline, setIsOffline] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   
   const notifRef = useRef(null);
 
@@ -63,6 +65,22 @@ export function Navbar() {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(prev => !prev);
+      }
+      if (e.key === 'Escape') {
+        setIsNotifOpen(false);
+        setIsSearchOpen(false);
+        window.dispatchEvent(new CustomEvent('sentinaut:escape'));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const handleLogout = () => {
@@ -126,8 +144,10 @@ export function Navbar() {
       <div className="flex items-center gap-6">
         {user ? (
           <>
-            {isOffline && (
+            {isOffline ? (
               <span className="text-xs font-medium text-red-500 bg-red-100 dark:bg-red-900/30 px-2 py-1 rounded">Offline</span>
+            ) : (
+              <span className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-widest bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-300/50 dark:border-amber-700/50" title="Running in Demonstration Mode">Demo Mode</span>
             )}
             {user.role === 'owner' && properties.length > 0 && (
               <div className="flex items-center gap-2">
@@ -142,11 +162,22 @@ export function Navbar() {
               </div>
             )}
             
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="hidden md:flex items-center gap-2 px-2.5 py-1 text-xs font-medium text-slate-500 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 dark:text-slate-400 dark:hover:text-white rounded-md transition-colors border border-slate-200 dark:border-slate-800"
+              title="Search / Command Palette (Ctrl+K)"
+            >
+              <span>Search...</span>
+              <kbd className="text-[10px] px-1 py-0.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded text-slate-400 font-mono">⌘K</kbd>
+            </button>
+            
             <div className="relative" ref={notifRef}>
               <button onClick={() => setIsNotifOpen(!isNotifOpen)} className="relative p-1 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                  <span className="absolute -top-1 -right-1 px-1 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
                 )}
               </button>
               {isNotifOpen && (
@@ -185,6 +216,46 @@ export function Navbar() {
         <div className="hidden sm:block w-px h-4 bg-slate-200 dark:bg-slate-800"></div>
         <ThemeToggle />
       </div>
+
+      {/* Command Palette Modal (Ctrl+K) */}
+      {isSearchOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/50 backdrop-blur-sm" onClick={() => setIsSearchOpen(false)}>
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl overflow-hidden animate-fadeIn" onClick={e => e.stopPropagation()}>
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
+              <input
+                type="text"
+                autoFocus
+                placeholder="Type a command or destination..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full bg-transparent text-sm text-slate-900 dark:text-white placeholder:text-slate-400 outline-none font-medium"
+              />
+              <kbd className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded border border-slate-300 dark:border-slate-700 font-mono">ESC</kbd>
+            </div>
+            <div className="p-2 max-h-60 overflow-y-auto space-y-1">
+              {[
+                { name: 'Go to Overview Dashboard', path: '/dashboard', role: 'all' },
+                { name: 'Analytics & Guest Reviews Queue', path: '/dashboard/reviews', role: 'all' },
+                { name: 'Guest CRM Directory', path: '/dashboard/guests', role: 'all' },
+                { name: 'Strategic AI Operational Insights', path: '/dashboard/suggestions', role: 'all' },
+                { name: 'Platform Settings & Configurations', path: '/dashboard/settings', role: 'all' },
+                { name: 'View Plans & Billing', path: '/pricing', role: 'owner' },
+              ]
+                .filter(item => (item.role === 'all' || item.role === user?.role) && item.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                .map((item, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => { navigate(item.path); setIsSearchOpen(false); setSearchQuery(''); }}
+                    className="w-full text-left px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white rounded-lg transition-colors flex items-center justify-between group"
+                  >
+                    <span>{item.name}</span>
+                    <span className="text-xs text-slate-400 font-mono group-hover:text-primary-500">{item.path}</span>
+                  </button>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

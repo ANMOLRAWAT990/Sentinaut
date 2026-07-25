@@ -22,7 +22,7 @@ export function SettingsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   React.useEffect(() => {
-    document.title = "SentiNaut";
+    document.title = "Settings — SentiNaut";
     if (!user || user.role !== 'owner') return;
       const propQuery = activeProperty || user?.property || 'Unassigned';
       fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/properties?owner_email=${user.email}`)
@@ -208,6 +208,31 @@ export function SettingsPage() {
           </CardContent>
         </Card>
       )}
+
+      <Card className="border-slate-200 dark:border-slate-800">
+        <CardHeader>
+          <CardTitle>Onboarding & Walkthroughs</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-900 dark:text-slate-200">Workspace Tour</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1">Replay the 3-step interactive onboarding walkthrough of the SentiNaut command center.</p>
+            </div>
+            <Button 
+              type="button" 
+              variant="secondary" 
+              onClick={() => {
+                localStorage.removeItem('sentinaut_onboarding_completed');
+                window.dispatchEvent(new CustomEvent('sentinaut:restart_tour'));
+                addToast('Onboarding tour restarted!', 'success');
+              }}
+            >
+              Restart Tour
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="border-red-100 dark:border-red-900/30">
         <CardHeader>
