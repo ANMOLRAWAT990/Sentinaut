@@ -35,6 +35,15 @@ Staff paste reviews from nearby competing properties and SentiNaut identifies wh
 **5. Review Request Generator**
 Staff log departing guest details at checkout and SentiNaut generates a personalized review request message with a direct link to the platform they booked from, ensuring the review lands where it matters most for visibility.
 
+**6. Interactive Command Palette & Walkthroughs**
+Press `Ctrl+K` anywhere to launch the global Command Palette for instant navigation across queues, guest CRM, and AI insights. First-time users are greeted with an interactive 3-step onboarding walkthrough, which can be replayed anytime from Platform Settings.
+
+**7. Responsive Mobile Navigation & Social Sharing**
+Fully responsive design with touch-friendly bottom navigation bar for mobile devices, Open Graph (`og:*`) social sharing meta tags, and real-time unread notification badging.
+
+**8. Secure Tokenized Team Invitations**
+General Managers and Staff are invited via tokenized magic links sent directly to their email, eliminating insecure hardcoded passwords and enforcing strict role-based access control.
+
 ---
 
 ## AI Architecture
@@ -158,7 +167,11 @@ Copy `backend/.env.example` to `backend/.env` and fill in your values:
 ```env
 # API Keys
 GEMINI_API_KEY=your_gemini_api_key_here
-USE_GEMINI=false
+USE_GEMINI=true
+
+# Security & Authentication
+JWT_SECRET=your_super_secret_jwt_key_here
+FRONTEND_URL=http://localhost:5173
 
 # Database
 MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/sentinaut?retryWrites=true&w=majority
@@ -260,6 +273,9 @@ SentiNaut uses MongoDB as its database. Follow these steps to get it running loc
 | PUT | `/api/actions/{id}` | Update an action item |
 | POST | `/api/auth/signup` | Register a new user (staff/manager/owner) |
 | POST | `/api/auth/login` | Authenticate and return user + role |
+| POST | `/api/auth/invite` | Send secure tokenized magic link invitation to staff/manager |
+| GET | `/api/insights` | Generate real-time AI strategic operational insights |
+| GET | `/api/notifications` | Fetch unread SLA and operational alerts |
 
 ---
 
