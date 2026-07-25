@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -48,7 +48,7 @@ export function LoginPage() {
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse) => {
+  const handleGoogleSuccess = useCallback(async (credentialResponse) => {
     setLoading(true);
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
@@ -70,11 +70,11 @@ export function LoginPage() {
       setError('Network failure.');
       setLoading(false);
     }
-  };
+  }, [role, login, addToast, navigate]);
 
-  const handleGoogleError = () => {
+  const handleGoogleError = useCallback(() => {
     setError('Google login failed.');
-  };
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-white dark:bg-slate-950">
