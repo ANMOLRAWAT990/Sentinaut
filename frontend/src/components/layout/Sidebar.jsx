@@ -6,6 +6,33 @@ import { LayoutDashboard, MessageSquare, Lightbulb, ClipboardList, BarChart3, Us
 export function Sidebar() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [currentPlan, setCurrentPlan] = React.useState('trial');
+
+  React.useEffect(() => {
+    const fetchPlan = () => {
+      if (!user) return;
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const endpoint = user.role === 'owner' 
+        ? `${API_URL}/api/properties?owner_email=${encodeURIComponent(user.email)}`
+        : `${API_URL}/api/properties`;
+      fetch(endpoint)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            if (user.role === 'owner') {
+              const upgraded = data.find(p => p.plan && p.plan !== 'trial');
+              setCurrentPlan(upgraded ? upgraded.plan : (data[0]?.plan || 'trial'));
+            } else {
+              const prop = data.find(p => p.name === user.property);
+              setCurrentPlan(prop?.plan || 'trial');
+            }
+          }
+        }).catch(() => {});
+    };
+    fetchPlan();
+    const interval = setInterval(fetchPlan, 15000);
+    return () => clearInterval(interval);
+  }, [user]);
   
   const getLinksByRole = () => {
     if (!user) return [];
@@ -66,6 +93,24 @@ export function Sidebar() {
             </NavLink>
           ))}
         </nav>
+      </div>
+
+      {/* Plan Chip */}
+      <div className="mx-2 mb-2 px-3 py-2 rounded-xl bg-gradient-to-r from-primary-600/10 via-blue-600/10 to-indigo-600/10 dark:from-primary-900/20 dark:via-blue-900/20 dark:to-indigo-900/20 border border-primary-600/20 dark:border-primary-500/20 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className={`w-2 h-2 rounded-full shrink-0 ${currentPlan === 'resort' ? 'bg-purple-500 animate-pulse' : currentPlan === 'boutique' ? 'bg-blue-500 animate-pulse' : 'bg-amber-500'}`}></span>
+          <span className="text-[11px] font-bold tracking-wider uppercase text-slate-800 dark:text-slate-200 truncate">
+            {currentPlan === 'resort' ? 'Resort Plan' : currentPlan === 'boutique' ? 'Boutique Plan' : 'Trial Plan'}
+          </span>
+        </div>
+        {user?.role === 'owner' && currentPlan === 'trial' && (
+          <button 
+            onClick={(e) => { e.stopPropagation(); navigate('/pricing'); }}
+            className="text-[10px] font-extrabold uppercase tracking-wider bg-primary-600 hover:bg-primary-700 text-white px-2 py-0.5 rounded shadow-sm transition-all shrink-0 ml-1"
+          >
+            Upgrade
+          </button>
+        )}
       </div>
 
       {/* User info */}
