@@ -116,7 +116,7 @@ export function Navbar() {
   const pageName = getPageName();
 
   return (
-    <nav className="w-full h-14 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex items-center px-6 lg:px-8 justify-between shrink-0">
+    <nav className="sticky top-0 z-50 w-full h-14 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex items-center px-6 lg:px-8 justify-between shrink-0">
       <div className="flex items-center gap-4 sm:gap-6">
         <div className="flex items-center gap-3">
           <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2">
