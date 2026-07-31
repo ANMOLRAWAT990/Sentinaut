@@ -70,6 +70,15 @@ Two-layer classification pipeline:
 
 ---
 
+## Deployment Documentation
+
+- **Live Frontend URL:** [https://sentinaut.vercel.app](https://sentinaut.vercel.app)
+- **Live Backend URL:** [https://sentinaut-backend.onrender.com](https://sentinaut-backend.onrender.com)
+- **Tech Stack Summary:** React JS (Vite) frontend deployed on Vercel, paired with a Python FastAPI backend deployed on Render, powered by MongoDB Atlas and Google Gemini AI.
+- **Known Limitations on Free Tier:** The Render backend free tier spins down after 15 minutes of inactivity. The very first request after an idle period (e.g., your first login attempt) may take 30–50 seconds to wake up the server. Please be patient on the first load!
+
+---
+
 ## Authentication & Security
 
 SentiNaut implements a full-stack, production-ready authentication architecture:
