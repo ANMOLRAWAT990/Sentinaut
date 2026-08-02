@@ -70,6 +70,8 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 class PropertyUpdate(BaseModel):
+    name: Optional[str] = None
+    location: Optional[str] = None
     custom_tags: Optional[List[str]] = None
     is_active: Optional[bool] = None
 
