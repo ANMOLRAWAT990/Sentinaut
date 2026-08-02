@@ -50,8 +50,8 @@ class RoleChecker:
         if payload.get("role") not in self.allowed_roles:
             raise HTTPException(status_code=403, detail="Operation not permitted")
             
-allow_owner = RoleChecker(["owner"])
-allow_manager_or_owner = RoleChecker(["owner", "manager"])
+allow_owner = RoleChecker(["owner", "admin"])
+allow_manager_or_owner = RoleChecker(["owner", "manager", "admin"])
 
 
 # Configure CORS so the React frontend can communicate with it

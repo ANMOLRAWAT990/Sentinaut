@@ -12,7 +12,6 @@ export function ChatBot() {
   const { user } = useAuth();
 
   const role = user ? user.role : 'guest';
-  if (role === 'admin') return null;
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
@@ -25,6 +24,8 @@ export function ChatBot() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
+
+  if (role === 'admin') return null;
 
   const sendMessage = async (e) => {
     e.preventDefault();

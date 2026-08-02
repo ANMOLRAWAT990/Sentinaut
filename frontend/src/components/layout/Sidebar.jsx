@@ -31,7 +31,11 @@ export function Sidebar() {
     };
     fetchPlan();
     const interval = setInterval(fetchPlan, 15000);
-    return () => clearInterval(interval);
+    window.addEventListener('planUpdated', fetchPlan);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('planUpdated', fetchPlan);
+    };
   }, [user]);
   
   const getLinksByRole = () => {

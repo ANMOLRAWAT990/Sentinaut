@@ -35,6 +35,9 @@ export function OwnerDashboard() {
   const [isEditManagerModalOpen, setIsEditManagerModalOpen] = useState(false);
   const [deleteManagerId, setDeleteManagerId] = useState(null);
 
+  const [isCancelPlanModalOpen, setIsCancelPlanModalOpen] = useState(false);
+  const [cancelPlanProperty, setCancelPlanProperty] = useState(null);
+
   // Feature 1: Competitor Benchmark State
   const [competitorScores, setCompetitorScores] = useState({
     own: { name: 'Your Property', rating: 0 }
@@ -153,11 +156,11 @@ export function OwnerDashboard() {
     }
   };
 
-  const handleCancelPlan = async (property) => {
-    if (!window.confirm(`Are you sure you want to cancel the ${property.plan} plan for ${property.name}?`)) return;
+  const handleCancelPlan = async () => {
+    if (!cancelPlanProperty) return;
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      const res = await fetch(`${API_URL}/api/properties/${property.id}`, {
+      const res = await fetch(`${API_URL}/api/properties/${cancelPlanProperty.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plan: 'trial' })
@@ -165,12 +168,16 @@ export function OwnerDashboard() {
       if (res.ok) {
         const updatedProp = await res.json();
         setProperties(properties.map(p => p.id === updatedProp.id ? updatedProp : p));
-        addToast(`Plan for ${property.name} cancelled successfully.`, 'success');
+        addToast(`Plan for ${cancelPlanProperty.name} cancelled successfully.`, 'success');
+        window.dispatchEvent(new Event('planUpdated'));
       } else {
         addToast('Failed to cancel plan.', 'error');
       }
     } catch (err) {
       addToast('Network error while cancelling plan.', 'error');
+    } finally {
+      setIsCancelPlanModalOpen(false);
+      setCancelPlanProperty(null);
     }
   };
 
@@ -507,7 +514,7 @@ export function OwnerDashboard() {
                   )}
                   <div className="flex gap-2 ml-2 flex-wrap">
                     {p.plan && p.plan !== 'trial' && (
-                      <Button variant="ghost" size="sm" className="h-8 px-2 text-amber-500 hover:text-amber-600 hover:bg-amber-50" onClick={() => handleCancelPlan(p)}>Cancel Plan</Button>
+                      <Button variant="ghost" size="sm" className="h-8 px-2 text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20" onClick={() => { setCancelPlanProperty(p); setIsCancelPlanModalOpen(true); }}>Cancel Plan</Button>
                     )}
                     <Button variant="ghost" size="sm" className="h-8 px-2 text-slate-500 hover:text-slate-900" onClick={() => { setEditingProperty(p); setPropertyName(p.name); setPropertyLocation(p.location); setIsEditPropertyModalOpen(true); }}>Edit</Button>
                     <Button variant="ghost" size="sm" className="h-8 px-2 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => setDeletePropertyId(p.id)}>Delete</Button>
@@ -716,6 +723,20 @@ export function OwnerDashboard() {
 
       <Modal isOpen={!!deleteManagerId} onClose={() => setDeleteManagerId(null)} title="Delete Manager" destructive confirmText="Delete Manager" onConfirm={handleDeleteManager}>
         <p className="text-sm text-slate-700">Are you sure you want to delete this manager? This action cannot be undone and they will lose access immediately.</p>
+      </Modal>
+
+      <Modal isOpen={isCancelPlanModalOpen} onClose={() => setIsCancelPlanModalOpen(false)} title="Cancel Subscription Plan">
+        <div className="space-y-4">
+          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            Are you sure you want to cancel the <span className="font-bold text-slate-900 dark:text-white uppercase">{cancelPlanProperty?.plan}</span> plan for <span className="font-bold text-slate-900 dark:text-white">{cancelPlanProperty?.name}</span>? 
+            <br/><br/>
+            This property will be downgraded to the Trial plan immediately, and you will lose access to premium features for this location.
+          </p>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="secondary" onClick={() => setIsCancelPlanModalOpen(false)}>Keep Plan</Button>
+            <Button variant="danger" onClick={handleCancelPlan}>Confirm Cancellation</Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );
