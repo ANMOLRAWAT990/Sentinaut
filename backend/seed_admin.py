@@ -7,7 +7,7 @@ load_dotenv()
 
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 client = MongoClient(MONGO_URI)
-db = client.get_database("sentinaut_db")
+db = client.get_database("sentinaut")
 users = db.get_collection("users")
 
 email = "admin@sentinaut.com"
