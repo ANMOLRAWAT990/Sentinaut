@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { LayoutDashboard, MessageSquare, Lightbulb, ClipboardList, BarChart3, Users, Settings } from 'lucide-react';
 
 export function Sidebar() {
-  const { user } = useAuth();
+  const { user, activeProperty } = useAuth();
   const navigate = useNavigate();
   const [currentPlan, setCurrentPlan] = React.useState('trial');
 
@@ -20,8 +20,8 @@ export function Sidebar() {
         .then(data => {
           if (Array.isArray(data)) {
             if (user.role === 'owner') {
-              const upgraded = data.find(p => p.plan && p.plan !== 'trial');
-              setCurrentPlan(upgraded ? upgraded.plan : (data[0]?.plan || 'trial'));
+              const activePropObj = data.find(p => p.name === activeProperty);
+              setCurrentPlan(activePropObj ? activePropObj.plan : (data[0]?.plan || 'trial'));
             } else {
               const prop = data.find(p => p.name === user.property);
               setCurrentPlan(prop?.plan || 'trial');
@@ -36,7 +36,7 @@ export function Sidebar() {
       clearInterval(interval);
       window.removeEventListener('planUpdated', fetchPlan);
     };
-  }, [user]);
+  }, [user, activeProperty]);
   
   const getLinksByRole = () => {
     if (!user) return [];

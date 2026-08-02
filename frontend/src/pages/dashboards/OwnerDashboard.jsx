@@ -324,8 +324,7 @@ export function OwnerDashboard() {
   };
 
   const activePropertyObj = properties.find(p => p.name === activeProperty) || properties[0] || {};
-  const anyUpgradedPlan = properties.find(p => p.plan && p.plan !== 'trial')?.plan;
-  const currentPlan = anyUpgradedPlan || activePropertyObj.plan || 'trial';
+  const currentPlan = activePropertyObj.plan || 'trial';
   const aiUsage = activePropertyObj.ai_usage_month || 0;
 
   return (
