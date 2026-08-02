@@ -38,9 +38,9 @@ export function AdminDashboard() {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
       
       const [propRes, userRes, revRes] = await Promise.all([
-        fetch(`${API_URL}/api/properties`),
-        fetch(`${API_URL}/api/users`),
-        fetch(`${API_URL}/api/reviews`)
+        fetch(`${API_URL}/api/properties`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }),
+        fetch(`${API_URL}/api/users`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }),
+        fetch(`${API_URL}/api/reviews`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
       ]);
 
       const [propData, userData, revData] = await Promise.all([
@@ -75,7 +75,7 @@ export function AdminDashboard() {
       if (editingProperty) {
         const res = await fetch(`${API_URL}/api/properties/${editingProperty.id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
           body: JSON.stringify({ name: propertyName, location: propertyLocation })
         });
         if (res.ok) {
@@ -94,7 +94,7 @@ export function AdminDashboard() {
       } else {
         const res = await fetch(`${API_URL}/api/properties`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
           body: JSON.stringify({ name: propertyName, location: propertyLocation, status: 'Active', owner_email: 'admin@sentinaut.com' })
         });
         if (res.ok) {
@@ -114,7 +114,7 @@ export function AdminDashboard() {
   const handleDeleteProperty = async () => {
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     try {
-      const res = await fetch(`${API_URL}/api/properties/${deletePropertyId}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/api/properties/${deletePropertyId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (res.ok) {
         setProperties(properties.filter(p => p.id !== deletePropertyId));
         addToast('Property deleted.', 'success');
@@ -136,7 +136,7 @@ export function AdminDashboard() {
     try {
       const res = await fetch(`${API_URL}/api/users/${editingUser.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ name: userName }) 
       });
       if (res.ok) {
@@ -154,7 +154,7 @@ export function AdminDashboard() {
   const handleDeleteUser = async () => {
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     try {
-      const res = await fetch(`${API_URL}/api/users/${deleteUserId}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/api/users/${deleteUserId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (res.ok) {
         setUsers(users.filter(u => u.id !== deleteUserId));
         addToast('User deleted.', 'success');
@@ -172,7 +172,7 @@ export function AdminDashboard() {
     if (!window.confirm("Are you sure you want to permanently delete this review?")) return;
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     try {
-      const res = await fetch(`${API_URL}/api/reviews/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/api/reviews/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (res.ok) {
         setReviews(reviews.filter(r => r.id !== id));
         addToast('Review deleted.', 'success');

@@ -59,10 +59,10 @@ export function OwnerDashboard() {
       const encodedEmail = encodeURIComponent(user.email);
       const propQuery = activeProperty ? `&property=${encodeURIComponent(activeProperty)}` : '';
       Promise.all([
-        fetch(`${API_URL}/api/properties?owner_email=${encodedEmail}`).then(res => res.json()),
-        fetch(`${API_URL}/api/users?role=manager&owner_email=${encodedEmail}`).then(res => res.json()),
-        fetch(`${API_URL}/api/analytics?owner_email=${encodedEmail}${propQuery}`).then(res => res.json()),
-        fetch(`${API_URL}/api/competitors/summary?property=${encodeURIComponent(activeProperty || 'Unassigned')}`).then(res => res.json()).catch(() => ({}))
+        fetch(`${API_URL}/api/properties?owner_email=${encodedEmail}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(res => res.json()),
+        fetch(`${API_URL}/api/users?role=manager&owner_email=${encodedEmail}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(res => res.json()),
+        fetch(`${API_URL}/api/analytics?owner_email=${encodedEmail}${propQuery}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(res => res.json()),
+        fetch(`${API_URL}/api/competitors/summary?property=${encodeURIComponent(activeProperty || 'Unassigned')}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(res => res.json()).catch(() => ({}))
       ]).then(([propsData, managersData, analyticsRes, compRes]) => {
         if (Array.isArray(propsData)) {
           setProperties(propsData);
@@ -94,7 +94,7 @@ export function OwnerDashboard() {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
       const res = await fetch(`${API_URL}/api/properties`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ name: propertyName, location: propertyLocation, status: 'Active', owner_email: user?.email })
       });
       
@@ -124,7 +124,7 @@ export function OwnerDashboard() {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
       const res = await fetch(`${API_URL}/api/properties/${editingProperty.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ name: propertyName, location: propertyLocation })
       });
       if (res.ok) {
@@ -148,7 +148,7 @@ export function OwnerDashboard() {
   const handleDeleteProperty = async () => {
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      const res = await fetch(`${API_URL}/api/properties/${deletePropertyId}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/api/properties/${deletePropertyId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (res.ok) {
         setProperties(properties.filter(p => p.id !== deletePropertyId));
         addToast('Property deleted.', 'success');
@@ -170,7 +170,7 @@ export function OwnerDashboard() {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
       const res = await fetch(`${API_URL}/api/properties/${cancelPlanProperty.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ plan: 'trial' })
       });
       if (res.ok) {
@@ -203,9 +203,7 @@ export function OwnerDashboard() {
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
       const targetProperty = selectedProperty || properties[0]?.name || 'Unassigned';
-      const res = await fetch(`${API_URL}/api/auth/invite?email=${encodeURIComponent(managerEmail)}&role=manager&property=${encodeURIComponent(targetProperty)}`, {
-        method: 'POST'
-      });
+      const res = await fetch(`${API_URL}/api/auth/invite?email=${encodeURIComponent(managerEmail)}&role=manager&property=${encodeURIComponent(targetProperty)}`, { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       
       if (res.ok) {
         const data = await res.json();
@@ -237,7 +235,7 @@ export function OwnerDashboard() {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
       const res = await fetch(`${API_URL}/api/users/${editingManager.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ name: editingManager.name, email: editingManager.email, property: editingManager.property })
       });
       if (res.ok) {
@@ -255,7 +253,7 @@ export function OwnerDashboard() {
   const handleDeleteManager = async () => {
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      const res = await fetch(`${API_URL}/api/users/${deleteManagerId}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/api/users/${deleteManagerId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (res.ok) {
         setManagers(managers.filter(m => m.id !== deleteManagerId));
         addToast('Manager deleted.', 'success');
@@ -274,7 +272,7 @@ export function OwnerDashboard() {
     addToast("Fetching latest OTA scores and generating AI benchmark...", "info");
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      const res = await fetch(`${API_URL}/api/competitors/refresh?property=${encodeURIComponent(activeProperty || 'Unassigned')}`, {method: 'POST'});
+      const res = await fetch(`${API_URL}/api/competitors/refresh?property=${encodeURIComponent(activeProperty || 'Unassigned')}`, { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (res.ok) {
         const data = await res.json();
         setCompetitorSummary(data.summary);
@@ -305,7 +303,7 @@ export function OwnerDashboard() {
       
       const res = await fetch(`${API_URL}/api/reviews/analyze`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ 
           property: activeProperty || 'Unassigned',
           batch: reviewsArray,

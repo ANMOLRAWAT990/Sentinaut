@@ -17,7 +17,7 @@ export function SuggestionsIndex() {
     setLoading(true);
     try {
       const propName = activeProperty || user?.property || 'Unassigned';
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/insights?property=${encodeURIComponent(propName)}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/insights?property=${encodeURIComponent(propName)}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if(res.ok) setInsights(await res.json());
     } catch(e) {}
     setLoading(false);
@@ -26,7 +26,7 @@ export function SuggestionsIndex() {
   const fetchActions = async () => {
     try {
       const propName = activeProperty || user?.property || 'Unassigned';
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/actions?property=${encodeURIComponent(propName)}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/actions?property=${encodeURIComponent(propName)}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if(res.ok) setActions(await res.json());
     } catch(e) {}
   };
@@ -44,7 +44,7 @@ export function SuggestionsIndex() {
     addToast('Generating insights... this takes a moment', 'info');
     try {
       const propName = activeProperty || user?.property || 'Unassigned';
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/insights/generate?property=${encodeURIComponent(propName)}`, {method: 'POST'});
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/insights/generate?property=${encodeURIComponent(propName)}`, { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if(res.ok) {
         setInsights(await res.json());
         addToast('Insights generated', 'success');
@@ -57,7 +57,7 @@ export function SuggestionsIndex() {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/actions/${action.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ ...action, status: 'Done' })
       });
       if (res.ok) {
@@ -112,7 +112,7 @@ export function SuggestionsIndex() {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
       const res = await fetch(`${API_URL}/api/actions`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({
           task: task?.task || anomaly.title,
           property: propName,
@@ -125,7 +125,7 @@ export function SuggestionsIndex() {
         fetchActions();
         
         // Remove from insights DB
-        await fetch(`${API_URL}/api/insights/dismiss?property=${encodeURIComponent(propName)}&anomaly_title=${encodeURIComponent(anomaly.title)}`, { method: 'PUT' });
+        await fetch(`${API_URL}/api/insights/dismiss?property=${encodeURIComponent(propName)}&anomaly_title=${encodeURIComponent(anomaly.title)}`, { method: 'PUT', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       }
     } catch (e) {
       addToast('Failed to create task.', 'error');
@@ -137,7 +137,7 @@ export function SuggestionsIndex() {
     try {
       const propName = activeProperty || user?.property || 'Unassigned';
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      await fetch(`${API_URL}/api/insights/dismiss?property=${encodeURIComponent(propName)}&anomaly_title=${encodeURIComponent(anomaly.title)}`, { method: 'PUT' });
+      await fetch(`${API_URL}/api/insights/dismiss?property=${encodeURIComponent(propName)}&anomaly_title=${encodeURIComponent(anomaly.title)}`, { method: 'PUT', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
     } catch (e) {
       // ignore
     }

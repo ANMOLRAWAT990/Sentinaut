@@ -25,7 +25,7 @@ export function SettingsPage() {
     document.title = "Settings — SentiNaut";
     if (!user || user.role !== 'owner') return;
       const propQuery = activeProperty || user?.property || 'Unassigned';
-      fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/properties?owner_email=${user.email}`)
+      fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/properties?owner_email=${user.email}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data) && data.length > 0) {
@@ -41,7 +41,7 @@ export function SettingsPage() {
     const updatedTags = [...(activePropObj.custom_tags || []), newTag];
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/properties/${activePropObj.id}`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ custom_tags: updatedTags })
       });
       if (res.ok) {
@@ -60,7 +60,7 @@ export function SettingsPage() {
     const updatedTags = (activePropObj.custom_tags || []).filter(t => t !== tagToRemove);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/properties/${activePropObj.id}`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ custom_tags: updatedTags })
       });
       if (res.ok) {
@@ -84,7 +84,7 @@ export function SettingsPage() {
 
       const res = await fetch(`${API_URL}/api/users/${user.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify(payload)
       });
       if (res.ok) {
@@ -106,7 +106,7 @@ export function SettingsPage() {
     setIsDeleting(true);
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      const res = await fetch(`${API_URL}/api/users/${user.id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/api/users/${user.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (res.ok) {
         login(null);
         window.location.href = '/';

@@ -37,7 +37,7 @@ export function ReviewsIndex() {
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
       const propQuery = activeProperty ? `?property=${encodeURIComponent(activeProperty)}` : '';
-      const res = await fetch(`${API_URL}/api/reviews${propQuery}`);
+      const res = await fetch(`${API_URL}/api/reviews${propQuery}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if(res.ok) {
         const data = await res.json();
         setReviews(data.reverse());
@@ -52,7 +52,7 @@ export function ReviewsIndex() {
   const deleteReview = async (id) => {
     setIsDeleting(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/reviews/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/reviews/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if(res.ok) {
         setReviews(reviews.filter(r => r.id !== id));
         addToast('Review deleted successfully', 'success');
@@ -68,7 +68,7 @@ export function ReviewsIndex() {
   const approveReview = async (review) => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/reviews/${review.id}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ ...review, status: 'Approved' })
       });
       if (res.ok) {
@@ -86,7 +86,7 @@ export function ReviewsIndex() {
     const newRepliedStatus = !review.replied;
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/reviews/${review.id}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ ...review, replied: newRepliedStatus })
       });
       if (res.ok) {
@@ -104,7 +104,7 @@ export function ReviewsIndex() {
     setIsDeleting(true);
     try {
       for (const id of selectedReviews) {
-        await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/reviews/${id}`, { method: 'DELETE' });
+        await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/reviews/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       }
       setReviews(reviews.filter(r => !selectedReviews.includes(r.id)));
       setSelectedReviews([]);
@@ -121,7 +121,7 @@ export function ReviewsIndex() {
       if(review && review.status !== 'Approved') {
         await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/reviews/${id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
           body: JSON.stringify({ ...review, status: 'Approved' })
         });
       }
@@ -142,7 +142,7 @@ export function ReviewsIndex() {
     }
     addToast('Translating...', 'info');
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/reviews/${id}/translate`, { method: 'POST' });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/reviews/${id}/translate`, { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (res.ok) {
         const data = await res.json();
         setTranslationMap(prev => ({ ...prev, [id]: `[Translated] ${data.translated_text}` }));
@@ -155,7 +155,7 @@ export function ReviewsIndex() {
   const handleDraftReply = async (id) => {
     setIsDrafting(prev => ({ ...prev, [id]: true }));
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/reviews/${id}/draft-reply`, { method: 'POST' });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/reviews/${id}/draft-reply`, { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (res.ok) {
         const data = await res.json();
         setDrafts(prev => ({ ...prev, [id]: data.draft }));

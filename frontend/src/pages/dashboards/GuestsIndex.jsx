@@ -19,8 +19,8 @@ export function GuestsIndex() {
     const encodedProp = encodeURIComponent(propQuery);
     
     Promise.all([
-      fetch(`${API_URL}/api/checkouts?property=${encodedProp}`).then(res => res.json()),
-      fetch(`${API_URL}/api/reviews?property=${encodedProp}`).then(res => res.json())
+      fetch(`${API_URL}/api/checkouts?property=${encodedProp}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(res => res.json()),
+      fetch(`${API_URL}/api/reviews?property=${encodedProp}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(res => res.json())
     ]).then(([checkouts, reviews]) => {
        const guestMap = {};
        checkouts.forEach(c => {

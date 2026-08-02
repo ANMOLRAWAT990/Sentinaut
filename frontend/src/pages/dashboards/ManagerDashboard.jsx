@@ -43,7 +43,7 @@ export function ManagerDashboard() {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
       const res = await fetch(`${API_URL}/api/actions/${selectedAction.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify(updatedAction)
       });
       if (!res.ok) throw new Error("Failed to add note");
@@ -66,7 +66,7 @@ export function ManagerDashboard() {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
       const res = await fetch(`${API_URL}/api/actions/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify(updatedAction)
       });
       if (!res.ok) throw new Error("Failed to archive");
@@ -86,7 +86,7 @@ export function ManagerDashboard() {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
       const res = await fetch(`${API_URL}/api/actions/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify(updatedAction)
       });
       if (!res.ok) throw new Error("Failed to assign staff");
@@ -106,7 +106,7 @@ export function ManagerDashboard() {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
       const res = await fetch(`${API_URL}/api/actions/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify(updatedAction)
       });
       if (!res.ok) throw new Error("Failed to set priority");
@@ -123,9 +123,7 @@ export function ManagerDashboard() {
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
       const targetProperty = user?.property || 'Unassigned';
-      const res = await fetch(`${API_URL}/api/auth/invite?email=${encodeURIComponent(inviteEmail)}&role=staff&property=${encodeURIComponent(targetProperty)}`, {
-        method: 'POST'
-      });
+      const res = await fetch(`${API_URL}/api/auth/invite?email=${encodeURIComponent(inviteEmail)}&role=staff&property=${encodeURIComponent(targetProperty)}`, { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       
       if (res.ok) {
         const data = await res.json();
@@ -156,7 +154,7 @@ export function ManagerDashboard() {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
       const res = await fetch(`${API_URL}/api/users/${editingStaff.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ name: editingStaff.name, email: editingStaff.email, property: editingStaff.property })
       });
       if (res.ok) {
@@ -174,7 +172,7 @@ export function ManagerDashboard() {
   const handleDeleteStaff = async () => {
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      const res = await fetch(`${API_URL}/api/users/${deleteStaffId}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/api/users/${deleteStaffId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (res.ok) {
         setStaffList(staffList.filter(s => s.id !== deleteStaffId));
         addToast('Staff member deleted.', 'success');
@@ -194,9 +192,9 @@ export function ManagerDashboard() {
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
     Promise.all([
-      fetch(`${API_URL}/api/reviews?property=${encodeURIComponent(user.property)}`).then(res => res.json()),
-      fetch(`${API_URL}/api/actions?property=${encodeURIComponent(user.property)}`).then(res => res.json()),
-      fetch(`${API_URL}/api/users?role=staff&property=${encodeURIComponent(user.property)}`).then(res => res.json())
+      fetch(`${API_URL}/api/reviews?property=${encodeURIComponent(user.property)}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(res => res.json()),
+      fetch(`${API_URL}/api/actions?property=${encodeURIComponent(user.property)}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(res => res.json()),
+      fetch(`${API_URL}/api/users?role=staff&property=${encodeURIComponent(user.property)}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(res => res.json())
     ]).then(([reviewsData, actionsData, staffData]) => {
       const fetchedReviews = reviewsData.reverse().map(r => ({
         id: r.id, text: r.text, sentiment: r.sentiment, approved: r.status === "Done", fullData: r
@@ -217,7 +215,7 @@ export function ManagerDashboard() {
 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/reviews/${id}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ ...reviewToUpdate.fullData, status: !reviewToUpdate.approved ? "Done" : "Pending" })
       });
       if (!res.ok) throw new Error("Failed to toggle approval");
@@ -235,7 +233,7 @@ export function ManagerDashboard() {
     if (!deleteReviewId) return;
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      const res = await fetch(`${API_URL}/api/reviews/${deleteReviewId}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/api/reviews/${deleteReviewId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (!res.ok) throw new Error("Failed to delete");
       setReviews(reviews.filter(r => r.id !== deleteReviewId));
       addToast("Review deleted permanently.", "success");
@@ -254,7 +252,7 @@ export function ManagerDashboard() {
     setActions(actions.map(a => a.id === id ? { ...a, status: newStatus } : a));
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/actions/${id}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ ...actionToUpdate, status: newStatus })
       });
       if (!res.ok) throw new Error("Failed to execute action");
@@ -272,7 +270,7 @@ export function ManagerDashboard() {
     setActions(actions.map(a => a.id === id ? { ...a, status: newStatus } : a));
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/actions/${id}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ ...actionToUpdate, status: newStatus })
       });
       if (!res.ok) throw new Error("Failed to revert action");

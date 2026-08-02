@@ -29,7 +29,7 @@ export function StaffDashboard() {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
       const res = await fetch(`${API_URL}/api/actions`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ 
           task: taskText, 
           status: 'Pending', 
@@ -59,7 +59,7 @@ export function StaffDashboard() {
     document.title = "Front Desk — SentiNaut";
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     if (user?.property) {
-      fetch(`${API_URL}/api/reviews?property=${encodeURIComponent(user.property)}`)
+      fetch(`${API_URL}/api/reviews?property=${encodeURIComponent(user.property)}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
         .then(res => res.json())
         .then(data => {
         // We'll just map this to the batch results structure to populate the left table initially if we wanted to
@@ -79,7 +79,7 @@ export function StaffDashboard() {
       if (mode === 'single') {
         const res = await fetch(`${API_URL}/api/reviews/analyze`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
           body: JSON.stringify({ text: reviewText, property: user?.property || 'Unassigned' })
         });
         
@@ -91,7 +91,7 @@ export function StaffDashboard() {
         
         const res = await fetch(`${API_URL}/api/reviews/analyze`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
           body: JSON.stringify({ batch: rawReviews, property: user?.property || 'Unassigned' })
         });
 

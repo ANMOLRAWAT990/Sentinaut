@@ -15,7 +15,7 @@ const PricingPage = () => {
     document.title = "SentiNaut - Pricing";
     if (user && !activeProperty) {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      fetch(`${API_URL}/api/properties?owner_email=${encodeURIComponent(user.email)}`)
+      fetch(`${API_URL}/api/properties?owner_email=${encodeURIComponent(user.email)}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data) && data.length > 0) {
@@ -35,14 +35,14 @@ const PricingPage = () => {
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
     
     try {
-      const orderRes = await fetch(`${API_URL}/api/payments/create-order?amount=${amount}&property=${encodeURIComponent(targetProp)}`, { method: 'POST' });
+      const orderRes = await fetch(`${API_URL}/api/payments/create-order?amount=${amount}&property=${encodeURIComponent(targetProp)}`, { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       const order = await orderRes.json();
       
       if (!order.key_id || order.key_id === "rzp_test_placeholder" || order.order_id?.startsWith("order_mock")) {
         addToast("Demo Mode: Simulating instant payment verification...", "info");
         const verifyRes = await fetch(`${API_URL}/api/payments/verify`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
           body: JSON.stringify({
             property: targetProp,
             plan: planTier,
@@ -71,7 +71,7 @@ const PricingPage = () => {
         handler: async function (response) {
           const verifyRes = await fetch(`${API_URL}/api/payments/verify`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
             body: JSON.stringify({
               property: targetProp,
               plan: planTier,
