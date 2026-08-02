@@ -48,6 +48,7 @@ export function SettingsPage() {
         setActivePropObj({...activePropObj, custom_tags: updatedTags});
         setNewTag('');
         addToast('Tag added successfully', 'success');
+        window.dispatchEvent(new Event('propertiesUpdated'));
       } else { throw new Error("Failed"); }
     } catch (err) {
       addToast('Failed to add tag', 'error');
@@ -65,6 +66,7 @@ export function SettingsPage() {
       if (res.ok) {
         setActivePropObj({...activePropObj, custom_tags: updatedTags});
         addToast('Tag removed', 'success');
+        window.dispatchEvent(new Event('propertiesUpdated'));
       } else { throw new Error("Failed"); }
     } catch (err) {
       addToast('Failed to remove tag', 'error');

@@ -131,6 +131,11 @@ export function OwnerDashboard() {
         const updatedProp = await res.json();
         setProperties(properties.map(p => p.id === updatedProp.id ? updatedProp : p));
         addToast(`${propertyName} has been updated successfully.`, 'success');
+        
+        if (editingProperty.name === activeProperty && propertyName !== activeProperty && typeof setActiveProperty === 'function') {
+          setActiveProperty(propertyName);
+        }
+        
         window.dispatchEvent(new Event('propertiesUpdated'));
       } else {
         addToast('Failed to update property.', 'error');

@@ -860,9 +860,25 @@ def patch_property(id: str, prop_update: PropertyUpdate):
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields provided for update.")
         
+    old_property = properties_collection.find_one(filter_query)
+    
     update_result = properties_collection.update_one(filter_query, {"$set": update_data})
     if update_result.modified_count == 1 or update_result.matched_count == 1:
         updated = properties_collection.find_one(filter_query)
+        
+        # Cascade update if name changed
+        if old_property and "name" in update_data and old_property.get("name") != update_data["name"]:
+            old_name = old_property["name"]
+            new_name = update_data["name"]
+            
+            users_collection.update_many({"property": old_name}, {"$set": {"property": new_name}})
+            reviews_collection.update_many({"property": old_name}, {"$set": {"property": new_name}})
+            actions_collection.update_many({"property": old_name}, {"$set": {"property": new_name}})
+            notifications_collection.update_many({"property": old_name}, {"$set": {"property": new_name}})
+            insights_collection.update_many({"property": old_name}, {"$set": {"property": new_name}})
+            invites_collection.update_many({"property": old_name}, {"$set": {"property": new_name}})
+            checkouts_collection.update_many({"property": old_name}, {"$set": {"property": new_name}})
+            
         return property_helper(updated)
     raise HTTPException(status_code=404, detail="Property not found")
 
