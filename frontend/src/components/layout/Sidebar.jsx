@@ -124,7 +124,12 @@ export function Sidebar() {
             {user?.name?.[0] || 'U'}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-medium text-[#111] dark:text-[#eee] capitalize truncate">{user?.name || 'User'}</p>
+            <div className="flex items-center gap-2 truncate">
+              <p className="text-[13px] font-medium text-[#111] dark:text-[#eee] capitalize truncate">{user?.name || 'User'}</p>
+              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider text-white ${user?.role === 'owner' ? 'bg-purple-500' : user?.role === 'manager' ? 'bg-blue-500' : 'bg-green-500'}`}>
+                {user?.role || 'Staff'}
+              </span>
+            </div>
             <p className="text-[11px] font-medium text-[#888] dark:text-[#888] uppercase tracking-wide truncate">{user?.email || 'user@example.com'}</p>
           </div>
           <Settings className="h-4 w-4 text-[#888] opacity-0 group-hover:opacity-100 transition-opacity" />

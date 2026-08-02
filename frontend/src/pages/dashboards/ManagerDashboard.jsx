@@ -5,6 +5,7 @@ import { useToast } from '../../components/ui/Toast';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { EmptyState } from '../../components/ui/EmptyState';
 import { useAuth } from '../../context/AuthContext';
 
 export function ManagerDashboard() {
@@ -308,6 +309,13 @@ export function ManagerDashboard() {
                 <Skeleton className="h-8 w-20 rounded-md shrink-0" />
               </div>
             ))
+          ) : reviews.length === 0 ? (
+            <div className="p-6">
+              <EmptyState 
+                title="Queue is Clear" 
+                description="There are no pending reviews requiring authorization at this time." 
+              />
+            </div>
           ) : (
             reviews.slice(0, 4).map(r => (
               <div key={r.id} className="p-5 flex items-start justify-between gap-6 hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors">

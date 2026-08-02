@@ -9,7 +9,7 @@ let toastCount = 0;
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
-  const addToast = useCallback((message, type = 'info', duration = 3000) => {
+  const addToast = useCallback((message, type = 'info', duration = 4000) => {
     const id = ++toastCount;
     setToasts(prev => [...prev, { id, message, type }]);
 

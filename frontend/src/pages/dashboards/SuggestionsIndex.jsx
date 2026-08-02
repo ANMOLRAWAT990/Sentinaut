@@ -104,6 +104,35 @@ export function SuggestionsIndex() {
     </div>
   )};
 
+  const [triageIndex, setTriageIndex] = React.useState(0);
+
+  const handleTriageAccept = async (anomaly, task) => {
+    try {
+      const propName = activeProperty || user?.property || 'Unassigned';
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/actions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          task: task?.task || anomaly.title,
+          property: propName,
+          status: 'Pending',
+          priority: anomaly.severity
+        })
+      });
+      if (res.ok) {
+        addToast('Task created from insight!', 'success');
+        fetchActions();
+      }
+    } catch (e) {
+      addToast('Failed to create task.', 'error');
+    }
+    setTriageIndex(prev => prev + 1);
+  };
+
+  const handleTriageDismiss = () => {
+    setTriageIndex(prev => prev + 1);
+  };
+
   const renderManagerView = () => (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -111,43 +140,35 @@ export function SuggestionsIndex() {
           <h2 className="text-xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">Operational Intelligence</h2>
           <p className="text-[13px] text-[#666666] dark:text-[#a1a1aa] mt-1">{insights.summary || 'Algorithmic deductions based on review volume anomalies.'}</p>
         </div>
-        <Button size="sm" variant="secondary" onClick={generateInsights} isLoading={isGenerating}>Force AI Re-index</Button>
+        <Button size="sm" variant="secondary" onClick={() => { setTriageIndex(0); generateInsights(); }} isLoading={isGenerating}>Force AI Re-index</Button>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-black/10 dark:border-white/10 rounded-xl shadow-sm overflow-hidden">
-        <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 border-b border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.02] text-[11px] font-semibold text-[#666666] dark:text-[#a1a1aa] uppercase tracking-wider">
-          <div className="col-span-3">Anomaly Status</div>
-          <div className="col-span-9">Deduction & Recommended Action</div>
-        </div>
-        <div className="divide-y divide-black/5 dark:divide-white/5">
-          {loading ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-4 px-6 py-4 items-start">
-                <div className="md:col-span-3">
-                  <Skeleton className="h-5 w-16" />
-                </div>
-                <div className="md:col-span-9 md:pr-8 space-y-2 w-full">
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                </div>
-              </div>
-            ))
-          ) : insights.anomalies.map((s, i) => (
-            <div key={i} className="flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-4 px-6 py-4 items-start group hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors">
-              <div className="md:col-span-3">
-                <div className={`text-[13px] font-medium font-mono ${s.severity === 'High' ? 'text-red-500' : 'text-yellow-500'}`}>[{s.severity.toUpperCase()}]</div>
-              </div>
-              <div className="md:col-span-9 md:pr-8">
-                <div className="text-[14px] font-medium text-slate-900 dark:text-slate-200 mb-1">{s.title}</div>
-                {insights.tasks[i] && <div className="text-[13px] text-[#666666] dark:text-[#a1a1aa] leading-relaxed mb-3">Suggested Task: {insights.tasks[i].task}</div>}
-              </div>
+      <div className="bg-white dark:bg-slate-900 border border-black/10 dark:border-white/10 rounded-xl shadow-sm overflow-hidden p-6">
+        {loading ? (
+          <div className="space-y-4">
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-24 w-full" />
+            <div className="flex gap-2"><Skeleton className="h-10 w-24" /><Skeleton className="h-10 w-24" /></div>
+          </div>
+        ) : insights.anomalies && triageIndex < insights.anomalies.length ? (
+          <div className="animate-in slide-in-from-right-4 duration-300">
+            <div className="mb-4">
+              <div className="text-[12px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Insight {triageIndex + 1} of {insights.anomalies.length}</div>
+              <div className={`text-[14px] font-medium font-mono mb-2 ${insights.anomalies[triageIndex].severity === 'High' ? 'text-red-500' : 'text-yellow-500'}`}>[{insights.anomalies[triageIndex].severity.toUpperCase()} SEVERITY]</div>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-200">{insights.anomalies[triageIndex].title}</h3>
+              {insights.tasks[triageIndex] && (
+                <p className="text-[14px] text-slate-600 dark:text-slate-400 mt-2">Recommended Action: {insights.tasks[triageIndex].task}</p>
+              )}
             </div>
-          ))}
-        </div>
-        {!loading && insights.anomalies.length === 0 && (
+            <div className="flex gap-3">
+              <Button size="sm" onClick={() => handleTriageAccept(insights.anomalies[triageIndex], insights.tasks[triageIndex])}>Accept & Create Task</Button>
+              <Button size="sm" variant="secondary" onClick={handleTriageDismiss}>Dismiss</Button>
+            </div>
+          </div>
+        ) : (
           <EmptyState 
-            title="Operational Harmony"
-            description="No critical anomalies detected in recent guest feedback."
+            title={insights.anomalies?.length > 0 ? "All Insights Triaged!" : "Operational Harmony"}
+            description={insights.anomalies?.length > 0 ? "You've reviewed all AI-generated insights for now." : "No critical anomalies detected in recent guest feedback."}
           />
         )}
       </div>

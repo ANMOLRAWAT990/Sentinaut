@@ -26,6 +26,22 @@ export function SignupPage() {
   const [error, setError] = useState('');
   const role = 'owner';
 
+  const calculateStrength = (pass) => {
+    let score = 0;
+    if (pass.length > 5) score += 20;
+    if (pass.length > 8) score += 20;
+    if (/[A-Z]/.test(pass)) score += 20;
+    if (/[0-9]/.test(pass)) score += 20;
+    if (/[^A-Za-z0-9]/.test(pass)) score += 20;
+    
+    if (pass.length === 0) return { score: 0, label: '', color: 'bg-transparent' };
+    if (score <= 40) return { score, label: 'Weak', color: 'bg-red-500' };
+    if (score <= 80) return { score, label: 'Good', color: 'bg-yellow-500' };
+    return { score, label: 'Strong', color: 'bg-green-500' };
+  };
+
+  const strength = calculateStrength(password);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -110,7 +126,21 @@ export function SignupPage() {
           <form className="space-y-5" onSubmit={handleSubmit}>
             <Input label="Full Name" type="text" placeholder="Enter your full name" required value={name} onChange={(e) => setName(e.target.value)} />
             <Input label="Email address" type="email" placeholder="Enter your email address" required value={email} onChange={(e) => setEmail(e.target.value)} />
-            <Input label="Password" type="password" placeholder="Create a password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+            
+            <div className="space-y-2">
+              <Input label="Password" type="password" placeholder="Create a password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+              {password.length > 0 && (
+                <div className="space-y-1 mt-1">
+                  <div className="flex h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div className={`h-full transition-all duration-300 ease-out ${strength.color}`} style={{ width: `${strength.score}%` }} />
+                  </div>
+                  <div className="flex justify-between items-center text-[11px] text-slate-500 font-medium px-1">
+                    <span>{strength.label}</span>
+                    {password.length < 6 && <span className="text-red-500">Min 6 chars</span>}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {error && <div className="text-[13px] text-red-500 font-medium">{error}</div>}
             

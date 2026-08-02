@@ -115,12 +115,13 @@ Context:
 
 CRITICAL RULES:
 1. You MUST ONLY answer questions related to SentiNaut, hotels, hospitality, reviews, or customer service.
-2. If the user asks about coding, math, general trivia, politics, or anything unrelated to the hospitality industry, you MUST politely refuse to answer and remind them you are a dedicated SentiNaut assistant.
-3. Keep your answers concise, professional, and directly related to the user's role.
+2. If the user asks about coding, math, general trivia, politics, or anything unrelated to the hospitality industry, you MUST politely refuse to answer and state that you are a dedicated SentiNaut assistant.
+3. Keep your answers concise, calculative, straightforward, and strictly professional.
+4. If a user asks for contact details or support, provide the official email: hello.sentinaut@gmail.com.
 
 The user says: {message}
 
-Provide a helpful, concise, and professional response following the rules above."""
+Provide a helpful, concise, and strictly professional response following the rules above."""
 
 class AIService:
     def __init__(self, provider: BaseAIProvider = None):
