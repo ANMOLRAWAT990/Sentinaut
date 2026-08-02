@@ -101,10 +101,11 @@ export function OwnerDashboard() {
       if (res.ok) {
         const newProp = await res.json();
         setProperties([...properties, newProp]);
-        if (!activeProperty && typeof setActiveProperty === 'function') {
+        if (properties.length === 0) {
           setActiveProperty(newProp.name);
         }
         addToast(`${propertyName} has been registered successfully.`, 'success');
+        window.dispatchEvent(new Event('propertiesUpdated'));
       } else {
         addToast('Failed to register property.', 'error');
       }
@@ -130,6 +131,7 @@ export function OwnerDashboard() {
         const updatedProp = await res.json();
         setProperties(properties.map(p => p.id === updatedProp.id ? updatedProp : p));
         addToast(`${propertyName} has been updated successfully.`, 'success');
+        window.dispatchEvent(new Event('propertiesUpdated'));
       } else {
         addToast('Failed to update property.', 'error');
       }
@@ -145,6 +147,7 @@ export function OwnerDashboard() {
       if (res.ok) {
         setProperties(properties.filter(p => p.id !== deletePropertyId));
         addToast('Property deleted.', 'success');
+        window.dispatchEvent(new Event('propertiesUpdated'));
       } else {
         addToast('Failed to delete property.', 'error');
       }

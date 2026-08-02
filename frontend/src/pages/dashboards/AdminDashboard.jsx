@@ -82,6 +82,7 @@ export function AdminDashboard() {
           const updatedProp = await res.json();
           setProperties(properties.map(p => p.id === updatedProp.id ? updatedProp : p));
           addToast('Property updated.', 'success');
+          window.dispatchEvent(new Event('propertiesUpdated'));
         } else {
           addToast('Failed to update property.', 'error');
         }
@@ -95,6 +96,7 @@ export function AdminDashboard() {
           const newProp = await res.json();
           setProperties([...properties, newProp]);
           addToast('Property created.', 'success');
+          window.dispatchEvent(new Event('propertiesUpdated'));
         } else {
           addToast('Failed to create property.', 'error');
         }
@@ -111,6 +113,7 @@ export function AdminDashboard() {
       if (res.ok) {
         setProperties(properties.filter(p => p.id !== deletePropertyId));
         addToast('Property deleted.', 'success');
+        window.dispatchEvent(new Event('propertiesUpdated'));
       } else {
         addToast('Failed to delete property.', 'error');
       }

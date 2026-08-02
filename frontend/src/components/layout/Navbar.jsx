@@ -21,19 +21,24 @@ export function Navbar() {
   useEffect(() => {
     if (user) {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      if (user.role === 'owner') {
-        fetch(`${API_URL}/api/properties?owner_email=${user.email}`)
-          .then(r => r.json())
-          .then(data => {
-             setProperties(data);
-             if (data.length > 0) {
-               const propExists = data.some(p => p.name === activeProperty);
-               if (!activeProperty || !propExists) {
-                 setActiveProperty(data[0].name);
+      const fetchProperties = () => {
+        if (user.role === 'owner') {
+          fetch(`${API_URL}/api/properties?owner_email=${user.email}`)
+            .then(r => r.json())
+            .then(data => {
+               setProperties(data);
+               if (data.length > 0) {
+                 const propExists = data.some(p => p.name === activeProperty);
+                 if (!activeProperty || !propExists) {
+                   setActiveProperty(data[0].name);
+                 }
                }
-             }
-          }).catch(err => console.error(err));
-      }
+            }).catch(err => console.error(err));
+        }
+      };
+
+      fetchProperties();
+      window.addEventListener('propertiesUpdated', fetchProperties);
       
       const fetchNotifs = () => {
          const propQuery = activeProperty || user.property || 'Unassigned';
@@ -56,7 +61,10 @@ export function Navbar() {
       
       fetchNotifs();
       const interval = setInterval(fetchNotifs, 10000); // 10 seconds for demo
-      return () => clearInterval(interval);
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('propertiesUpdated', fetchProperties);
+      };
     }
   }, [user, activeProperty]);
 
