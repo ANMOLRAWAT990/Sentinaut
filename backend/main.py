@@ -53,6 +53,29 @@ class RoleChecker:
 allow_owner = RoleChecker(["owner", "admin"])
 allow_manager_or_owner = RoleChecker(["owner", "manager", "admin"])
 
+def get_authorized_properties(token_payload: dict):
+    user = users_collection.find_one({"email": token_payload.get("email")})
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+        
+    if user.get("role") == "admin":
+        return None
+        
+    if user.get("role") == "owner":
+        props = properties_collection.find({"owner_email": user.get("email")})
+        return [p["name"] for p in props]
+        
+    if user.get("role") in ["manager", "staff"]:
+        return [user.get("property")]
+        
+    return []
+
+def verify_property_access(property: str, token_payload: dict):
+    auth_props = get_authorized_properties(token_payload)
+    if auth_props is not None and property not in auth_props:
+        raise HTTPException(status_code=403, detail="Access denied for this property")
+    return True
+
 
 # Configure CORS so the React frontend can communicate with it
 env_origins = [url.strip().rstrip('/') for url in config.FRONTEND_URL.split(",") if url.strip()]
@@ -86,9 +109,14 @@ def review_helper(review) -> dict:
 # 1. GET /api/reviews - list all reviews
 @app.get("/api/reviews", response_model=List[Review])
 def get_reviews(property: Optional[str] = None, token_payload = Depends(verify_token)):
+    auth_props = get_authorized_properties(token_payload)
     query = {"is_competitor": {"$ne": True}, "is_active": {"$ne": False}}
     if property:
+        verify_property_access(property, token_payload)
         query["property"] = property
+    elif auth_props is not None:
+        query["property"] = {"$in": auth_props}
+
     reviews = []
     for review in reviews_collection.find(query):
         reviews.append(review_helper(review))
@@ -97,15 +125,19 @@ def get_reviews(property: Optional[str] = None, token_payload = Depends(verify_t
 # 2. GET /api/reviews/search?q=... - search reviews
 @app.get("/api/reviews/search", response_model=List[Review])
 def search_reviews(q: str = Query(..., description="Search query"), token_payload = Depends(verify_token)):
+    auth_props = get_authorized_properties(token_payload)
     query = {"$regex": q, "$options": "i"}
     db_query = {
         "is_competitor": {"$ne": True},
+        "is_active": {"$ne": False},
         "$or": [
             {"guestName": query},
             {"text": query},
-            {"tags": query}
+            {"property": query}
         ]
     }
+    if auth_props is not None:
+        db_query["property"] = {"$in": auth_props}
     reviews = []
     for review in reviews_collection.find(db_query):
         reviews.append(review_helper(review))
@@ -118,14 +150,15 @@ def get_review(id: str, token_payload = Depends(verify_token)):
         review = reviews_collection.find_one({"_id": ObjectId(id)})
     except InvalidId:
         review = reviews_collection.find_one({"id": id})
-        
-    if review:
+    if review and review.get("is_active") != False:
+        verify_property_access(review.get("property"), token_payload)
         return review_helper(review)
     raise HTTPException(status_code=404, detail="Review not found")
 
 # 4. POST /api/reviews - create a review
 @app.post("/api/reviews", response_model=Review, status_code=201)
 def create_review(review: Review, token_payload = Depends(verify_token)):
+    verify_property_access(review.property, token_payload)
     if not review.created_at:
         review.created_at = datetime.utcnow().isoformat()
     review_dict = review.model_dump(exclude={"id"})
@@ -136,13 +169,18 @@ def create_review(review: Review, token_payload = Depends(verify_token)):
 # 5. PUT /api/reviews/{id} - update a review
 @app.put("/api/reviews/{id}", response_model=Review)
 def update_review(id: str, updated_review: Review, token_payload = Depends(verify_token)):
+    verify_property_access(updated_review.property, token_payload)
     review_dict = updated_review.model_dump(exclude={"id"})
     
     try:
         filter_query = {"_id": ObjectId(id)}
     except InvalidId:
         filter_query = {"id": id}
-
+        
+    old_review = reviews_collection.find_one(filter_query)
+    if old_review:
+        verify_property_access(old_review.get("property"), token_payload)
+    
     update_result = reviews_collection.update_one(filter_query, {"$set": review_dict})
     
     if update_result.modified_count == 1 or update_result.matched_count == 1:
@@ -160,8 +198,12 @@ def delete_review(id: str, token_payload = Depends(verify_token)):
     except InvalidId:
         filter_query = {"id": id}
         
-    delete_result = reviews_collection.delete_one(filter_query)
-    if delete_result.deleted_count == 1:
+    old_review = reviews_collection.find_one(filter_query)
+    if old_review:
+        verify_property_access(old_review.get("property"), token_payload)
+        
+    update_result = reviews_collection.update_one(filter_query, {"$set": {"is_active": False}})
+    if update_result.modified_count == 1:
         return
     raise HTTPException(status_code=404, detail="Review not found")
 
@@ -185,9 +227,13 @@ def action_helper(action) -> dict:
 
 @app.get("/api/actions", response_model=List[Action])
 def get_actions(property: Optional[str] = None, token_payload = Depends(verify_token)):
+    auth_props = get_authorized_properties(token_payload)
     query = {}
     if property:
+        verify_property_access(property, token_payload)
         query["property"] = property
+    elif auth_props is not None:
+        query["property"] = {"$in": auth_props}
     actions = []
     for action in actions_collection.find(query):
         actions.append(action_helper(action))
@@ -195,6 +241,7 @@ def get_actions(property: Optional[str] = None, token_payload = Depends(verify_t
 
 @app.post("/api/actions", response_model=Action, status_code=201)
 def create_action(action: Action, token_payload = Depends(verify_token)):
+    verify_property_access(action.property, token_payload)
     if not action.created_at:
         action.created_at = datetime.utcnow().isoformat()
     if action.status == "Done" and not action.completed_at:
@@ -206,6 +253,7 @@ def create_action(action: Action, token_payload = Depends(verify_token)):
 
 @app.put("/api/actions/{id}", response_model=Action)
 def update_action(id: str, updated_action: Action, token_payload = Depends(verify_token)):
+    verify_property_access(updated_action.property, token_payload)
     if updated_action.status == "Done" and not updated_action.completed_at:
         updated_action.completed_at = datetime.utcnow().isoformat()
     action_dict = updated_action.model_dump(exclude={"id"})
@@ -214,6 +262,10 @@ def update_action(id: str, updated_action: Action, token_payload = Depends(verif
         filter_query = {"_id": ObjectId(id)}
     except InvalidId:
         filter_query = {"id": id}
+        
+    old_action = actions_collection.find_one(filter_query)
+    if old_action:
+        verify_property_access(old_action.get("property"), token_payload)
             
     update_result = actions_collection.update_one(filter_query, {"$set": action_dict})
     
@@ -246,9 +298,12 @@ def property_helper(prop) -> dict:
 
 @app.get("/api/properties", response_model=List[Property])
 def get_properties(owner_email: Optional[str] = None, token_payload = Depends(verify_token)):
+    auth_props = get_authorized_properties(token_payload)
     query = {"is_active": {"$ne": False}}
     if owner_email:
         query["owner_email"] = owner_email
+    if auth_props is not None:
+        query["name"] = {"$in": auth_props}
     props = []
     for prop in properties_collection.find(query):
         props.append(property_helper(prop))
@@ -262,7 +317,7 @@ def create_property(prop: Property, _ = Depends(allow_owner)):
     if owner_email:
         multi_prop = properties_collection.find_one({
             "owner_email": owner_email, 
-            "plan": {"$in": ["multi", "resort", "enterprise"]}
+            "plan": {"$in": ["multi", "enterprise"]}
         })
         if multi_prop:
             prop_dict["plan"] = multi_prop["plan"]
@@ -326,10 +381,10 @@ def register(request: Request, data: SignupRequest):
         if assigned_role == "manager":
             prop = properties_collection.find_one({"name": assigned_property})
             plan = prop.get("plan", "trial") if prop else "trial"
-            if plan == "boutique":
+            if plan == "single":
                 existing_managers = users_collection.count_documents({"property": assigned_property, "role": "manager"})
                 if existing_managers >= 10:
-                    raise HTTPException(status_code=403, detail="Manager limit reached for Boutique plan (max 10).")
+                    raise HTTPException(status_code=403, detail="Manager limit reached for Single plan (max 10).")
                     
         # Delete invite after successful validation to prevent reuse
         invites_collection.delete_one({"_id": invite["_id"]})
@@ -468,9 +523,9 @@ def analyze_reviews(payload: dict, token_payload = Depends(verify_token)):
 
         if plan == "trial" and usage + len(texts) > 50:
             raise HTTPException(status_code=403, detail="Trial limit reached. Please upgrade to process more reviews.")
-        elif plan == "boutique" and usage + len(texts) > 1000:
-            raise HTTPException(status_code=403, detail="Boutique limit reached (1000 reviews/mo). Please upgrade to Resort.")
-        elif plan in ["resort", "enterprise"] and usage + len(texts) > 10000:
+        elif plan == "single" and usage + len(texts) > 1000:
+            raise HTTPException(status_code=403, detail="Single plan limit reached (1000 reviews/mo). Please upgrade to Multi-Property.")
+        elif plan in ["multi", "enterprise"] and usage + len(texts) > 10000:
             raise HTTPException(status_code=403, detail="Fair usage limit reached (10000 reviews/mo).")
 
         properties_collection.update_one(
@@ -481,8 +536,8 @@ def analyze_reviews(payload: dict, token_payload = Depends(verify_token)):
     is_competitor = payload.get("is_competitor", False)
     competitor_name = payload.get("competitor_name", None)
 
-    if is_competitor and plan in ["trial", "boutique"]:
-        raise HTTPException(status_code=403, detail="Competitor benchmarking is only available on Resort and Enterprise plans.")
+    if is_competitor and plan in ["trial", "single"]:
+        raise HTTPException(status_code=403, detail="Competitor benchmarking is only available on Multi-Property and Enterprise plans.")
 
     saved_reviews = []
     actions = []
@@ -590,6 +645,7 @@ def translate_review(id: str, token_payload = Depends(verify_token)):
 
 @app.get("/api/insights")
 def get_insights(property: str, token_payload = Depends(verify_token)):
+    verify_property_access(property, token_payload)
     insight = insights_collection.find_one({"property": property}, sort=[("created_at", -1)])
     if not insight:
         return {"summary": "No insights available yet.", "anomalies": [], "tasks": []}
@@ -598,6 +654,7 @@ def get_insights(property: str, token_payload = Depends(verify_token)):
 
 @app.post("/api/insights/generate")
 def generate_insights(property: str, token_payload = Depends(verify_token)):
+    verify_property_access(property, token_payload)
     all_reviews = list(reviews_collection.find({"property": property, "is_competitor": {"$ne": True}}))
     positive = sum(1 for r in all_reviews if r.get("sentiment") == "Positive")
     total = len(all_reviews)
@@ -616,6 +673,7 @@ def generate_insights(property: str, token_payload = Depends(verify_token)):
 
 @app.put("/api/insights/dismiss")
 def dismiss_insight(property: str, anomaly_title: str, token_payload = Depends(verify_token)):
+    verify_property_access(property, token_payload)
     insight = insights_collection.find_one({"property": property}, sort=[("created_at", -1)])
     if not insight:
          raise HTTPException(status_code=404, detail="No insights found")
@@ -641,6 +699,7 @@ def dismiss_insight(property: str, anomaly_title: str, token_payload = Depends(v
 
 @app.get("/api/competitors/summary")
 def get_competitor_summary(property: str, token_payload = Depends(verify_token)):
+    verify_property_access(property, token_payload)
     comp = competitors_collection.find_one({"property": property}, sort=[("created_at", -1)])
     scores = get_real_competitor_scores(property)
     if not comp:
@@ -670,6 +729,7 @@ def get_real_competitor_scores(property: str):
 
 @app.post("/api/competitors/refresh")
 def refresh_competitors(property: str, token_payload = Depends(verify_token)):
+    verify_property_access(property, token_payload)
     scores = get_real_competitor_scores(property)
     
     try:
@@ -687,12 +747,18 @@ def refresh_competitors(property: str, token_payload = Depends(verify_token)):
 
 @app.get("/api/analytics")
 def get_analytics(owner_email: Optional[str] = None, property: Optional[str] = None, token_payload = Depends(verify_token)):
+    auth_props = get_authorized_properties(token_payload)
     query = {"is_competitor": {"$ne": True}, "is_active": {"$ne": False}}
     if property:
+        verify_property_access(property, token_payload)
         query["property"] = property
     elif owner_email:
         owned_props = [p["name"] for p in properties_collection.find({"owner_email": owner_email})]
+        if auth_props is not None:
+            owned_props = [p for p in owned_props if p in auth_props]
         query["property"] = {"$in": owned_props}
+    elif auth_props is not None:
+        query["property"] = {"$in": auth_props}
         
     all_reviews = list(reviews_collection.find(query))
     total = len(all_reviews)
@@ -818,6 +884,7 @@ def checkout_helper(checkout) -> dict:
 
 @app.post("/api/checkouts", response_model=Checkout, status_code=201)
 def create_checkout(checkout: Checkout, token_payload = Depends(verify_token)):
+    verify_property_access(checkout.property, token_payload)
     if not checkout.timestamp:
         checkout.timestamp = datetime.utcnow().isoformat()
     checkout_dict = checkout.model_dump(exclude={"id"})
@@ -838,9 +905,13 @@ def create_checkout(checkout: Checkout, token_payload = Depends(verify_token)):
 
 @app.get("/api/checkouts", response_model=List[Checkout])
 def get_checkouts(property: Optional[str] = None, token_payload = Depends(verify_token)):
+    auth_props = get_authorized_properties(token_payload)
     query = {}
     if property:
+        verify_property_access(property, token_payload)
         query["property"] = property
+    elif auth_props is not None:
+        query["property"] = {"$in": auth_props}
     checkouts = []
     for c in checkouts_collection.find(query):
         checkouts.append(checkout_helper(c))
@@ -848,6 +919,7 @@ def get_checkouts(property: Optional[str] = None, token_payload = Depends(verify
 
 @app.post("/api/payments/create-order")
 def create_payment_order(amount: int = Query(..., description="Amount in INR"), property: str = Query(...), token_payload = Depends(verify_token)):
+    verify_property_access(property, token_payload)
     order = payment_service.create_order(amount * 100, "INR") # Razorpay uses paise
     return {"order_id": order["id"], "amount": amount, "currency": "INR", "key_id": config.RAZORPAY_KEY_ID}
 
@@ -855,7 +927,7 @@ def create_payment_order(amount: int = Query(..., description="Amount in INR"), 
 def verify_payment(req: PaymentVerifyRequest):
     is_valid = payment_service.verify_signature(req.razorpay_payment_id, req.razorpay_order_id, req.razorpay_signature)
     if is_valid:
-        if req.plan in ["multi", "resort", "enterprise"] and req.property != 'Unassigned':
+        if req.plan in ["multi", "enterprise"] and req.property != 'Unassigned':
             prop = properties_collection.find_one({"name": req.property})
             if prop and "owner_email" in prop:
                 res = properties_collection.update_many(
@@ -935,7 +1007,7 @@ def patch_property(id: str, prop_update: PropertyUpdate, _ = Depends(allow_owner
             new_plan = update_data["plan"]
             
             # If changing to/from a multi-property plan, sync across the portfolio
-            if old_plan in ["multi", "resort", "enterprise"] or new_plan in ["multi", "resort", "enterprise"]:
+            if old_plan in ["multi", "enterprise"] or new_plan in ["multi", "enterprise"]:
                 owner_email = old_property.get("owner_email")
                 if owner_email:
                     properties_collection.update_many(
@@ -983,11 +1055,11 @@ def invite_user(email: str, role: str, background_tasks: BackgroundTasks, proper
     prop = properties_collection.find_one({"name": property})
     plan = prop.get("plan", "trial") if prop else "trial"
 
-    if role == "manager" and plan == "boutique":
+    if role == "manager" and plan == "single":
         existing_managers = users_collection.count_documents({"property": property, "role": "manager"})
         pending_invites = invites_collection.count_documents({"property": property, "role": "manager"})
         if existing_managers + pending_invites >= 10:
-            raise HTTPException(status_code=403, detail="Manager limit reached for Boutique plan (max 10).")
+            raise HTTPException(status_code=403, detail="Manager limit reached for Single plan (max 10).")
 
     token = str(uuid.uuid4())
     expiry = (datetime.utcnow() + timedelta(hours=24)).isoformat()
@@ -1058,6 +1130,7 @@ def notification_helper(notif) -> dict:
 
 @app.get("/api/notifications", response_model=List[Notification])
 def get_notifications(property: str, token_payload = Depends(verify_token)):
+    verify_property_access(property, token_payload)
     query = {"property": property}
     notifs = []
     # Sort by created_at descending
@@ -1071,6 +1144,10 @@ def mark_notification_read(id: str, token_payload = Depends(verify_token)):
         filter_query = {"_id": ObjectId(id)}
     except InvalidId:
         filter_query = {"id": id}
+        
+    old_notif = notifications_collection.find_one(filter_query)
+    if old_notif:
+        verify_property_access(old_notif.get("property"), token_payload)
     
     update_result = notifications_collection.update_one(filter_query, {"$set": {"is_read": True}})
     if update_result.modified_count == 1 or update_result.matched_count == 1:
@@ -1080,6 +1157,7 @@ def mark_notification_read(id: str, token_payload = Depends(verify_token)):
 
 @app.post("/api/notifications", response_model=Notification, status_code=201)
 def create_notification(notif: Notification, token_payload = Depends(verify_token)):
+    verify_property_access(notif.property, token_payload)
     if not notif.created_at:
         notif.created_at = datetime.utcnow().isoformat()
     notif_dict = notif.model_dump(exclude={"id"})
