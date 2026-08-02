@@ -86,7 +86,7 @@ def review_helper(review) -> dict:
 # 1. GET /api/reviews - list all reviews
 @app.get("/api/reviews", response_model=List[Review])
 def get_reviews(property: Optional[str] = None):
-    query = {"is_competitor": {"$ne": True}}
+    query = {"is_competitor": {"$ne": True}, "is_active": {"$ne": False}}
     if property:
         query["property"] = property
     reviews = []
@@ -357,7 +357,7 @@ def get_users(role: Optional[str] = None, owner_email: Optional[str] = None, pro
 @limiter.limit("5/15minute")
 def login(request: Request, data: LoginRequest):
     user = users_collection.find_one({"email": data.email})
-    if not user:
+    if not user or user.get("is_active", True) == False:
         raise HTTPException(status_code=401, detail="Invalid email or password.")
 
     # Check if account is locked
@@ -622,7 +622,7 @@ def get_competitor_summary(property: str):
     return {"summary": comp["summary"], "scores": scores}
 
 def get_real_competitor_scores(property: str):
-    own_reviews = list(reviews_collection.find({"property": property, "is_competitor": {"$ne": True}}))
+    own_reviews = list(reviews_collection.find({"property": property, "is_competitor": {"$ne": True}, "is_active": {"$ne": False}}))
     own_total = len(own_reviews)
     own_score = round((sum(1 for r in own_reviews if r.get("sentiment") == "Positive") / own_total * 10) if own_total > 0 else 0, 1)
     
@@ -661,7 +661,7 @@ def refresh_competitors(property: str):
 
 @app.get("/api/analytics")
 def get_analytics(owner_email: Optional[str] = None, property: Optional[str] = None):
-    query = {"is_competitor": {"$ne": True}}
+    query = {"is_competitor": {"$ne": True}, "is_active": {"$ne": False}}
     if property:
         query["property"] = property
     elif owner_email:
@@ -1087,6 +1087,10 @@ def google_oauth_login(data: OAuthLoginRequest):
         name = payload.get("name")
         
         user = users_collection.find_one({"email": email})
+        
+        if user and user.get("is_active", True) == False:
+            raise HTTPException(status_code=401, detail="Account is deactivated.")
+
         if not user:
             # Create user on the fly if not exists
             new_user = {
