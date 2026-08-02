@@ -37,6 +37,10 @@ export function Sidebar() {
   const getLinksByRole = () => {
     if (!user) return [];
     switch (user.role) {
+      case 'admin':
+        return [
+          { name: 'System Core', shortName: 'Core', path: '/dashboard', icon: <LayoutDashboard className="h-4 w-4" /> }
+        ];
       case 'owner':
         return [
           { name: 'Overview', shortName: 'Overview', path: '/dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
@@ -97,22 +101,24 @@ export function Sidebar() {
       </div>
 
       {/* Plan Chip */}
-      <div className="mx-2 mb-2 px-3 py-2 rounded-xl bg-gradient-to-r from-primary-600/10 via-blue-600/10 to-indigo-600/10 dark:from-primary-900/20 dark:via-blue-900/20 dark:to-indigo-900/20 border border-primary-600/20 dark:border-primary-500/20 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className={`w-2 h-2 rounded-full shrink-0 ${['resort', 'multi'].includes(currentPlan) ? 'bg-purple-500 animate-pulse' : ['boutique', 'single'].includes(currentPlan) ? 'bg-blue-500 animate-pulse' : 'bg-amber-500'}`}></span>
-          <span className="text-[11px] font-bold tracking-wider uppercase text-slate-800 dark:text-slate-200 truncate">
-            {['resort', 'multi'].includes(currentPlan) ? 'Multi-Property Plan' : ['boutique', 'single'].includes(currentPlan) ? 'Single Property Plan' : currentPlan === 'enterprise' ? 'Enterprise Plan' : 'Trial Plan'}
-          </span>
+      {user?.role !== 'admin' && (
+        <div className="mx-2 mb-2 px-3 py-2 rounded-xl bg-gradient-to-r from-primary-600/10 via-blue-600/10 to-indigo-600/10 dark:from-primary-900/20 dark:via-blue-900/20 dark:to-indigo-900/20 border border-primary-600/20 dark:border-primary-500/20 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className={`w-2 h-2 rounded-full shrink-0 ${['resort', 'multi'].includes(currentPlan) ? 'bg-purple-500 animate-pulse' : ['boutique', 'single'].includes(currentPlan) ? 'bg-blue-500 animate-pulse' : 'bg-amber-500'}`}></span>
+            <span className="text-[11px] font-bold tracking-wider uppercase text-slate-800 dark:text-slate-200 truncate">
+              {['resort', 'multi'].includes(currentPlan) ? 'Multi-Property Plan' : ['boutique', 'single'].includes(currentPlan) ? 'Single Property Plan' : currentPlan === 'enterprise' ? 'Enterprise Plan' : 'Trial Plan'}
+            </span>
+          </div>
+          {user?.role === 'owner' && currentPlan === 'trial' && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); navigate('/pricing'); }}
+              className="text-[10px] font-extrabold uppercase tracking-wider bg-primary-600 hover:bg-primary-700 text-white px-2 py-0.5 rounded shadow-sm transition-all shrink-0 ml-1"
+            >
+              Upgrade
+            </button>
+          )}
         </div>
-        {user?.role === 'owner' && currentPlan === 'trial' && (
-          <button 
-            onClick={(e) => { e.stopPropagation(); navigate('/pricing'); }}
-            className="text-[10px] font-extrabold uppercase tracking-wider bg-primary-600 hover:bg-primary-700 text-white px-2 py-0.5 rounded shadow-sm transition-all shrink-0 ml-1"
-          >
-            Upgrade
-          </button>
-        )}
-      </div>
+      )}
 
       {/* User info */}
       <div 

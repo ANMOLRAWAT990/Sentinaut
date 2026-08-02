@@ -109,7 +109,8 @@ export function SuggestionsIndex() {
   const handleTriageAccept = async (anomaly, task) => {
     try {
       const propName = activeProperty || user?.property || 'Unassigned';
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/actions`, {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/actions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -122,6 +123,9 @@ export function SuggestionsIndex() {
       if (res.ok) {
         addToast('Task created from insight!', 'success');
         fetchActions();
+        
+        // Remove from insights DB
+        await fetch(`${API_URL}/api/insights/dismiss?property=${encodeURIComponent(propName)}&anomaly_title=${encodeURIComponent(anomaly.title)}`, { method: 'PUT' });
       }
     } catch (e) {
       addToast('Failed to create task.', 'error');
@@ -129,7 +133,14 @@ export function SuggestionsIndex() {
     setTriageIndex(prev => prev + 1);
   };
 
-  const handleTriageDismiss = () => {
+  const handleTriageDismiss = async (anomaly) => {
+    try {
+      const propName = activeProperty || user?.property || 'Unassigned';
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      await fetch(`${API_URL}/api/insights/dismiss?property=${encodeURIComponent(propName)}&anomaly_title=${encodeURIComponent(anomaly.title)}`, { method: 'PUT' });
+    } catch (e) {
+      // ignore
+    }
     setTriageIndex(prev => prev + 1);
   };
 
@@ -162,7 +173,7 @@ export function SuggestionsIndex() {
             </div>
             <div className="flex gap-3">
               <Button size="sm" onClick={() => handleTriageAccept(insights.anomalies[triageIndex], insights.tasks[triageIndex])}>Accept & Create Task</Button>
-              <Button size="sm" variant="secondary" onClick={handleTriageDismiss}>Dismiss</Button>
+              <Button size="sm" variant="secondary" onClick={() => handleTriageDismiss(insights.anomalies[triageIndex])}>Dismiss</Button>
             </div>
           </div>
         ) : (

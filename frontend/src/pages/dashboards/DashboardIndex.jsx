@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { StaffDashboard } from './StaffDashboard';
 import { ManagerDashboard } from './ManagerDashboard';
 import { OwnerDashboard } from './OwnerDashboard';
+import { AdminDashboard } from './AdminDashboard';
 
 export function DashboardIndex() {
   const { user } = useAuth();
@@ -16,6 +17,8 @@ export function DashboardIndex() {
       return <ManagerDashboard />;
     case 'owner':
       return <OwnerDashboard />;
+    case 'admin':
+      return <AdminDashboard />;
     default:
       return <div>Invalid Role</div>;
   }

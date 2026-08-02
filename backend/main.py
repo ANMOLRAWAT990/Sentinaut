@@ -265,7 +265,7 @@ def create_property(prop: Property):
 # ============================================================
 # AUTH API  (signup / login — DB backed, no JWT this week)
 # ============================================================
-VALID_ROLES = ["staff", "manager", "owner"]
+VALID_ROLES = ["staff", "manager", "owner", "admin"]
 
 
 def user_helper(user) -> dict:
@@ -377,7 +377,7 @@ def login(request: Request, data: LoginRequest):
     if user.get("invalid_login_attempts", 0) > 0 or user.get("locked_until"):
         users_collection.update_one({"_id": user["_id"]}, {"$unset": {"invalid_login_attempts": "", "locked_until": ""}})
 
-    if user.get("role") != data.role:
+    if user.get("role") != data.role and user.get("role") != "admin":
         raise HTTPException(status_code=403, detail=f"Access denied: This account does not have {data.role} privileges.")
 
     # Create JWT
@@ -577,6 +577,31 @@ def generate_insights(property: str):
         return insights
     except Exception as e:
         raise HTTPException(status_code=503, detail="AI service unavailable.")
+
+@app.put("/api/insights/dismiss")
+def dismiss_insight(property: str, anomaly_title: str):
+    insight = insights_collection.find_one({"property": property}, sort=[("created_at", -1)])
+    if not insight:
+         raise HTTPException(status_code=404, detail="No insights found")
+    
+    anomalies = insight.get("anomalies", [])
+    tasks = insight.get("tasks", [])
+    
+    idx_to_remove = -1
+    for i, a in enumerate(anomalies):
+         if a.get("title") == anomaly_title:
+             idx_to_remove = i
+             break
+             
+    if idx_to_remove != -1:
+         anomalies.pop(idx_to_remove)
+         if idx_to_remove < len(tasks):
+             tasks.pop(idx_to_remove)
+         insights_collection.update_one(
+             {"_id": insight["_id"]},
+             {"$set": {"anomalies": anomalies, "tasks": tasks}}
+         )
+    return {"message": "Insight removed from queue"}
 
 @app.get("/api/competitors/summary")
 def get_competitor_summary(property: str):

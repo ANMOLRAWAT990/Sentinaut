@@ -12,6 +12,7 @@ export function ChatBot() {
   const { user } = useAuth();
 
   const role = user ? user.role : 'guest';
+  if (role === 'admin') return null;
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
