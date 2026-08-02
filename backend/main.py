@@ -85,7 +85,7 @@ def review_helper(review) -> dict:
 
 # 1. GET /api/reviews - list all reviews
 @app.get("/api/reviews", response_model=List[Review])
-def get_reviews(property: Optional[str] = None):
+def get_reviews(property: Optional[str] = None, token_payload = Depends(verify_token)):
     query = {"is_competitor": {"$ne": True}, "is_active": {"$ne": False}}
     if property:
         query["property"] = property
@@ -96,7 +96,7 @@ def get_reviews(property: Optional[str] = None):
 
 # 2. GET /api/reviews/search?q=... - search reviews
 @app.get("/api/reviews/search", response_model=List[Review])
-def search_reviews(q: str = Query(..., description="Search query")):
+def search_reviews(q: str = Query(..., description="Search query"), token_payload = Depends(verify_token)):
     query = {"$regex": q, "$options": "i"}
     db_query = {
         "is_competitor": {"$ne": True},
@@ -113,7 +113,7 @@ def search_reviews(q: str = Query(..., description="Search query")):
 
 # 3. GET /api/reviews/{id} - get a single review
 @app.get("/api/reviews/{id}", response_model=Review)
-def get_review(id: str):
+def get_review(id: str, token_payload = Depends(verify_token)):
     try:
         review = reviews_collection.find_one({"_id": ObjectId(id)})
     except InvalidId:
@@ -125,7 +125,7 @@ def get_review(id: str):
 
 # 4. POST /api/reviews - create a review
 @app.post("/api/reviews", response_model=Review, status_code=201)
-def create_review(review: Review):
+def create_review(review: Review, token_payload = Depends(verify_token)):
     if not review.created_at:
         review.created_at = datetime.utcnow().isoformat()
     review_dict = review.model_dump(exclude={"id"})
@@ -135,7 +135,7 @@ def create_review(review: Review):
 
 # 5. PUT /api/reviews/{id} - update a review
 @app.put("/api/reviews/{id}", response_model=Review)
-def update_review(id: str, updated_review: Review):
+def update_review(id: str, updated_review: Review, token_payload = Depends(verify_token)):
     review_dict = updated_review.model_dump(exclude={"id"})
     
     try:
@@ -154,7 +154,7 @@ def update_review(id: str, updated_review: Review):
 
 # 6. DELETE /api/reviews/{id} - delete a review
 @app.delete("/api/reviews/{id}", status_code=204)
-def delete_review(id: str):
+def delete_review(id: str, token_payload = Depends(verify_token)):
     try:
         filter_query = {"_id": ObjectId(id)}
     except InvalidId:
@@ -184,7 +184,7 @@ def action_helper(action) -> dict:
     }
 
 @app.get("/api/actions", response_model=List[Action])
-def get_actions(property: Optional[str] = None):
+def get_actions(property: Optional[str] = None, token_payload = Depends(verify_token)):
     query = {}
     if property:
         query["property"] = property
@@ -194,7 +194,7 @@ def get_actions(property: Optional[str] = None):
     return actions
 
 @app.post("/api/actions", response_model=Action, status_code=201)
-def create_action(action: Action):
+def create_action(action: Action, token_payload = Depends(verify_token)):
     if not action.created_at:
         action.created_at = datetime.utcnow().isoformat()
     if action.status == "Done" and not action.completed_at:
@@ -205,7 +205,7 @@ def create_action(action: Action):
     return action_helper(created_action)
 
 @app.put("/api/actions/{id}", response_model=Action)
-def update_action(id: str, updated_action: Action):
+def update_action(id: str, updated_action: Action, token_payload = Depends(verify_token)):
     if updated_action.status == "Done" and not updated_action.completed_at:
         updated_action.completed_at = datetime.utcnow().isoformat()
     action_dict = updated_action.model_dump(exclude={"id"})
@@ -245,7 +245,7 @@ def property_helper(prop) -> dict:
     }
 
 @app.get("/api/properties", response_model=List[Property])
-def get_properties(owner_email: Optional[str] = None):
+def get_properties(owner_email: Optional[str] = None, token_payload = Depends(verify_token)):
     query = {"is_active": {"$ne": False}}
     if owner_email:
         query["owner_email"] = owner_email
@@ -255,7 +255,7 @@ def get_properties(owner_email: Optional[str] = None):
     return props
 
 @app.post("/api/properties", response_model=Property, status_code=201)
-def create_property(prop: Property):
+def create_property(prop: Property, _ = Depends(allow_owner)):
     prop_dict = prop.model_dump(exclude={"id"})
     
     owner_email = prop_dict.get("owner_email")
@@ -300,21 +300,47 @@ def register(request: Request, data: SignupRequest):
     if users_collection.find_one({"email": data.email}):
         raise HTTPException(status_code=400, detail="An account with this email already exists.")
 
-    if data.role == "manager":
-        prop = properties_collection.find_one({"name": data.property})
-        plan = prop.get("plan", "trial") if prop else "trial"
-        if plan == "boutique":
-            existing_managers = users_collection.count_documents({"property": data.property, "role": "manager"})
-            if existing_managers >= 10:
-                raise HTTPException(status_code=403, detail="Manager limit reached for Boutique plan (max 10).")
+    assigned_role = data.role
+    assigned_property = data.property or "Unassigned"
+
+    if data.role in ["manager", "staff"]:
+        if not data.invite_token:
+            raise HTTPException(status_code=403, detail=f"An invite token is required to register as a {data.role}.")
+            
+        invite = invites_collection.find_one({
+            "token": data.invite_token, 
+            "email": data.email,
+            "role": data.role
+        })
+        
+        if not invite:
+            raise HTTPException(status_code=403, detail="Invalid or mismatched invite token.")
+            
+        # Check expiry
+        if datetime.utcnow().isoformat() > invite.get("expires_at", ""):
+            raise HTTPException(status_code=403, detail="Invite token has expired.")
+            
+        assigned_property = invite.get("property")
+        
+        # Enforce limits for manager
+        if assigned_role == "manager":
+            prop = properties_collection.find_one({"name": assigned_property})
+            plan = prop.get("plan", "trial") if prop else "trial"
+            if plan == "boutique":
+                existing_managers = users_collection.count_documents({"property": assigned_property, "role": "manager"})
+                if existing_managers >= 10:
+                    raise HTTPException(status_code=403, detail="Manager limit reached for Boutique plan (max 10).")
+                    
+        # Delete invite after successful validation to prevent reuse
+        invites_collection.delete_one({"_id": invite["_id"]})
 
     hashed = bcrypt.hashpw(data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     new_user = {
         "name": data.name,
         "email": data.email,
         "password": hashed,
-        "role": data.role,
-        "property": data.property,
+        "role": assigned_role,
+        "property": assigned_property,
         "is_active": True,
         "dark_mode": False
     }
@@ -411,7 +437,7 @@ from services.ai_service import AIService
 ai = AIService()
 
 @app.post("/api/chat")
-def chat_with_bot(payload: ChatRequest):
+def chat_with_bot(payload: ChatRequest, token_payload = Depends(verify_token)):
     try:
         reply = ai.chat(message=payload.message, role=payload.role)
         return {"reply": reply}
@@ -419,7 +445,7 @@ def chat_with_bot(payload: ChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/reviews/analyze")
-def analyze_reviews(payload: dict):
+def analyze_reviews(payload: dict, token_payload = Depends(verify_token)):
     is_batch = "batch" in payload
     texts = payload.get("batch") if is_batch else [payload.get("text")]
     if not texts or not texts[0]:
@@ -527,7 +553,7 @@ def analyze_reviews(payload: dict):
         }
 
 @app.post("/api/reviews/{id}/draft-reply")
-def draft_reply(id: str):
+def draft_reply(id: str, token_payload = Depends(verify_token)):
     try:
         filter_query = {"_id": ObjectId(id)}
     except InvalidId:
@@ -543,7 +569,7 @@ def draft_reply(id: str):
         raise HTTPException(status_code=503, detail="AI service unavailable. Please draft manually.")
 
 @app.post("/api/reviews/{id}/translate")
-def translate_review(id: str):
+def translate_review(id: str, token_payload = Depends(verify_token)):
     try:
         filter_query = {"_id": ObjectId(id)}
     except InvalidId:
@@ -563,7 +589,7 @@ def translate_review(id: str):
         raise HTTPException(status_code=503, detail="AI service unavailable.")
 
 @app.get("/api/insights")
-def get_insights(property: str):
+def get_insights(property: str, token_payload = Depends(verify_token)):
     insight = insights_collection.find_one({"property": property}, sort=[("created_at", -1)])
     if not insight:
         return {"summary": "No insights available yet.", "anomalies": [], "tasks": []}
@@ -571,7 +597,7 @@ def get_insights(property: str):
     return insight
 
 @app.post("/api/insights/generate")
-def generate_insights(property: str):
+def generate_insights(property: str, token_payload = Depends(verify_token)):
     all_reviews = list(reviews_collection.find({"property": property, "is_competitor": {"$ne": True}}))
     positive = sum(1 for r in all_reviews if r.get("sentiment") == "Positive")
     total = len(all_reviews)
@@ -589,7 +615,7 @@ def generate_insights(property: str):
         raise HTTPException(status_code=503, detail="AI service unavailable.")
 
 @app.put("/api/insights/dismiss")
-def dismiss_insight(property: str, anomaly_title: str):
+def dismiss_insight(property: str, anomaly_title: str, token_payload = Depends(verify_token)):
     insight = insights_collection.find_one({"property": property}, sort=[("created_at", -1)])
     if not insight:
          raise HTTPException(status_code=404, detail="No insights found")
@@ -614,7 +640,7 @@ def dismiss_insight(property: str, anomaly_title: str):
     return {"message": "Insight removed from queue"}
 
 @app.get("/api/competitors/summary")
-def get_competitor_summary(property: str):
+def get_competitor_summary(property: str, token_payload = Depends(verify_token)):
     comp = competitors_collection.find_one({"property": property}, sort=[("created_at", -1)])
     scores = get_real_competitor_scores(property)
     if not comp:
@@ -643,7 +669,7 @@ def get_real_competitor_scores(property: str):
     return scores
 
 @app.post("/api/competitors/refresh")
-def refresh_competitors(property: str):
+def refresh_competitors(property: str, token_payload = Depends(verify_token)):
     scores = get_real_competitor_scores(property)
     
     try:
@@ -660,7 +686,7 @@ def refresh_competitors(property: str):
 
 
 @app.get("/api/analytics")
-def get_analytics(owner_email: Optional[str] = None, property: Optional[str] = None):
+def get_analytics(owner_email: Optional[str] = None, property: Optional[str] = None, token_payload = Depends(verify_token)):
     query = {"is_competitor": {"$ne": True}, "is_active": {"$ne": False}}
     if property:
         query["property"] = property
@@ -791,7 +817,7 @@ def checkout_helper(checkout) -> dict:
     }
 
 @app.post("/api/checkouts", response_model=Checkout, status_code=201)
-def create_checkout(checkout: Checkout):
+def create_checkout(checkout: Checkout, token_payload = Depends(verify_token)):
     if not checkout.timestamp:
         checkout.timestamp = datetime.utcnow().isoformat()
     checkout_dict = checkout.model_dump(exclude={"id"})
@@ -811,7 +837,7 @@ def create_checkout(checkout: Checkout):
     return checkout_helper(created_checkout)
 
 @app.get("/api/checkouts", response_model=List[Checkout])
-def get_checkouts(property: Optional[str] = None):
+def get_checkouts(property: Optional[str] = None, token_payload = Depends(verify_token)):
     query = {}
     if property:
         query["property"] = property
@@ -821,7 +847,7 @@ def get_checkouts(property: Optional[str] = None):
     return checkouts
 
 @app.post("/api/payments/create-order")
-def create_payment_order(amount: int = Query(..., description="Amount in INR"), property: str = Query(...)):
+def create_payment_order(amount: int = Query(..., description="Amount in INR"), property: str = Query(...), token_payload = Depends(verify_token)):
     order = payment_service.create_order(amount * 100, "INR") # Razorpay uses paise
     return {"order_id": order["id"], "amount": amount, "currency": "INR", "key_id": config.RAZORPAY_KEY_ID}
 
@@ -874,7 +900,7 @@ def delete_property(id: str, _ = Depends(allow_owner)):
     raise HTTPException(status_code=404, detail="Property not found")
 
 @app.patch("/api/properties/{id}", response_model=Property)
-def patch_property(id: str, prop_update: PropertyUpdate):
+def patch_property(id: str, prop_update: PropertyUpdate, _ = Depends(allow_owner)):
     try:
         filter_query = {"_id": ObjectId(id)}
     except InvalidId:
@@ -953,7 +979,7 @@ def patch_user(id: str, user_update: UserUpdate, _ = Depends(allow_owner)):
 
 # --- Magic Links / Invites ---
 @app.post("/api/auth/invite", status_code=201)
-def invite_user(email: str, role: str, background_tasks: BackgroundTasks, property: str = "Unassigned"):
+def invite_user(email: str, role: str, background_tasks: BackgroundTasks, property: str = "Unassigned", _ = Depends(allow_owner)):
     prop = properties_collection.find_one({"name": property})
     plan = prop.get("plan", "trial") if prop else "trial"
 
@@ -975,7 +1001,7 @@ def invite_user(email: str, role: str, background_tasks: BackgroundTasks, proper
     invites_collection.insert_one(invite)
     
     # Send actual email
-    invite_url = f"{config.FRONTEND_URL}/register?token={token}&email={email}"
+    invite_url = f"{config.FRONTEND_URL}/signup?token={token}&email={email}"
     html_body = f"<p>You have been invited to join SentiNaut as a {role} for {property}.</p><p><a href='{invite_url}'>Click here to register</a></p>"
     
     background_tasks.add_task(email_service.send_email, email, "SentiNaut Invitation", html_body)
@@ -1031,7 +1057,7 @@ def notification_helper(notif) -> dict:
     }
 
 @app.get("/api/notifications", response_model=List[Notification])
-def get_notifications(property: str):
+def get_notifications(property: str, token_payload = Depends(verify_token)):
     query = {"property": property}
     notifs = []
     # Sort by created_at descending
@@ -1040,7 +1066,7 @@ def get_notifications(property: str):
     return notifs
 
 @app.put("/api/notifications/{id}/read", response_model=Notification)
-def mark_notification_read(id: str):
+def mark_notification_read(id: str, token_payload = Depends(verify_token)):
     try:
         filter_query = {"_id": ObjectId(id)}
     except InvalidId:
@@ -1053,7 +1079,7 @@ def mark_notification_read(id: str):
     raise HTTPException(status_code=404, detail="Notification not found")
 
 @app.post("/api/notifications", response_model=Notification, status_code=201)
-def create_notification(notif: Notification):
+def create_notification(notif: Notification, token_payload = Depends(verify_token)):
     if not notif.created_at:
         notif.created_at = datetime.utcnow().isoformat()
     notif_dict = notif.model_dump(exclude={"id"})
@@ -1063,7 +1089,7 @@ def create_notification(notif: Notification):
 
 # --- Follow Ups (Mocked) ---
 @app.post("/api/followup")
-def trigger_followup(guest_phone: str):
+def trigger_followup(guest_phone: str, token_payload = Depends(verify_token)):
     if not all([config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN, config.TWILIO_WHATSAPP_NUMBER]):
         raise HTTPException(status_code=501, detail="Twilio/WhatsApp Business API is not configured.")
         

@@ -46,6 +46,7 @@ class SignupRequest(BaseModel):
     password: str = Field(..., min_length=6)
     role: str
     property: Optional[str] = None
+    invite_token: Optional[str] = None
 
 class LoginRequest(BaseModel):
     email: EmailStr

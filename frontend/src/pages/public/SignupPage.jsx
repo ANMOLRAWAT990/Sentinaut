@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { AuthCarousel } from '../../components/ui/AuthCarousel';
@@ -19,12 +19,16 @@ export function SignupPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get('token');
+  const inviteEmail = searchParams.get('email');
+
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(inviteEmail || '');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const role = 'owner';
+  const role = inviteToken ? 'manager' : 'owner'; // The backend will enforce the true role based on the token
 
   const calculateStrength = (pass) => {
     let score = 0;
@@ -56,7 +60,7 @@ export function SignupPage() {
       const res = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({ name, email, password, role, invite_token: inviteToken }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -123,11 +127,33 @@ export function SignupPage() {
             <h1 className="text-[28px] font-semibold tracking-tight text-slate-900 dark:text-slate-200 mb-2">Initialize Workspace</h1>
             <p className="text-[14px] text-[#666666] dark:text-[#a1a1aa]">Create an account to deploy SentiNaut.</p>
           </div>
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            <Input label="Full Name" type="text" placeholder="Enter your full name" required value={name} onChange={(e) => setName(e.target.value)} />
-            <Input label="Email address" type="email" placeholder="Enter your email address" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            {inviteToken && (
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-6">
+                <p className="text-sm text-primary font-medium text-center">
+                  You've been invited to join SentiNaut! Complete your registration below.
+                </p>
+              </div>
+            )}
             
-            <div className="space-y-2">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input
+                label="Full Name"
+                type="text"
+                placeholder="Enter your full name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+              <Input
+                label="Email address"
+                type="email"
+                placeholder="Enter your email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={!!inviteToken}
+                required
+              />
+              <div className="space-y-2">
               <Input label="Password" type="password" placeholder="Create a password" required value={password} onChange={(e) => setPassword(e.target.value)} />
               {password.length > 0 && (
                 <div className="space-y-1 mt-1">
