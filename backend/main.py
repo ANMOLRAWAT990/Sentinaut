@@ -843,7 +843,7 @@ def delete_property(id: str, _ = Depends(allow_owner)):
     try:
         filter_query = {"_id": ObjectId(id)}
     except InvalidId:
-        filter_query = {"id": id}
+        filter_query = {"$or": [{"id": id}, {"_id": id}]}
     update_result = properties_collection.update_one(filter_query, {"$set": {"is_active": False}})
     if update_result.modified_count == 1 or update_result.matched_count == 1:
         return
@@ -854,7 +854,7 @@ def patch_property(id: str, prop_update: PropertyUpdate):
     try:
         filter_query = {"_id": ObjectId(id)}
     except InvalidId:
-        filter_query = {"id": id}
+        filter_query = {"$or": [{"id": id}, {"_id": id}]}
     
     update_data = {k: v for k, v in prop_update.model_dump().items() if v is not None}
     if not update_data:
@@ -871,14 +871,14 @@ def delete_user(id: str, _ = Depends(allow_owner)):
     try:
         filter_query = {"_id": ObjectId(id)}
     except InvalidId:
-        filter_query = {"id": id}
+        filter_query = {"$or": [{"id": id}, {"_id": id}]}
     update_result = users_collection.update_one(filter_query, {"$set": {"is_active": False}})
     if update_result.modified_count == 1 or update_result.matched_count == 1:
         return
     raise HTTPException(status_code=404, detail="User not found")
 
 @app.patch("/api/users/{id}", response_model=UserResponse)
-def patch_user(id: str, user_update: UserUpdate):
+def patch_user(id: str, user_update: UserUpdate, _ = Depends(allow_owner)):
     try:
         filter_query = {"_id": ObjectId(id)}
     except InvalidId:

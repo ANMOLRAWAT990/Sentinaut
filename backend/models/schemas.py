@@ -74,6 +74,7 @@ class PropertyUpdate(BaseModel):
     location: Optional[str] = None
     custom_tags: Optional[List[str]] = None
     is_active: Optional[bool] = None
+    plan: Optional[str] = None
 
 class Invite(BaseModel):
     id: Optional[str] = None

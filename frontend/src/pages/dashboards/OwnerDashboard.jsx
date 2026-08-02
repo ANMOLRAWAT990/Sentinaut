@@ -148,7 +148,29 @@ export function OwnerDashboard() {
     } catch (err) {
       addToast('Network error while deleting property.', 'error');
     } finally {
+      setIsEditPropertyModalOpen(false);
       setDeletePropertyId(null);
+    }
+  };
+
+  const handleCancelPlan = async (property) => {
+    if (!window.confirm(`Are you sure you want to cancel the ${property.plan} plan for ${property.name}?`)) return;
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/api/properties/${property.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: 'trial' })
+      });
+      if (res.ok) {
+        const updatedProp = await res.json();
+        setProperties(properties.map(p => p.id === updatedProp.id ? updatedProp : p));
+        addToast(`Plan for ${property.name} cancelled successfully.`, 'success');
+      } else {
+        addToast('Failed to cancel plan.', 'error');
+      }
+    } catch (err) {
+      addToast('Network error while cancelling plan.', 'error');
     }
   };
 
@@ -480,7 +502,13 @@ export function OwnerDashboard() {
                     <p className="text-xs text-slate-500 dark:text-slate-400">{p.location}</p>
                   </div>
                   <span className="text-xs font-medium px-2 py-1 bg-green-100 text-green-700 rounded-full">{p.status}</span>
-                  <div className="flex gap-2 ml-2">
+                  {p.plan && p.plan !== 'trial' && (
+                    <span className="text-xs font-medium px-2 py-1 bg-purple-100 text-purple-700 rounded-full uppercase tracking-wider">{p.plan}</span>
+                  )}
+                  <div className="flex gap-2 ml-2 flex-wrap">
+                    {p.plan && p.plan !== 'trial' && (
+                      <Button variant="ghost" size="sm" className="h-8 px-2 text-amber-500 hover:text-amber-600 hover:bg-amber-50" onClick={() => handleCancelPlan(p)}>Cancel Plan</Button>
+                    )}
                     <Button variant="ghost" size="sm" className="h-8 px-2 text-slate-500 hover:text-slate-900" onClick={() => { setEditingProperty(p); setPropertyName(p.name); setPropertyLocation(p.location); setIsEditPropertyModalOpen(true); }}>Edit</Button>
                     <Button variant="ghost" size="sm" className="h-8 px-2 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => setDeletePropertyId(p.id)}>Delete</Button>
                   </div>
