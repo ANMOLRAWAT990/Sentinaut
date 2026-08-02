@@ -27,6 +27,21 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
 
+@app.on_event("startup")
+def run_migrations():
+    print("Running startup migrations...")
+    # Migrate legacy plan names
+    res1 = properties_collection.update_many({"plan": "resort"}, {"$set": {"plan": "multi"}})
+    res2 = properties_collection.update_many({"plan": "boutique"}, {"$set": {"plan": "single"}})
+    print(f"Migrated {res1.modified_count} resort plans and {res2.modified_count} boutique plans.")
+    
+    # Ensure all properties for an owner with a multi plan have the multi plan
+    owners_with_multi = properties_collection.find({"plan": {"$in": ["multi", "enterprise"]}})
+    multi_emails = set(p.get("owner_email") for p in owners_with_multi if p.get("owner_email"))
+    for email in multi_emails:
+        properties_collection.update_many({"owner_email": email}, {"$set": {"plan": "multi"}})
+    print(f"Synced multi plans for {len(multi_emails)} owners.")
+
 security = HTTPBearer(auto_error=False)
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -317,7 +332,7 @@ def create_property(prop: Property, _ = Depends(allow_owner)):
     if owner_email:
         multi_prop = properties_collection.find_one({
             "owner_email": owner_email, 
-            "plan": {"$in": ["multi", "enterprise"]}
+            "plan": {"$in": ["multi", "enterprise", "resort"]}
         })
         if multi_prop:
             prop_dict["plan"] = multi_prop["plan"]
@@ -927,7 +942,7 @@ def create_payment_order(amount: int = Query(..., description="Amount in INR"), 
 def verify_payment(req: PaymentVerifyRequest):
     is_valid = payment_service.verify_signature(req.razorpay_payment_id, req.razorpay_order_id, req.razorpay_signature)
     if is_valid:
-        if req.plan in ["multi", "enterprise"] and req.property != 'Unassigned':
+        if req.plan in ["multi", "enterprise", "resort"] and req.property != 'Unassigned':
             prop = properties_collection.find_one({"name": req.property})
             if prop and "owner_email" in prop:
                 res = properties_collection.update_many(
@@ -1007,7 +1022,7 @@ def patch_property(id: str, prop_update: PropertyUpdate, _ = Depends(allow_owner
             new_plan = update_data["plan"]
             
             # If changing to/from a multi-property plan, sync across the portfolio
-            if old_plan in ["multi", "enterprise"] or new_plan in ["multi", "enterprise"]:
+            if old_plan in ["multi", "enterprise", "resort"] or new_plan in ["multi", "enterprise", "resort"]:
                 owner_email = old_property.get("owner_email")
                 if owner_email:
                     properties_collection.update_many(
