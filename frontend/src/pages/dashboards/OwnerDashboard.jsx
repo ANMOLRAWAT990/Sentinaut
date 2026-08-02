@@ -510,7 +510,9 @@ export function OwnerDashboard() {
                   </div>
                   <span className="text-xs font-medium px-2 py-1 bg-green-100 text-green-700 rounded-full">{p.status}</span>
                   {p.plan && p.plan !== 'trial' && (
-                    <span className="text-xs font-medium px-2 py-1 bg-purple-100 text-purple-700 rounded-full uppercase tracking-wider">{p.plan}</span>
+                    <span className="text-xs font-medium px-2 py-1 bg-purple-100 text-purple-700 rounded-full uppercase tracking-wider">
+                      {p.plan === 'boutique' || p.plan === 'single' ? 'Single-Property' : p.plan === 'resort' || p.plan === 'multi' ? 'Multi-Property' : p.plan}
+                    </span>
                   )}
                   <div className="flex gap-2 ml-2 flex-wrap">
                     {p.plan && p.plan !== 'trial' && (
@@ -728,7 +730,7 @@ export function OwnerDashboard() {
       <Modal isOpen={isCancelPlanModalOpen} onClose={() => setIsCancelPlanModalOpen(false)} title="Cancel Subscription Plan">
         <div className="space-y-4">
           <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-            Are you sure you want to cancel the <span className="font-bold text-slate-900 dark:text-white uppercase">{cancelPlanProperty?.plan}</span> plan for <span className="font-bold text-slate-900 dark:text-white">{cancelPlanProperty?.name}</span>? 
+            Are you sure you want to cancel the <span className="font-bold text-slate-900 dark:text-white uppercase">{cancelPlanProperty?.plan === 'boutique' || cancelPlanProperty?.plan === 'single' ? 'Single-Property' : cancelPlanProperty?.plan === 'resort' || cancelPlanProperty?.plan === 'multi' ? 'Multi-Property' : cancelPlanProperty?.plan}</span> plan for <span className="font-bold text-slate-900 dark:text-white">{cancelPlanProperty?.name}</span>? 
             <br/><br/>
             This property will be downgraded to the Trial plan immediately, and you will lose access to premium features for this location.
           </p>

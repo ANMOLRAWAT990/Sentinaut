@@ -280,7 +280,9 @@ export function AdminDashboard() {
                             <Badge variant={prop.is_active ? "success" : "secondary"}>
                               {prop.is_active ? "Active" : "Inactive"}
                             </Badge>
-                            <span className="text-xs text-slate-500 uppercase tracking-wider font-medium">{prop.plan} Plan</span>
+                            <span className="text-xs text-slate-500 uppercase tracking-wider font-medium">
+                              {prop.plan === 'boutique' || prop.plan === 'single' ? 'Single-Property' : prop.plan === 'resort' || prop.plan === 'multi' ? 'Multi-Property' : prop.plan} Plan
+                            </span>
                             <span className="text-xs text-slate-400">&bull; {prop.location || 'No Location'}</span>
                           </div>
                         </div>

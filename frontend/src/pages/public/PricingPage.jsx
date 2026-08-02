@@ -135,7 +135,7 @@ const PricingPage = () => {
                 <li className="flex gap-2">✓ Basic analytics dashboard</li>
                 <li className="flex gap-2">✓ Basic competitor benchmarking</li>
               </ul>
-              <button onClick={() => handleUpgrade('boutique', isYearly ? 9990 : 999)} className="w-full px-6 py-3 border border-slate-900 dark:border-white text-slate-900 dark:text-white text-sm uppercase tracking-widest hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors mt-auto">Select</button>
+              <button onClick={() => handleUpgrade('single', isYearly ? 9990 : 999)} className="w-full px-6 py-3 border border-slate-900 dark:border-white text-slate-900 dark:text-white text-sm uppercase tracking-widest hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors mt-auto">Select</button>
             </div>
             
             <div className="p-12 sm:p-16 text-center bg-slate-900 dark:bg-white text-white dark:text-slate-900 relative flex flex-col h-full">
@@ -149,7 +149,7 @@ const PricingPage = () => {
                 <li className="flex gap-2">✓ Full competitor benchmarking</li>
                 <li className="flex gap-2">✓ Priority SLA support</li>
               </ul>
-              <button onClick={() => handleUpgrade('resort', isYearly ? 29990 : 2999)} className="w-full px-6 py-3 border border-white dark:border-slate-900 text-white dark:text-slate-900 text-sm uppercase tracking-widest hover:bg-white hover:text-black dark:hover:bg-slate-900 dark:hover:text-white transition-colors mt-auto">Select</button>
+              <button onClick={() => handleUpgrade('multi', isYearly ? 29990 : 2999)} className="w-full px-6 py-3 border border-white dark:border-slate-900 text-white dark:text-slate-900 text-sm uppercase tracking-widest hover:bg-white hover:text-black dark:hover:bg-slate-900 dark:hover:text-white transition-colors mt-auto">Select</button>
             </div>
 
             <div className="p-12 sm:p-16 text-center hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors flex flex-col h-full">
@@ -157,7 +157,7 @@ const PricingPage = () => {
               <p className="text-sm text-slate-500 mb-8 font-light flex-grow">Custom SLAs for large hotel chains.</p>
               <p className="text-5xl font-serif text-slate-900 dark:text-white mb-8">POA</p>
               <ul className="text-sm text-slate-600 dark:text-slate-400 mb-8 space-y-3 text-left">
-                <li className="flex gap-2">✓ Everything in Resort</li>
+                <li className="flex gap-2">✓ Everything in Multi-Property</li>
                 <li className="flex gap-2">✓ Custom PMS integration</li>
                 <li className="flex gap-2">✓ On-premise deployment options</li>
                 <li className="flex gap-2">✓ Dedicated account manager</li>
