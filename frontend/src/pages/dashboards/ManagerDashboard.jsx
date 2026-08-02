@@ -213,7 +213,7 @@ export function ManagerDashboard() {
     const reviewToUpdate = reviews.find(r => r.id === id);
     if (!reviewToUpdate) return;
     setReviews(reviews.map(r => r.id === id ? { ...r, approved: !r.approved } : r));
-    if (String(id).startsWith('mock-')) return; 
+
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/reviews/${id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -227,10 +227,6 @@ export function ManagerDashboard() {
   };
 
   const handleDeleteReview = (id) => {
-    if (String(id).startsWith('mock-')) {
-      setReviews(reviews.filter(r => r.id !== id));
-      return;
-    }
     setDeleteReviewId(id);
   };
 
@@ -255,7 +251,6 @@ export function ManagerDashboard() {
     const statusFlow = { 'Pending': 'In Progress', 'In Progress': 'Done', 'Done': 'Verified' };
     const newStatus = statusFlow[actionToUpdate.status] || 'Done';
     setActions(actions.map(a => a.id === id ? { ...a, status: newStatus } : a));
-    if (String(id).startsWith('mock-')) return; 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/actions/${id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -274,7 +269,6 @@ export function ManagerDashboard() {
     const revertFlow = { 'In Progress': 'Pending', 'Done': 'In Progress', 'Verified': 'Done' };
     const newStatus = revertFlow[actionToUpdate.status] || 'Pending';
     setActions(actions.map(a => a.id === id ? { ...a, status: newStatus } : a));
-    if (String(id).startsWith('mock-')) return; 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/actions/${id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },

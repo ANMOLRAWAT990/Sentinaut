@@ -37,15 +37,12 @@ export function GuestsIndex() {
 
   const handleFollowup = async (phone) => {
     if (phone === 'Unknown') return addToast("No phone number available.", "error");
-    addToast("Triggering automated WhatsApp follow-up...", "default");
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      const res = await fetch(`${API_URL}/api/followup?guest_phone=${encodeURIComponent(phone)}`, { method: 'POST' });
-      const data = await res.json();
-      addToast(data.message, "success");
-    } catch (err) {
-      addToast("Failed to trigger follow-up.", "error");
-    }
+    addToast("Opening WhatsApp...", "default");
+    
+    const message = encodeURIComponent("Hi there! Thank you for staying with us. We hope you had a great experience. Could you please take a moment to rate us on Google? It would mean the world to our team! [Insert Google Link]");
+    // Clean phone number: remove all non-digits
+    const cleanPhone = phone.replace(/\\D/g, '');
+    window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
   };
 
   if (loading) return (
