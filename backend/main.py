@@ -257,6 +257,16 @@ def get_properties(owner_email: Optional[str] = None):
 @app.post("/api/properties", response_model=Property, status_code=201)
 def create_property(prop: Property):
     prop_dict = prop.model_dump(exclude={"id"})
+    
+    owner_email = prop_dict.get("owner_email")
+    if owner_email:
+        multi_prop = properties_collection.find_one({
+            "owner_email": owner_email, 
+            "plan": {"$in": ["multi", "resort", "enterprise"]}
+        })
+        if multi_prop:
+            prop_dict["plan"] = multi_prop["plan"]
+            
     new_prop = properties_collection.insert_one(prop_dict)
     created_prop = properties_collection.find_one({"_id": new_prop.inserted_id})
     return property_helper(created_prop)
@@ -819,10 +829,24 @@ def create_payment_order(amount: int = Query(..., description="Amount in INR"), 
 def verify_payment(req: PaymentVerifyRequest):
     is_valid = payment_service.verify_signature(req.razorpay_payment_id, req.razorpay_order_id, req.razorpay_signature)
     if is_valid:
-        res = properties_collection.update_many(
-            {"name": req.property},
-            {"$set": {"plan": req.plan}}
-        )
+        if req.plan in ["multi", "resort", "enterprise"] and req.property != 'Unassigned':
+            prop = properties_collection.find_one({"name": req.property})
+            if prop and "owner_email" in prop:
+                res = properties_collection.update_many(
+                    {"owner_email": prop["owner_email"]},
+                    {"$set": {"plan": req.plan}}
+                )
+            else:
+                res = properties_collection.update_many(
+                    {"name": req.property},
+                    {"$set": {"plan": req.plan}}
+                )
+        else:
+            res = properties_collection.update_many(
+                {"name": req.property},
+                {"$set": {"plan": req.plan}}
+            )
+            
         if res.matched_count == 0 or req.property == 'Unassigned':
             properties_collection.update_many({}, {"$set": {"plan": req.plan}})
         return {"message": "Payment verified and plan updated."}
@@ -879,6 +903,21 @@ def patch_property(id: str, prop_update: PropertyUpdate):
             invites_collection.update_many({"property": old_name}, {"$set": {"property": new_name}})
             checkouts_collection.update_many({"property": old_name}, {"$set": {"property": new_name}})
             
+        # Cascade update if plan changed
+        if old_property and "plan" in update_data and old_property.get("plan") != update_data["plan"]:
+            old_plan = old_property.get("plan")
+            new_plan = update_data["plan"]
+            
+            # If changing to/from a multi-property plan, sync across the portfolio
+            if old_plan in ["multi", "resort", "enterprise"] or new_plan in ["multi", "resort", "enterprise"]:
+                owner_email = old_property.get("owner_email")
+                if owner_email:
+                    properties_collection.update_many(
+                        {"owner_email": owner_email},
+                        {"$set": {"plan": new_plan}}
+                    )
+
+        updated = properties_collection.find_one(filter_query)
         return property_helper(updated)
     raise HTTPException(status_code=404, detail="Property not found")
 

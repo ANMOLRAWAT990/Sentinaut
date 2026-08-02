@@ -175,7 +175,14 @@ export function OwnerDashboard() {
       });
       if (res.ok) {
         const updatedProp = await res.json();
-        setProperties(properties.map(p => p.id === updatedProp.id ? updatedProp : p));
+        if (['multi', 'resort', 'enterprise'].includes(cancelPlanProperty.plan)) {
+            setProperties(properties.map(p => ({...p, plan: 'trial'})));
+            if (activePropertyObj?.plan && ['multi', 'resort', 'enterprise'].includes(activePropertyObj.plan)) {
+                // If active property was part of the multi plan, update its state implicitly via properties
+            }
+        } else {
+            setProperties(properties.map(p => p.id === updatedProp.id ? updatedProp : p));
+        }
         addToast(`Plan for ${cancelPlanProperty.name} cancelled successfully.`, 'success');
         window.dispatchEvent(new Event('planUpdated'));
       } else {
