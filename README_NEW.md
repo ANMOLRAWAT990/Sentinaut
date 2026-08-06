@@ -6,46 +6,6 @@ SentiNaut turns guest reviews into direct business actions. Staff paste reviews 
 
 ---
 
-### Deliverable 1 Links
-- **Live Application:** [https://sentinaut.vercel.app](https://sentinaut.vercel.app)
-- **Developer LinkedIn:** [Anmol Rawat](YOUR_LINKEDIN_URL_HERE)
-
----
-
-## 📸 Platform Interfaces & Architecture
-
-The following interfaces demonstrate the multi-tiered architecture and functional capabilities of SentiNaut. *(Note: To render these locally, please ensure the corresponding image files are placed in the `screenshots/` directory with the matching filenames).*
-
-### 1. Landing & Value Proposition
-![Public Landing Page](./screenshots/Screenshot%202026-07-29%20174949.png)
-*The public-facing landing page establishes the core value proposition: converting unstructured guest feedback into actionable intelligence. The responsive design ensures seamless onboarding and immediate access to the authentication flow.*
-
-### 2. Secure Authentication Gateway
-![Login Page](./screenshots/Screenshot%202026-07-29%20175031.png)
-*The authentication gateway strictly enforces Role-Based Access Control (RBAC). Users are segregated into Staff, Manager, and Owner tiers before authentication. The system supports native credentials (hashed via bcrypt) alongside secure OAuth 2.0 integration via Google.*
-
-### 3. Executive Dashboard (Owner Access)
-![Executive Dashboard](./screenshots/Screenshot%202026-07-29%20181848.png)
-*Provides a macro-level overview for property owners. Features real-time data polling (15s intervals), aggregate health scores, and temporal sentiment analysis graphs. The interface integrates an automated Competitor Benchmark module, aggregating market data to identify comparative operational strengths.*
-
-### 4. Command Center & Action Tracker (Manager Access)
-![Manager Command Center](./screenshots/Screenshot%202026-07-29%20175110.png)
-*The centralized operational hub for General Managers. It translates negative sentiment triggers into assigned action items (e.g., "Review food quality and kitchen operations"). The Kanban-style interface tracks resolution states (Pending, In Progress, Done, Verified) and manages tokenized staff invitations.*
-
-### 5. AI Review Processing (Staff Workspace)
-![Staff Review Input](./screenshots/Screenshot%202026-07-29%20175335.png)
-*The front-line ingestion interface. Staff input raw guest feedback for processing by the Google Gemini AI pipeline. The system instantly classifies sentiment, extracts core operational themes (e.g., Experience, Leisure), and generates draft management responses to standardize external communications.*
-
-### 6. Guest Intelligence & Aggregation (Staff Access)
-![Guest Intelligence](./screenshots/Screenshot%202026-07-29%20175350.png)
-*A historical ledger of processed reviews. Each entry displays AI-determined sentiment tags, identified operational themes, and resolution status. This ensures complete traceability of guest feedback from ingestion to operational resolution.*
-
-### 7. Subscription & Scalability Infrastructure
-![Pricing Plans](./screenshots/Screenshot%202026-08-05%20120436.png)
-*The subscription matrix powered by Razorpay integration. It facilitates frictionless upgrades from Single-Property to Multi-Property architectures. The backend automatically synchronizes elevated subscription tiers across an owner's entire property portfolio.*
-
----
-
 ## The Problem
 
 Small homestays and mountain resorts in competitive markets (like Lansdowne with 30-40 properties) receive reviews across Google, Booking.com, and TripAdvisor but have no system to:
@@ -147,6 +107,11 @@ MongoDB was chosen for SentiNaut for three reasons:
 | `users` | Stores registered users with hashed passwords and role assignments (staff, manager, owner) |
 | `reviews` | Stores all guest reviews ingested via the platform, with sentiment, tags, and status |
 | `actions` | Stores operational action items generated from review patterns |
+
+### Schema Diagram
+
+![SentiNaut MongoDB Schema](<img width="1160" height="711" alt="Screenshot 2026-07-01 210237" src="https://github.com/user-attachments/assets/54bfb86c-bdae-404c-b357-ab751d60c8ca" />
+)
 
 #### Entity-Relationship Diagram
 ```mermaid

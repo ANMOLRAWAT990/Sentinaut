@@ -22,6 +22,12 @@ export function ChatBot() {
   }, [isOpen]);
 
   useEffect(() => {
+    // Clear chat when user changes to ensure role-based isolation
+    setMessages([]);
+    setIsOpen(false);
+  }, [user?.id]);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
 

@@ -13,7 +13,6 @@ export function SettingsPage() {
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [password, setPassword] = useState('');
-  const [darkMode, setDarkMode] = useState(user?.dark_mode || false);
   const [loading, setLoading] = useState(false);
   const { activeProperty } = useAuth();
   const [activePropObj, setActivePropObj] = useState(null);
@@ -79,7 +78,7 @@ export function SettingsPage() {
     
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      const payload = { name, email, dark_mode: darkMode };
+      const payload = { name, email };
       if (password) payload.password = password;
 
       const res = await fetch(`${API_URL}/api/users/${user.id}`, {
@@ -88,7 +87,7 @@ export function SettingsPage() {
         body: JSON.stringify(payload)
       });
       if (res.ok) {
-        login({ ...user, dark_mode: darkMode, name, email }, localStorage.getItem('sentiNautToken'));
+        login({ ...user, name, email }, localStorage.getItem('sentiNautToken'));
         setPassword('');
         addToast('Profile updated successfully', 'success');
       } else {
@@ -153,18 +152,7 @@ export function SettingsPage() {
               placeholder="Leave blank to keep current password"
             />
             
-            <div className="flex items-center justify-between pt-2">
-              <div>
-                <label className="text-[13px] font-medium text-slate-900 dark:text-slate-200">Dark Mode</label>
-                <p className="text-[11px] text-slate-500">Enable dark theme across the application.</p>
-              </div>
-              <input 
-                type="checkbox" 
-                checked={darkMode}
-                onChange={(e) => setDarkMode(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-300"
-              />
-            </div>
+
             
             <div className="space-y-1.5 pt-2">
               <label className="text-[13px] font-medium text-slate-900 dark:text-slate-200">Authorization Scope</label>

@@ -82,13 +82,16 @@ Sentiment: {sentiment}
 Review: {review}
 Output only the drafted response text, no greetings to me, no quotes."""
 
-INSIGHTS_PROMPT = """You are a hospitality strategy consultant. Analyze the following 30-day performance data for a hotel.
+INSIGHTS_PROMPT = """You are a hospitality strategy consultant providing insights for a hotel {role}. Analyze the following 30-day performance data.
 Data: {data}
 
+If the role is 'owner', focus on high-level strategic insights, portfolio-wide patterns, financial impact, and competitor benchmarking. 
+If the role is 'manager', focus on day-to-day operations, staff performance, immediate guest satisfaction, and operational efficiency.
+
 Provide a JSON object with:
-1. "summary": A brief 2-sentence executive summary.
+1. "summary": A brief 2-sentence executive summary tailored to the {role}.
 2. "anomalies": An array of objects, each with "title" and "severity" (Low, Medium, High).
-3. "tasks": An array of objects, each with "task" (actionable recommendation).
+3. "tasks": An array of objects, each with "task" (actionable recommendation for the {role}).
 
 Return EXACTLY this JSON schema:
 {{
@@ -141,8 +144,8 @@ class AIService:
         prompt = DRAFT_REPLY_PROMPT.format(review=review_text, sentiment=sentiment)
         return self.provider.generate_text(prompt).strip()
         
-    def generate_strategic_insights(self, data: dict) -> dict:
-        prompt = INSIGHTS_PROMPT.format(data=json.dumps(data))
+    def generate_strategic_insights(self, data: dict, role: str) -> dict:
+        prompt = INSIGHTS_PROMPT.format(role=role, data=json.dumps(data))
         return self.provider.generate_json(prompt)
         
     def summarize_competitors(self, data: dict) -> str:

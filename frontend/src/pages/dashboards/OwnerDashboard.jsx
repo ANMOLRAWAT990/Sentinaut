@@ -215,7 +215,7 @@ export function OwnerDashboard() {
           initials: 'IM',
           status: 'Invited'
         }]);
-        addToast(`Invitation link sent to ${managerEmail}! They can register via the link sent to their email.`, 'success');
+        addToast(`Invitation link sent to ${managerEmail}! Default password is 'password123'. They can register via the link sent to their email.`, 'success', 10000);
       } else {
         const data = await res.json();
         addToast(data.detail || 'Failed to create manager account.', 'error');

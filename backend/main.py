@@ -64,6 +64,7 @@ class RoleChecker:
     def __call__(self, payload: dict = Depends(verify_token)):
         if payload.get("role") not in self.allowed_roles:
             raise HTTPException(status_code=403, detail="Operation not permitted")
+        return payload
             
 allow_owner = RoleChecker(["owner", "admin"])
 allow_manager_or_owner = RoleChecker(["owner", "manager", "admin"])
@@ -446,6 +447,29 @@ def get_users(role: Optional[str] = None, owner_email: Optional[str] = None, pro
         name_parts = str(u["name"]).split() if u.get("name") else []
         u["initials"] = "".join([p[0].upper() for p in name_parts[:2]]) if name_parts else "U"
         users.append(u)
+
+    # Fetch pending invites and append them
+    invite_query = {}
+    if role:
+        invite_query["role"] = role
+    if property:
+        invite_query["property"] = property
+    elif owner_email:
+        owned_props = [p["name"] for p in properties_collection.find({"owner_email": owner_email})]
+        invite_query["property"] = {"$in": owned_props}
+
+    for invite in invites_collection.find(invite_query):
+        role_label = invite.get("role", "User").capitalize()
+        users.append({
+            "id": invite.get("token"),
+            "name": f"Invited {role_label} (Pending)",
+            "email": invite.get("email"),
+            "role": invite.get("role"),
+            "property": invite.get("property"),
+            "initials": "I",
+            "status": "Invited"
+        })
+        
     return users
 
 
@@ -453,7 +477,29 @@ def get_users(role: Optional[str] = None, owner_email: Optional[str] = None, pro
 @limiter.limit("5/15minute")
 def login(request: Request, data: LoginRequest):
     user = users_collection.find_one({"email": data.email})
-    if not user or user.get("is_active", True) == False:
+    
+    # Auto-provision if they are an invited user using the default password
+    if not user:
+        invite = invites_collection.find_one({"email": data.email})
+        if invite and data.password == "password123":
+            hashed_pw = bcrypt.hashpw("password123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            role_label = invite.get("role", "User").capitalize()
+            new_user = {
+                "name": f"New {role_label}",
+                "email": data.email,
+                "password": hashed_pw,
+                "role": invite.get("role"),
+                "property": invite.get("property", "Unassigned"),
+                "is_active": True,
+                "dark_mode": False
+            }
+            res = users_collection.insert_one(new_user)
+            user = users_collection.find_one({"_id": res.inserted_id})
+            invites_collection.delete_one({"_id": invite["_id"]})
+        else:
+            raise HTTPException(status_code=401, detail="Invalid email or password.")
+            
+    if user.get("is_active", True) == False:
         raise HTTPException(status_code=401, detail="Invalid email or password.")
 
     # Check if account is locked
@@ -507,7 +553,7 @@ from services.ai_service import AIService
 ai = AIService()
 
 @app.post("/api/chat")
-def chat_with_bot(payload: ChatRequest, token_payload = Depends(verify_token)):
+def chat_with_bot(payload: ChatRequest):
     try:
         reply = ai.chat(message=payload.message, role=payload.role)
         return {"reply": reply}
@@ -661,7 +707,8 @@ def translate_review(id: str, token_payload = Depends(verify_token)):
 @app.get("/api/insights")
 def get_insights(property: str, token_payload = Depends(verify_token)):
     verify_property_access(property, token_payload)
-    insight = insights_collection.find_one({"property": property}, sort=[("created_at", -1)])
+    role = token_payload.get("role", "manager")
+    insight = insights_collection.find_one({"property": property, "role": role}, sort=[("created_at", -1)])
     if not insight:
         return {"summary": "No insights available yet.", "anomalies": [], "tasks": []}
     insight.pop("_id", None)
@@ -670,6 +717,7 @@ def get_insights(property: str, token_payload = Depends(verify_token)):
 @app.post("/api/insights/generate")
 def generate_insights(property: str, token_payload = Depends(verify_token)):
     verify_property_access(property, token_payload)
+    role = token_payload.get("role", "manager")
     all_reviews = list(reviews_collection.find({"property": property, "is_competitor": {"$ne": True}}))
     positive = sum(1 for r in all_reviews if r.get("sentiment") == "Positive")
     total = len(all_reviews)
@@ -677,8 +725,9 @@ def generate_insights(property: str, token_payload = Depends(verify_token)):
     data_summary = {"total_reviews": total, "positive_pct": pos_pct}
     
     try:
-        insights = ai.generate_strategic_insights(data_summary)
+        insights = ai.generate_strategic_insights(data_summary, role=role)
         insights["property"] = property
+        insights["role"] = role
         insights["created_at"] = datetime.utcnow().isoformat()
         insights_collection.insert_one(insights)
         insights.pop("_id", None)
@@ -689,7 +738,8 @@ def generate_insights(property: str, token_payload = Depends(verify_token)):
 @app.put("/api/insights/dismiss")
 def dismiss_insight(property: str, anomaly_title: str, token_payload = Depends(verify_token)):
     verify_property_access(property, token_payload)
-    insight = insights_collection.find_one({"property": property}, sort=[("created_at", -1)])
+    role = token_payload.get("role", "manager")
+    insight = insights_collection.find_one({"property": property, "role": role}, sort=[("created_at", -1)])
     if not insight:
          raise HTTPException(status_code=404, detail="No insights found")
     
@@ -1035,22 +1085,46 @@ def patch_property(id: str, prop_update: PropertyUpdate, _ = Depends(allow_owner
     raise HTTPException(status_code=404, detail="Property not found")
 
 @app.delete("/api/users/{id}", status_code=204)
-def delete_user(id: str, _ = Depends(allow_owner)):
+def delete_user(id: str, token_payload = Depends(allow_manager_or_owner)):
     try:
         filter_query = {"_id": ObjectId(id)}
     except InvalidId:
         filter_query = {"$or": [{"id": id}, {"_id": id}]}
-    update_result = users_collection.update_one(filter_query, {"$set": {"is_active": False}})
-    if update_result.modified_count == 1 or update_result.matched_count == 1:
+        
+    caller_role = token_payload.get("role")
+    
+    target_user = users_collection.find_one(filter_query)
+    if target_user:
+        if caller_role == "manager" and target_user.get("role") != "staff":
+            raise HTTPException(status_code=403, detail="Managers can only delete staff members.")
+        users_collection.update_one(filter_query, {"$set": {"is_active": False}})
         return
+        
+    target_invite = invites_collection.find_one({"token": id})
+    if target_invite:
+        if caller_role == "manager" and target_invite.get("role") != "staff":
+            raise HTTPException(status_code=403, detail="Managers can only delete staff members.")
+        invites_collection.delete_one({"token": id})
+        return
+        
     raise HTTPException(status_code=404, detail="User not found")
 
 @app.patch("/api/users/{id}", response_model=UserResponse)
-def patch_user(id: str, user_update: UserUpdate, _ = Depends(allow_owner)):
+def patch_user(id: str, user_update: UserUpdate, token_payload = Depends(allow_manager_or_owner)):
     try:
         filter_query = {"_id": ObjectId(id)}
     except InvalidId:
         filter_query = {"id": id}
+        
+    caller_role = token_payload.get("role")
+    target_user = users_collection.find_one(filter_query)
+    if target_user and caller_role == "manager" and target_user.get("role") != "staff":
+        raise HTTPException(status_code=403, detail="Managers can only edit staff members.")
+        
+    if not target_user:
+        target_invite = invites_collection.find_one({"token": id})
+        if target_invite and caller_role == "manager" and target_invite.get("role") != "staff":
+            raise HTTPException(status_code=403, detail="Managers can only edit staff members.")
         
     update_data = {k: v for k, v in user_update.model_dump().items() if v is not None}
     if "password" in update_data:
@@ -1062,11 +1136,29 @@ def patch_user(id: str, user_update: UserUpdate, _ = Depends(allow_owner)):
     if update_result.modified_count == 1 or update_result.matched_count == 1:
         updated = users_collection.find_one(filter_query)
         return user_helper(updated)
+        
+    update_invite = invites_collection.update_one({"token": id}, {"$set": update_data})
+    if update_invite.modified_count == 1 or update_invite.matched_count == 1:
+        updated_invite = invites_collection.find_one({"token": id})
+        role_label = updated_invite.get("role", "User").capitalize()
+        return {
+            "id": updated_invite.get("token"),
+            "name": f"Invited {role_label} (Pending)",
+            "email": updated_invite.get("email"),
+            "role": updated_invite.get("role"),
+            "property": updated_invite.get("property"),
+            "initials": "I",
+            "status": "Invited"
+        }
+        
     raise HTTPException(status_code=404, detail="User not found")
 
 # --- Magic Links / Invites ---
 @app.post("/api/auth/invite", status_code=201)
-def invite_user(email: str, role: str, background_tasks: BackgroundTasks, property: str = "Unassigned", _ = Depends(allow_owner)):
+def invite_user(email: str, role: str, background_tasks: BackgroundTasks, property: str = "Unassigned", token_payload = Depends(allow_manager_or_owner)):
+    caller_role = token_payload.get("role")
+    if caller_role == "manager" and role != "staff":
+        raise HTTPException(status_code=403, detail="Managers can only invite staff members.")
     prop = properties_collection.find_one({"name": property})
     plan = prop.get("plan", "trial") if prop else "trial"
 
