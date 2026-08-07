@@ -7,7 +7,7 @@ SentiNaut turns guest reviews into direct business actions. Staff paste reviews 
 ---
 
 - **Live Application:** [https://sentinaut.vercel.app](https://sentinaut.vercel.app)
-- **Developer LinkedIn:** [Anmol Rawat](linkedin.com/in/anmol-rawat-2a691a288)
+- **Developer LinkedIn:** [Anmol Rawat](www.linkedin.com/in/anmol-rawat-2a691a288)
 
 ---
 
