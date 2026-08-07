@@ -13,7 +13,7 @@ SentiNaut turns guest reviews into direct business actions. Staff paste reviews 
 
 ## 📸 Platform Interfaces & Architecture
 
-The following interfaces demonstrate the multi-tiered architecture and functional capabilities of SentiNaut. *(Note: To render these locally, please ensure the corresponding image files are placed in the `screenshots/` directory with the matching filenames).*
+The following interfaces demonstrate the multi-tiered architecture and functional capabilities of SentiNaut.
 
 ### 1. Landing & Value Proposition
 ![Public Landing Page](./screenshots/Screenshot%202026-07-29%20174949.png)
